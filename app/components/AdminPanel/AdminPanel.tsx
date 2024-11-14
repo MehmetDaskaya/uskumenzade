@@ -17,6 +17,7 @@ import {
   ReportsComponent,
   ProductManagementComponent,
   SettingsComponent,
+  BlogsComponent,
 } from "@/app/components";
 
 export default function AdminPanel() {
@@ -52,7 +53,7 @@ export default function AdminPanel() {
       {/* Sidebar */}
       <aside className="w-64 bg-gray-800 text-white hidden md:flex flex-col">
         <div className="p-6 text-2xl font-bold text-center border-b border-gray-700">
-          Admin Panel
+          Admin Paneli
         </div>
         <nav className="flex-1 p-4">
           <ul className="space-y-4">
@@ -64,7 +65,7 @@ export default function AdminPanel() {
                 onClick={() => handleSectionChange("dashboard")}
               >
                 <FaChartLine className="mr-3" />
-                Dashboard
+                Yönetim Paneli
               </button>
             </li>
             <li>
@@ -75,7 +76,7 @@ export default function AdminPanel() {
                 onClick={() => handleSectionChange("users")}
               >
                 <FaUsers className="mr-3" />
-                User Management
+                Kullanıcı Yönetimi
               </button>
             </li>
             <li>
@@ -86,7 +87,7 @@ export default function AdminPanel() {
                 onClick={() => handleSectionChange("products")}
               >
                 <FaBox className="mr-3" />
-                Product Management
+                Ürün Yönetimi
               </button>
             </li>
             <li>
@@ -97,7 +98,18 @@ export default function AdminPanel() {
                 onClick={() => handleSectionChange("orders")}
               >
                 <FaShoppingCart className="mr-3" />
-                Order Management
+                Sipariş Yönetimi
+              </button>
+            </li>
+            <li>
+              <button
+                className={`flex items-center p-3 w-full ${
+                  activeSection === "products" ? "bg-gray-700" : ""
+                } hover:bg-gray-700`}
+                onClick={() => handleSectionChange("blogs")}
+              >
+                <FaBox className="mr-3" />
+                Blog Yönetimi
               </button>
             </li>
             <li>
@@ -108,7 +120,7 @@ export default function AdminPanel() {
                 onClick={() => handleSectionChange("reports")}
               >
                 <MdOutlineAnalytics className="mr-3" />
-                Reports & Analytics
+                Raporlar ve Analitik
               </button>
             </li>
             <li>
@@ -119,7 +131,7 @@ export default function AdminPanel() {
                 onClick={() => handleSectionChange("settings")}
               >
                 <FaCog className="mr-3" />
-                Settings
+                Ayarlar
               </button>
             </li>
           </ul>
@@ -127,7 +139,7 @@ export default function AdminPanel() {
         <div className="p-4 border-t border-gray-700">
           <button className="flex items-center p-3 w-full hover:bg-gray-700">
             <FiLogOut className="mr-3" />
-            Log Out
+            Çıkış Yap
           </button>
         </div>
       </aside>
@@ -164,6 +176,7 @@ export default function AdminPanel() {
         {activeSection === "users" && <UserManagementComponent />}
         {activeSection === "products" && <ProductManagementComponent />}
         {activeSection === "orders" && <OrderManagementComponent />}
+        {activeSection === "blogs" && <BlogsComponent />}
         {activeSection === "reports" && <ReportsComponent />}
         {activeSection === "settings" && <SettingsComponent />}
       </main>

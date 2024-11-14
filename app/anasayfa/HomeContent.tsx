@@ -1,14 +1,20 @@
-// src/pages/home.tsx
-import { FlipWords, ProductListings } from "../components";
-import Image from "next/image";
+// src/components/HomeContent.tsx
+"use client";
+
+import { FlipWords, ProductListings } from "../../app/components";
+import LoadingSpinner from "../../app/components/LoadingSpinner/LoadingSpinner";
+import { useEffect, useState } from "react";
 import {
   Carousel,
   Card,
 } from "@/app/components/ui/AppleCardsCarousel/AppleCardsCarousel";
+import Image from "next/image";
+import Link from "next/link";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 import herbalTea from "@/public/images/herbal-tea.webp";
 import herbalOil from "@/public/images/herbal-oil.webp";
 import herbalCream from "@/public/images/herbal-cream.webp";
-import Link from "next/link";
 
 const words = ["Çaylar", "Kremler", "Yağlar"];
 
@@ -53,38 +59,50 @@ const data = [
     title: "Bitkisel formüllü çaylarımızı keşfedin.",
     src: herbalTea,
     content: <ProductsContent />,
+    link: "/blog/detaylar/1",
   },
   {
     category: "Bitkisel Yağlar",
     title: "Bitkisel yağlarımızın faydalarını öğrenin.",
     src: herbalOil,
     content: <ProductsContent />,
+    link: "/blog/detaylar/2",
   },
-
   {
     category: "Bitkisel Kremler",
     title: "Doğal bitkisel kremlerimizin faydalarını keşfedin.",
     src: herbalCream,
     content: <ProductsContent />,
+    link: "/blog/detaylar/3",
   },
 ];
 
-export default function Home() {
-  interface Card {
-    src: { src: string };
-    link?: string;
+export default function HomeContent() {
+  const [loading, setLoading] = useState(true);
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+
+  useEffect(() => {
+    // Simulate loading delay, or remove if actual loading required
+    const timer = setTimeout(() => setLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return <LoadingSpinner />;
   }
+
   const cards = data.map((card, index) => (
     <Card
       key={index}
       card={{
         ...card,
         src: { src: card.src.src },
-        link: (card as Card).link ?? "#",
+        link: card.link ?? "#",
       }}
       index={index}
     />
   ));
+
   return (
     <div className="bg-gray-50 text-gray-900 font-sans relative">
       <div className="leaf-decoration leaf-left"></div>
@@ -95,7 +113,6 @@ export default function Home() {
         className="relative bg-cover bg-center h-[40vh] sm:h-[80vh] flex items-center justify-center sm:justify-start px-4 sm:px-8"
         style={{ backgroundImage: "url('/images/teahero.png')" }}
       >
-        {/* Add a pseudo-element for the dark overlay */}
         <div className="absolute inset-0 bg-black opacity-40"></div>
 
         <div className="relative z-10 sm:left-32 text-center sm:text-center">
@@ -103,11 +120,11 @@ export default function Home() {
             Üskümenzade
           </h2>
           <div className="text-xl sm:text-2xl text-white mt-4">
-            Bitkisel <FlipWords words={words} /> Burada.
+            Bitkisel <FlipWords className="text-white" words={words} /> Burada.
           </div>
 
           <div className="mt-6 sm:mt-8">
-            <Link href="/products">
+            <Link href="/urunler">
               <button className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110">
                 Ürünleri Gör
               </button>
@@ -117,11 +134,25 @@ export default function Home() {
       </section>
 
       <div className="w-full h-full py-20">
-        <h2 className="max-w-7xl pl-4 mx-auto text-xl md:text-5xl font-bold text-yellow-500  font-sans">
+        <h2 className="max-w-7xl pl-4 mx-auto text-xl md:text-5xl font-bold text-yellow-500 font-sans">
           Ürünlerimiz Hakkında Bilgi Edinin
         </h2>
         <Carousel items={cards} />
       </div>
+
+      {/* Conditionally render content based on login status */}
+      {accessToken ? (
+        <>
+          <div className="bg-green-50 p-6 text-green-800 font-semibold text-center">
+            Hoş geldiniz, değerli müşterimiz! Özel tekliflerimizi keşfedin.
+          </div>
+          {/* Display additional components or offers for logged-in users */}
+        </>
+      ) : (
+        <div className="bg-red-50 p-6 text-red-800 font-semibold text-center">
+          Lütfen daha fazlasını keşfetmek için giriş yapın!
+        </div>
+      )}
 
       <ProductListings />
     </div>

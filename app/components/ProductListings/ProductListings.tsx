@@ -1,10 +1,10 @@
-"use client"; // Mark the component as a Client Component
+"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 import { FaCartPlus, FaHeart, FaTag } from "react-icons/fa";
-
+import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 import { products } from "../../../util/mock/mockProducts";
 // Define a type that includes stock
 type ProductWithStock =
@@ -32,6 +32,8 @@ interface ProductListingsProps {
 export const ProductListings = ({
   isProductsPage = false,
 }: ProductListingsProps) => {
+  const [isLoading, setIsLoading] = useState(true);
+
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [visibleProductsCount, setVisibleProductsCount] = useState(
     isProductsPage ? 12 : 4
@@ -64,6 +66,11 @@ export const ProductListings = ({
     discount: [],
     stock: [],
   });
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1000); // Simulate loading delay
+    return () => clearTimeout(timer); // Cleanup timer on unmount
+  }, []);
 
   const toggleFilter = (
     filterType: keyof typeof selectedFilters,
@@ -149,6 +156,9 @@ export const ProductListings = ({
     return priceFilter && discountFilter && stockFilter;
   });
 
+  if (isLoading) {
+    return <LoadingSpinner />; // Show spinner if still loading
+  }
   return (
     <div className="container flex-col mx-auto px-4 md:px-16 py-8 flex bg-yellow-500 ">
       <div className="w-full mb-4 ">
@@ -421,7 +431,7 @@ export const ProductListings = ({
             {filteredProducts.slice(0, visibleProductsCount).map((product) => (
               <div key={product.id} className="relative group">
                 <Link
-                  href={`/products/details/${product.id}`}
+                  href={`/urunler/detaylar/${product.id}`}
                   className="relative z-10"
                 >
                   <img

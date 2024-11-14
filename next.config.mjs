@@ -6,6 +6,7 @@ const nextConfig = {
       "via.placeholder.com",
       "assets.aceternity.com",
       "teami-store-demo.myshopify.com",
+      "picsum.photos",
     ],
   },
 };

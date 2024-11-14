@@ -1,4 +1,4 @@
-// app/products/details/[id]/page.tsx
+// app/urunler/detaylar/[id]/page.tsx
 import { notFound } from "next/navigation";
 import { products } from "../../../../util/mock/mockProducts";
 import ProductDetailsClient from "./ProductDetailsClient";
@@ -38,5 +38,6 @@ export default async function ProductDetailsPage({
   }
 
   // Pass the product data to the client component
-  return <ProductDetailsClient product={product} />;
+  // Pass `isLoggedIn` as a prop to ProductDetailsClient
+  return <ProductDetailsClient product={product} isLoggedIn={true} />;
 }

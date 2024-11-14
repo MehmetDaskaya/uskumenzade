@@ -1,9 +1,12 @@
-// app/products/details/[id]/ProductDetailsClient.tsx
-"use client"; // Mark this as a client component
+"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { FaLeaf, FaShoppingCart, FaTruck } from "react-icons/fa";
+import LoadingSpinner from "../../../../app/components/LoadingSpinner/LoadingSpinner";
+import Modal from "../../../../app/components/Modal/Modal";
+import CheckOutModalContent from "../../../../app/components/Modal/CheckOutModalContent";
+import LoginModalContent from "../../../../app/components/Modal/LoginModalContent";
 
 interface Product {
   id: number;
@@ -19,17 +22,37 @@ interface Product {
 
 interface ProductDetailsClientProps {
   product: Product;
+  isLoggedIn: boolean;
 }
 
 export default function ProductDetailsClient({
   product,
+  isLoggedIn, //burası şu anda false dönüyor true olunca checkout ekranı görünüyor
 }: ProductDetailsClientProps) {
+  const [isLoading, setIsLoading] = useState(true); // Loading state
   const [isAddedToCart, setIsAddedToCart] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1000); // Simulate loading delay
+    return () => clearTimeout(timer); // Cleanup timer
+  }, []);
 
   const handleAddToCart = () => {
-    setIsAddedToCart(true);
-    setTimeout(() => setIsAddedToCart(false), 2000);
+    if (isAddedToCart) {
+      setIsModalOpen(true);
+    } else {
+      setIsAddedToCart(true);
+    }
   };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  if (isLoading) {
+    return <LoadingSpinner />; // Show spinner if loading
+  }
 
   return (
     <div className="bg-yellow-500 min-h-screen py-8 px-8">
@@ -42,7 +65,7 @@ export default function ProductDetailsClient({
           objectFit="contain"
           className="transition-transform duration-500 transform hover:scale-110"
         />
-        <div className="absolute inset-0 flex items-end justify-center  ">
+        <div className="absolute inset-0 flex items-end justify-center">
           <div className="text-center">
             <h1 className="text-3xl md:text-5xl font-bold text-gray-800 mb-4 tracking-wide">
               {product.name}
@@ -118,7 +141,7 @@ export default function ProductDetailsClient({
                   }`}
                 >
                   <FaShoppingCart className="mr-2" />
-                  {isAddedToCart ? "Sepete Eklendi!" : "Sepete Ekle"}
+                  {isAddedToCart ? "Sepette!" : "Sepete Ekle"}
                 </button>
               </div>
 
@@ -178,6 +201,11 @@ export default function ProductDetailsClient({
           </div>
         </div>
       </div>
+      {isModalOpen && (
+        <Modal onClose={closeModal}>
+          {isLoggedIn ? <CheckOutModalContent /> : <LoginModalContent />}
+        </Modal>
+      )}
     </div>
   );
 }

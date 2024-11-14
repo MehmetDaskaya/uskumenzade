@@ -27,7 +27,10 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "app/components/AdminPanel",
+    "app/urunler/detaylar/[id]/ProductDetailsClient.tsx",
+    "app/blog/detaylar/[id]/BlogDetailsClient.tsx",
     "next-i18next.config.js"
   ],
+
   "exclude": ["node_modules"]
 }

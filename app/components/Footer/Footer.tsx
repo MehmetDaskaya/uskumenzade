@@ -36,12 +36,12 @@ export const Footer = ({ viewable = false }: FooterProps) => {
           <h3 className="text-xl font-semibold mb-4">Site İçi Ulaşım</h3>
           <ul className="space-y-2">
             <li>
-              <Link href="/products" className="hover:text-yellow-500">
+              <Link href="/urunler" className="hover:text-yellow-500">
                 Ürünler
               </Link>
             </li>
             <li>
-              <Link href="/blogs" className="hover:text-yellow-500">
+              <Link href="/blog" className="hover:text-yellow-500">
                 Blog
               </Link>
             </li>

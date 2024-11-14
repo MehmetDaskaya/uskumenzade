@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin Panel",
+  title: "Admin Paneli",
   description: "Admin management and settings",
 };
 

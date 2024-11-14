@@ -39,24 +39,24 @@ interface DashboardStats {
 
 interface SalesData {
   name: string;
-  sales: number;
+  satış: number;
   revenue: number;
 }
 
 const salesData: SalesData[] = [
-  { name: "Jan", sales: 4000, revenue: 24000 },
-  { name: "Feb", sales: 3000, revenue: 18000 },
-  { name: "Mar", sales: 5000, revenue: 30000 },
-  { name: "Apr", sales: 4500, revenue: 27000 },
-  { name: "May", sales: 6000, revenue: 36000 },
-  { name: "Jun", sales: 5500, revenue: 33000 },
+  { name: "Ocak", satış: 4000, revenue: 24000 },
+  { name: "Şubat", satış: 3000, revenue: 18000 },
+  { name: "Mart", satış: 5000, revenue: 30000 },
+  { name: "Nisan", satış: 4500, revenue: 27000 },
+  { name: "Mayıs", satış: 6000, revenue: 36000 },
+  { name: "Haziran", satış: 5500, revenue: 33000 },
 ];
 
 const productCategoryData = [
-  { name: "Electronics", value: 400 },
-  { name: "Clothing", value: 300 },
-  { name: "Books", value: 300 },
-  { name: "Home & Garden", value: 200 },
+  { name: "Çaylar", value: 400 },
+  { name: "Yağlar", value: 300 },
+  { name: "Kremler", value: 300 },
+  { name: "Diğer", value: 200 },
 ];
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
@@ -101,31 +101,31 @@ export const DashboardComponent = ({ stats }: { stats: DashboardStats }) => {
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-bold text-gray-800 mb-6">
-        Dashboard Overview
+        Yönetim Paneli Genel Bakış
       </h2>
 
       {/* Quick Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Total Users"
+          title="Toplam Kullanıcı"
           value={stats.users}
           icon={<FaUsers />}
           growth={stats.userGrowth}
         />
         <StatCard
-          title="Total Products"
+          title="Toplam Ürün"
           value={stats.products}
           icon={<FaBox />}
           growth={stats.productGrowth}
         />
         <StatCard
-          title="Total Orders"
+          title="Toplam Sipariş"
           value={stats.orders}
           icon={<FaShoppingCart />}
           growth={stats.orderGrowth}
         />
         <StatCard
-          title="Total Revenue"
+          title="Toplam Gelir"
           value={`$${stats.revenue.toLocaleString()}`}
           icon={<FaDollarSign />}
           growth={stats.revenueGrowth}
@@ -135,7 +135,7 @@ export const DashboardComponent = ({ stats }: { stats: DashboardStats }) => {
       {/* Sales and Revenue Chart */}
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h3 className="text-xl font-semibold text-gray-700 mb-4">
-          Sales and Revenue Overview
+          Satış ve Gelir Özeti
         </h3>
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={salesData}>
@@ -148,14 +148,14 @@ export const DashboardComponent = ({ stats }: { stats: DashboardStats }) => {
             <Line
               yAxisId="left"
               type="monotone"
-              dataKey="sales"
+              dataKey="satış"
               stroke="#8884d8"
               activeDot={{ r: 8 }}
             />
             <Line
               yAxisId="right"
               type="monotone"
-              dataKey="revenue"
+              dataKey="gelir"
               stroke="#82ca9d"
             />
           </LineChart>
@@ -167,7 +167,7 @@ export const DashboardComponent = ({ stats }: { stats: DashboardStats }) => {
         {/* Product Categories */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-xl font-semibold text-gray-700 mb-4">
-            Product Categories
+            Ürün Kategorileri
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -196,7 +196,7 @@ export const DashboardComponent = ({ stats }: { stats: DashboardStats }) => {
         {/* Recent Orders */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-xl font-semibold text-gray-700 mb-4">
-            Recent Orders
+            Son Siparişler
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={salesData}>
@@ -205,7 +205,7 @@ export const DashboardComponent = ({ stats }: { stats: DashboardStats }) => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="sales" fill="#8884d8" />
+              <Bar dataKey="satış" fill="#8884d8" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -214,7 +214,7 @@ export const DashboardComponent = ({ stats }: { stats: DashboardStats }) => {
       {/* Recent Activity */}
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h3 className="text-xl font-semibold text-gray-700 mb-4">
-          Recent Activity
+          Son Aktiviteler
         </h3>
         <ul className="space-y-4">
           {[1, 2, 3, 4, 5].map((item) => (
@@ -227,32 +227,13 @@ export const DashboardComponent = ({ stats }: { stats: DashboardStats }) => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  New order placed
+                  Yeni Sipariş
                 </p>
-                <p className="text-xs text-gray-500">2 minutes ago</p>
+                <p className="text-xs text-gray-500">2 dakika önce</p>
               </div>
             </li>
           ))}
         </ul>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold text-gray-700 mb-4">
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {["Add Product", "Create Order", "Add User", "Generate Report"].map(
-            (action) => (
-              <button
-                key={action}
-                className="py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300"
-              >
-                {action}
-              </button>
-            )
-          )}
-        </div>
       </div>
     </div>
   );

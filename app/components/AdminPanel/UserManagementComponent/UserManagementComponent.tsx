@@ -76,13 +76,13 @@ export const UserManagementComponent = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Manage Users</h2>
+      <h2 className="text-2xl font-bold mb-4">Kullanıcıları Yönet</h2>
 
       {/* Search Bar */}
       <div className="mb-4 flex items-center">
         <input
           type="text"
-          placeholder="Search users..."
+          placeholder="Kullanıcı Ara..."
           value={searchQuery}
           onChange={handleSearch}
           className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
@@ -127,7 +127,7 @@ export const UserManagementComponent = () => {
           ) : (
             <tr>
               <td colSpan={5} className="p-4 text-center text-gray-500">
-                No users found.
+                Kullanıcı bulunamadı.
               </td>
             </tr>
           )}
@@ -156,7 +156,7 @@ export const UserManagementComponent = () => {
       {/* Add User Button */}
       <div className="mt-6">
         <button className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300">
-          Add New User
+          Yeni Kullanıcı Ekle
         </button>
       </div>
     </div>

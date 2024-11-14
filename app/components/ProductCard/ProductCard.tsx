@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Product } from "../../mockData"; // Importing the Product type
+import { Product } from "../../mockData";
 
 export const ProductCard = ({ product }: { product: Product }) => {
   return (
-    <Link href={`/products/${product.id}`}>
+    <Link href={`/urunler/${product.id}`}>
       <div className="border p-4 cursor-pointer hover:shadow-lg">
         <img
           src={product.imageUrl}

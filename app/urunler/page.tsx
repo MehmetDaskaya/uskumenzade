@@ -1,4 +1,4 @@
-// app/products/page.tsx
+// app/urunler/page.tsx
 import { ProductListings } from "../components/index";
 
 export default function ProductsPage() {

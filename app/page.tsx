@@ -1,15 +1,16 @@
-"use client"; // Mark the component as a Client Component
+// app/page.tsx
+"use client";
 
 import "../app/globals.css";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation"; // Use next/navigation for app directory
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/home"); // Redirect to /home
+    router.push("/anasayfa"); // Redirect to /anasayfa
   }, [router]);
 
-  return null; // No content as it redirects
+  return null;
 }

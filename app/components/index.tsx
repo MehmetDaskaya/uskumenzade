@@ -3,6 +3,7 @@ export { UserManagementComponent } from "./AdminPanel/UserManagementComponent/Us
 export { OrderManagementComponent } from "./AdminPanel/OrderManagementComponent/OrderManagementComponent";
 export { ReportsComponent } from "./AdminPanel/ReportsComponent/ReportsComponent";
 export { ProductManagementComponent } from "./AdminPanel/ProductManagementComponent/ProductManagementComponent";
+export { BlogsComponent } from "./AdminPanel/BlogsComponent/BlogsComponent";
 export { SettingsComponent } from "./AdminPanel/SettingsComponent/SettingsComponent";
 export { FlipWords } from "./ui/FlipWords/FlipWords";
 export { ProductCard } from "./ProductCard/ProductCard";

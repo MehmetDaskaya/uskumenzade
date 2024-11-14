@@ -137,7 +137,7 @@ export const BlurImage = ({
   return (
     <Image
       className={cn(
-        "transition duration-300 object-cover rounded-lg", // Added object-cover and rounded-lg for styling
+        "transition duration-300 object-cover rounded-lg",
         isLoading ? "blur-sm" : "blur-0",
         className
       )}
