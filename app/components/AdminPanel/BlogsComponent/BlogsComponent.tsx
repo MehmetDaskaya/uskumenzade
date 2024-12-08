@@ -1,10 +1,28 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaEdit, FaTrashAlt, FaSearch, FaPlus, FaTimes } from "react-icons/fa";
-import { mockBlogData } from "../../../../util/mock/mockBlogData";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import {
+  fetchBlogs,
+  addBlog,
+  updateBlog,
+  deleteBlog,
+  createSection,
+  fetchBlogById,
+} from "../../../api/blog/blogApi";
+import { ImageModal } from "../../index";
+import { CategoryModal } from "../../Modal/CategoryModal";
+
+interface Category {
+  id: string; // or number, based on your API's response
+  name: string;
+}
 
 export const BlogsComponent = () => {
-  const [blogs, setBlogs] = useState(mockBlogData);
+  const images = useSelector((state: RootState) => state.image.images);
+
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const blogsPerPage = 5;
@@ -12,19 +30,87 @@ export const BlogsComponent = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentBlog, setCurrentBlog] = useState<Blog | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
 
-  const [newBlogData, setNewBlogData] = useState({
+  const openCategoryModal = () => setShowCategoryModal(true);
+  const closeCategoryModal = () => setShowCategoryModal(false);
+
+  interface Section {
+    id?: string; // Make ID optional
+    content: string;
+    order: number;
+    section_type: string;
+    heading: string;
+    body: string;
+  }
+
+  interface Image {
+    id: string;
+    url: string;
+    alt_text: string;
+  }
+
+  interface Blog {
+    id: string;
+    title: string;
+    author: string;
+    category: string;
+    content: string;
+    related_item_ids: string[];
+    tags: string[];
+    images: Image[];
+    sections: Section[];
+    created_at: string;
+    updated_at: string;
+    excerpt?: string;
+    readTime?: string;
+    relatedProducts?: string[];
+  }
+
+  const [newBlogData, setNewBlogData] = useState<{
+    id?: string;
+    title: string;
+    author: string;
+    category: string;
+    content: string;
+    related_item_ids: string[];
+    publishedDate: string;
+    excerpt: string;
+    contentSections: Section[];
+    tags: string;
+    imageUrl: string;
+    readTime: string;
+    relatedProducts: string;
+  }>({
+    id: undefined,
     title: "",
     author: "",
     category: "",
+    content: "",
+    related_item_ids: [],
     publishedDate: "",
     excerpt: "",
-    contentSections: [{ heading: "", body: "" }],
+    contentSections: [
+      {
+        id: undefined,
+        content: "\n", // Initialize with an empty heading and body joined by "\n"
+        order: 0,
+        section_type: "body", // Default type, adjust as needed
+        heading: "",
+        body: "",
+      },
+    ],
     tags: "",
     imageUrl: "",
     readTime: "",
-    relatedProducts: "", // Initialize as an empty string, not an array
+    relatedProducts: "",
   });
+
+  const openImageModal = () => setShowImageModal(true);
+  const closeImageModal = () => setShowImageModal(false);
 
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<() => void>(
@@ -37,13 +123,100 @@ export const BlogsComponent = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [showSnackbar, setShowSnackbar] = useState(false);
 
+  useEffect(() => {
+    const getBlogs = async () => {
+      try {
+        const fetchedBlogs = await fetchBlogs();
+        setBlogs(fetchedBlogs);
+      } catch (error) {
+        console.error("Error fetching blogs:", error);
+      }
+    };
+
+    getBlogs();
+  }, []);
+
+  // Function to add a new blog
+  const handleAddBlogSubmit = async () => {
+    try {
+      // Ensure all selected categories have valid IDs
+      const validTagIds = selectedCategories.map((category) => category.id);
+
+      // Step 1: Create the blog without sections
+      const newBlog = {
+        title: newBlogData.title || "",
+        author: newBlogData.author || "",
+        category: newBlogData.category || "",
+        content: newBlogData.content || "No content provided",
+        related_item_ids: newBlogData.related_item_ids || [],
+        image_ids: selectedImageId ? [selectedImageId] : [],
+        tag_ids: validTagIds,
+      };
+
+      const addedBlog = await addBlog({
+        ...newBlog,
+        sections: [], // Exclude sections from the initial blog creation
+      });
+
+      // Step 2: Create sections for the newly created blog
+      const sections = newBlogData.contentSections.map((section, index) => ({
+        order: index,
+        section_type: "body",
+        content: `${section.heading}\n\n${section.body}`,
+      }));
+
+      for (const section of sections) {
+        await createSection({
+          blog_id: addedBlog.id,
+          ...section,
+        });
+      }
+
+      // Step 3: Fetch the updated blog to include sections
+      const updatedBlog = await fetchBlogById(addedBlog.id);
+      setBlogs([...blogs, updatedBlog]);
+
+      resetBlogData();
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding blog:", error);
+    }
+  };
+
+  const resetBlogData = () => {
+    setNewBlogData({
+      title: "",
+      author: "",
+      category: "",
+      content: "",
+      related_item_ids: [],
+      publishedDate: "",
+      excerpt: "",
+      contentSections: [
+        {
+          id: undefined,
+          content: "", // Initialize with an empty heading and body joined by "\n"
+          order: 0,
+          section_type: "", // Default type, adjust as needed
+          heading: "",
+          body: "",
+        },
+      ],
+      tags: "",
+      imageUrl: "",
+      readTime: "",
+      relatedProducts: "",
+    });
+    setSelectedImageId(null); // Reset selected image ID
+  };
+
   // Function to show the Snackbar
   const triggerSnackbar = (message: string) => {
     setSnackbarMessage(message);
     setShowSnackbar(true);
     setTimeout(() => {
       setShowSnackbar(false);
-    }, 3000); // Hide the Snackbar after 3 seconds
+    }, 3000);
   };
 
   const confirmDeleteBlog = (blog: Blog) => {
@@ -51,12 +224,18 @@ export const BlogsComponent = () => {
     setShowDeleteModal(true);
   };
 
-  const handleDeleteConfirmed = () => {
+  const handleDeleteConfirmed = async () => {
     if (!blogToDelete) return;
-    const updatedBlogs = blogs.filter((blog) => blog.id !== blogToDelete.id);
-    setBlogs(updatedBlogs);
-    setShowDeleteModal(false);
-    triggerSnackbar("Blog deleted.");
+
+    try {
+      await deleteBlog(blogToDelete.id);
+      setBlogs(blogs.filter((blog) => blog.id !== blogToDelete.id));
+      setShowDeleteModal(false);
+      triggerSnackbar("Blog deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting blog:", error);
+      triggerSnackbar("Failed to delete blog.");
+    }
   };
 
   // Handle search query input
@@ -67,7 +246,7 @@ export const BlogsComponent = () => {
   // Pagination logic
   const indexOfLastBlog = currentPage * blogsPerPage;
   const indexOfFirstBlog = indexOfLastBlog - blogsPerPage;
-  const currentBlogs = blogs.slice(indexOfFirstBlog, indexOfLastBlog); // Now use currentPage and blogsPerPage
+  const currentBlogs = blogs.slice(indexOfFirstBlog, indexOfLastBlog);
 
   const totalPages = Math.ceil(blogs.length / blogsPerPage);
 
@@ -75,119 +254,77 @@ export const BlogsComponent = () => {
     setCurrentPage(pageNumber);
   };
 
-  // Handle add and edit blog
-  const handleAddBlogSubmit = () => {
-    // Check if any field is empty
-    const {
-      title,
-      author,
-      category,
-      publishedDate,
-      excerpt,
-      tags,
-      imageUrl,
-      readTime,
-      contentSections,
-    } = newBlogData;
-
-    if (
-      !title.trim() ||
-      !author.trim() ||
-      !category.trim() ||
-      !publishedDate.trim() ||
-      !excerpt.trim() ||
-      !tags.trim() ||
-      !imageUrl.trim() ||
-      !readTime.trim() ||
-      contentSections.some(
-        (section) => !section.heading.trim() || !section.body.trim()
-      ) // Check if any content section is empty
-    ) {
-      triggerSnackbar("Please fill in all required fields.");
-      return; // Prevent submission
-    }
-
-    const newBlog = {
-      id: blogs.length + 1,
-      ...newBlogData,
-      tags: newBlogData.tags.split(",").map((tag) => tag.trim()), // Split tags by comma
-      relatedProducts: newBlogData.relatedProducts
-        .split(",")
-        .map((product) => product.trim()), // Split related products by comma
-      contentSections: newBlogData.contentSections.map((section) => ({
-        ...section,
-      })),
-    };
-
-    setBlogs([...blogs, newBlog]);
-    setShowAddModal(false);
-    resetBlogData();
-  };
-
-  interface Blog {
-    id: number;
-    title: string;
-    author: string;
-    category: string;
-    publishedDate: string;
-    excerpt: string;
-    contentSections: { heading: string; body: string }[];
-    tags: string[];
-    imageUrl: string;
-    readTime: string;
-    relatedProducts: string[]; // Should be an array of strings
-  }
-
   const handleEditBlog = (blog: Blog) => {
-    resetBlogData(); // Reset form fields before opening the modal
     setCurrentBlog(blog);
+
     setNewBlogData({
-      ...blog,
-      tags: blog.tags.join(", "), // Join tags to make them comma-separated string for input field
-      relatedProducts: Array.isArray(blog.relatedProducts)
-        ? blog.relatedProducts.join(", ")
-        : "",
+      id: blog.id, // `id` is now correctly typed as `string | undefined`
+      title: blog.title,
+      author: blog.author,
+      category: blog.category,
+      content: blog.content || "",
+      related_item_ids: blog.related_item_ids || [],
+      publishedDate: blog.created_at.split("T")[0], // Use created_at date for initial value
+      excerpt: blog.excerpt || "",
+      contentSections: blog.sections.map((section: Section) => {
+        const [heading, ...bodyParts] = section.content.split("\n\n"); // Split the content into heading and body
+        return {
+          id: section.id, // Keep `id` from the section
+          content: section.content, // Preserve the full content
+          order: section.order, // Include the order
+          section_type: section.section_type, // Include the section type
+          heading: heading || "",
+          body: bodyParts.join("\n\n") || "", // Join the remaining parts as body
+        };
+      }),
+      tags: (blog.tags || []).join(", "), // Join tags into a string
+      imageUrl: blog.images[0]?.url || "",
+      readTime: blog.readTime || "",
+      relatedProducts: (blog.relatedProducts || []).join(", "), // Join related products
     });
+
     setShowEditModal(true);
   };
 
-  const handleEditBlogSubmit = () => {
-    if (!currentBlog) return; // Check if currentBlog is null
+  const handleEditBlogSubmit = async () => {
+    if (!currentBlog) return;
 
-    const updatedBlogs = blogs.map((blog) =>
-      blog.id === currentBlog.id
-        ? {
-            ...blog,
-            ...newBlogData,
-            tags: newBlogData.tags.split(",").map((tag) => tag.trim()), // Split the tags into an array
-            relatedProducts: newBlogData.relatedProducts
-              .split(",")
-              .map((product) => product.trim()), // Split related products by comma
-          }
-        : blog
-    );
+    const updatedBlog = {
+      title: newBlogData.title || currentBlog.title,
+      author: newBlogData.author || currentBlog.author,
+      category: newBlogData.category || currentBlog.category,
+      content: newBlogData.content || "No content provided",
+      related_item_ids: newBlogData.related_item_ids || [],
+      image_ids: selectedImageId
+        ? [selectedImageId]
+        : currentBlog.images.map((img) => img.id), // Include image IDs
+      tag_ids:
+        selectedCategories.length > 0
+          ? selectedCategories.map((cat) => cat.id)
+          : currentBlog.tags || [], // Include tag IDs
+      sections: newBlogData.contentSections.map((section, index) => ({
+        id: section.id, // Use the existing ID if it exists
+        order: index,
+        section_type: section.section_type,
+        content: `${section.heading}\n\n${section.body}`,
+      })),
+    };
 
-    setBlogs(updatedBlogs);
-    setShowEditModal(false);
-    resetBlogData();
-  };
-
-  const resetBlogData = () => {
-    setNewBlogData({
-      title: "",
-      author: "",
-      category: "",
-      publishedDate: "",
-      excerpt: "",
-      contentSections: [{ heading: "", body: "" }],
-      tags: "",
-      imageUrl: "",
-      readTime: "",
-      relatedProducts: "",
-    });
+    try {
+      const editedBlog = await updateBlog(String(currentBlog.id), updatedBlog); // Ensure `id` is a string
+      setBlogs(
+        blogs.map((blog) => (blog.id === currentBlog.id ? editedBlog : blog))
+      );
+      setShowEditModal(false);
+      resetBlogData();
+      setSelectedCategories([]);
+    } catch (error) {
+      console.error("Error updating blog:", error);
+    }
   };
 
   // Manage content sections dynamically
+  // Updated Content Sections Dynamic Management
   const handleContentSectionChange = (
     index: number,
     field: string,
@@ -204,7 +341,14 @@ export const BlogsComponent = () => {
       ...newBlogData,
       contentSections: [
         ...newBlogData.contentSections,
-        { heading: "", body: "" },
+        {
+          id: undefined, // Optional since it may not exist for new sections
+          heading: "",
+          body: "",
+          content: "", // Initialize content
+          order: newBlogData.contentSections.length, // Set order based on the current length
+          section_type: "body", // Default section type
+        },
       ],
     });
   };
@@ -214,6 +358,14 @@ export const BlogsComponent = () => {
       (_, i) => i !== index
     );
     setNewBlogData({ ...newBlogData, contentSections: updatedSections });
+  };
+
+  const handleCategorySelect = (categories: Category[]) => {
+    setSelectedCategories(categories); // Save selected categories
+    setNewBlogData((prevState) => ({
+      ...prevState,
+      tag_ids: categories.map((category) => category.id), // Map category IDs to tag_ids
+    }));
   };
 
   return (
@@ -227,13 +379,13 @@ export const BlogsComponent = () => {
         </div>
       )}
 
-      <h2 className="text-2xl font-bold mb-6">Manage Blogs</h2>
+      <h2 className="text-2xl font-bold mb-6">Blog Yönetimi</h2>
 
       {/* Search Bar */}
       <div className="mb-4 flex items-center">
         <input
           type="text"
-          placeholder="Search blogs by title, author, or category..."
+          placeholder="Blogları başlık, yazar veya kategori olarak arayın..."
           value={searchQuery}
           onChange={handleSearch}
           className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
@@ -246,18 +398,18 @@ export const BlogsComponent = () => {
         <thead className="bg-gray-100">
           <tr>
             <th className="p-4 text-left font-semibold text-gray-600">ID</th>
-            <th className="p-4 text-left font-semibold text-gray-600">Title</th>
             <th className="p-4 text-left font-semibold text-gray-600">
-              Author
+              Başlık
+            </th>
+            <th className="p-4 text-left font-semibold text-gray-600">Yazar</th>
+            <th className="p-4 text-left font-semibold text-gray-600">
+              Kategori
             </th>
             <th className="p-4 text-left font-semibold text-gray-600">
-              Category
-            </th>
-            <th className="p-4 text-left font-semibold text-gray-600">
-              Published Date
+              Yayınlanma Tarihi
             </th>
             <th className="p-4 text-center font-semibold text-gray-600">
-              Actions
+              İşlemler
             </th>
           </tr>
         </thead>
@@ -269,7 +421,7 @@ export const BlogsComponent = () => {
                 <td className="p-4 text-gray-600">{blog.title}</td>
                 <td className="p-4 text-gray-600">{blog.author}</td>
                 <td className="p-4 text-gray-600">{blog.category}</td>
-                <td className="p-4 text-gray-600">{blog.publishedDate}</td>
+                <td className="p-4 text-gray-600">{blog.created_at}</td>
                 <td className="p-4 text-center">
                   <button
                     onClick={() => handleEditBlog(blog)}
@@ -288,23 +440,23 @@ export const BlogsComponent = () => {
                         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
                       >
                         <h2 className="text-xl text-black font-semibold mb-4">
-                          Confirm Delete
+                          Silme işlemini onayla
                         </h2>
                         <p className="text-gray-800">
-                          Are you sure you want to delete this blog?
+                          Bu blog yazısını silmek istediğinizden emin misiniz?
                         </p>
                         <div className="mt-6 flex justify-end space-x-4">
                           <button
                             onClick={() => setShowDeleteModal(false)} // Cancel delete
                             className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-200"
                           >
-                            Cancel
+                            İptal
                           </button>
                           <button
                             onClick={handleDeleteConfirmed} // Confirm delete
                             className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-200"
                           >
-                            Delete
+                            Sil
                           </button>
                         </div>
                       </div>
@@ -312,7 +464,13 @@ export const BlogsComponent = () => {
                   )}
 
                   <button
-                    onClick={() => confirmDeleteBlog(blog)} // Updated this line
+                    onClick={() =>
+                      confirmDeleteBlog({
+                        ...blog,
+                        content: blog.content ?? "Default Content", // Varsayılan içerik
+                        related_item_ids: blog.related_item_ids ?? [], // Varsayılan boş dizi
+                      })
+                    }
                     className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200"
                   >
                     <FaTrashAlt />
@@ -323,7 +481,7 @@ export const BlogsComponent = () => {
           ) : (
             <tr>
               <td colSpan={6} className="p-4 text-center text-gray-500">
-                No blogs found.
+                Blog Bulunamadı.
               </td>
             </tr>
           )}
@@ -331,7 +489,8 @@ export const BlogsComponent = () => {
       </table>
 
       {/* Add Blog Button */}
-      <div className="mt-6">
+
+      <div className="mt-6 flex space-x-4">
         <button
           onClick={() => {
             resetBlogData(); // Reset form fields when opening the modal
@@ -340,9 +499,32 @@ export const BlogsComponent = () => {
           className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300 flex items-center"
         >
           <FaPlus className="mr-2" />
-          Add New Blog
+          Yeni Blog Ekle
+        </button>
+        <button
+          onClick={openImageModal}
+          className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
+        >
+          <FaPlus className="mr-2" />
+          Görsel Ekle
         </button>
       </div>
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={showImageModal}
+        onClose={closeImageModal}
+        type="blog"
+        onSelectImage={(imageId) => {
+          setSelectedImageId(imageId); // Save selected image ID
+          closeImageModal(); // Close modal after selecting
+        }}
+      />
+
+      <CategoryModal
+        isOpen={showCategoryModal}
+        onClose={closeCategoryModal}
+        onCategorySelect={handleCategorySelect} // Pass the function here
+      />
 
       {/* Pagination Controls */}
       {blogs.length > blogsPerPage && (
@@ -373,17 +555,17 @@ export const BlogsComponent = () => {
             >
               <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
                 <h3 className="text-xl text-black font-bold mb-4">
-                  Are you sure?
+                  Çıkmak istediğinize emin misiniz?
                 </h3>
                 <p className="mb-6 text-gray-800">
-                  Your changes will not be saved.
+                  Değişiklikleriniz kaydedilmeyecektir.
                 </p>
                 <div className="flex justify-end space-x-4">
                   <button
                     className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition"
                     onClick={() => setShowConfirmationModal(false)}
                   >
-                    Cancel
+                    İptal
                   </button>
                   <button
                     className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition"
@@ -392,7 +574,7 @@ export const BlogsComponent = () => {
                       setShowConfirmationModal(false);
                     }}
                   >
-                    Confirm
+                    Onayla
                   </button>
                 </div>
               </div>
@@ -400,7 +582,7 @@ export const BlogsComponent = () => {
           )}
 
           <div
-            className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto"
+            className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 overflow-y-auto"
             onClick={() => {
               setConfirmationAction(() => () => {
                 setShowAddModal(false);
@@ -414,14 +596,14 @@ export const BlogsComponent = () => {
               onClick={(e) => e.stopPropagation()} // Prevent modal content click from closing
             >
               <h3 className="text-2xl font-bold mb-6 text-gray-800">
-                Add New Blog
+                Yeni Blog Ekle
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Blog Title */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Blog Title
+                    Blog Başlığı
                   </label>
                   <input
                     type="text"
@@ -437,7 +619,7 @@ export const BlogsComponent = () => {
                 {/* Author */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Author
+                    Yazar
                   </label>
                   <input
                     type="text"
@@ -453,7 +635,7 @@ export const BlogsComponent = () => {
                 {/* Category */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Category
+                    Kategori
                   </label>
                   <input
                     type="text"
@@ -472,7 +654,7 @@ export const BlogsComponent = () => {
                 {/* Published Date */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Published Date
+                    Yayınlanma Tarihi
                   </label>
                   <input
                     type="date"
@@ -490,7 +672,7 @@ export const BlogsComponent = () => {
                 {/* Excerpt */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Excerpt
+                    Kısa Açıklama
                   </label>
                   <textarea
                     placeholder="Short description of the blog"
@@ -508,7 +690,7 @@ export const BlogsComponent = () => {
                 {/* Related Products */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Related Products (comma-separated)
+                    İlgili Ürünler (comma-separated)
                   </label>
                   <input
                     type="text"
@@ -527,55 +709,52 @@ export const BlogsComponent = () => {
                 {/* Tags */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Tags (comma-separated)
+                    Kategoriler
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. skincare, health"
-                    value={newBlogData.tags}
-                    onChange={(e) =>
-                      setNewBlogData({ ...newBlogData, tags: e.target.value })
-                    }
-                    className="w-full p-3 bg-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={() => openCategoryModal()}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                    >
+                      Kategorileri Seç
+                    </button>
+                    <span className="text-gray-700">
+                      {selectedCategories.map((cat) => cat.name).join(", ") ||
+                        "Seçilmedi"}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Image Upload */}
+                {/* Image Selection */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Image Upload
+                    Blog Görseli
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files ? e.target.files[0] : null;
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setNewBlogData({
-                            ...newBlogData,
-                            imageUrl: reader.result as string,
-                          });
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full p-3 bg-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {newBlogData.imageUrl && (
-                    <img
-                      src={newBlogData.imageUrl}
-                      alt="Uploaded"
-                      className="mt-4 w-full h-64 object-cover rounded-lg shadow-lg"
-                    />
+                  <button
+                    onClick={openImageModal}
+                    className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                  >
+                    Görsel Seç
+                  </button>
+                  {selectedImageId && (
+                    <div className="mt-4">
+                      <img
+                        src={
+                          images.find((img) => img.id === selectedImageId)
+                            ?.url || newBlogData.imageUrl
+                        }
+                        alt="Selected Blog Image"
+                        className="w-full h-64 object-cover rounded-lg shadow-lg"
+                      />
+                    </div>
                   )}
                 </div>
 
                 {/* Read Time */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Read Time (minutes)
+                    Okuma Süresi (dakika)
                   </label>
                   <input
                     type="text"
@@ -594,10 +773,10 @@ export const BlogsComponent = () => {
                 {/* Dynamic Content Sections */}
                 <div className="md:col-span-2">
                   <h4 className="text-lg font-semibold text-gray-700 mb-4">
-                    Content Sections
+                    İçerik
                   </h4>
                   {newBlogData.contentSections.map((section, index) => (
-                    <div key={index} className="mb-6 relative">
+                    <div key={section.id || index} className="mb-6">
                       <input
                         type="text"
                         placeholder={`Section ${index + 1} Heading`}
@@ -609,7 +788,7 @@ export const BlogsComponent = () => {
                             e.target.value
                           )
                         }
-                        className="w-full bg-gray-800 p-2 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-2 mb-2 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <textarea
                         placeholder={`Section ${index + 1} Body`}
@@ -621,7 +800,7 @@ export const BlogsComponent = () => {
                             e.target.value
                           )
                         }
-                        className="w-full bg-gray-800 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-2 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
 
                       {/* Remove Section Button */}
@@ -637,7 +816,7 @@ export const BlogsComponent = () => {
                     onClick={addContentSection}
                     className="text-blue-600 hover:underline"
                   >
-                    + Add Section
+                    + Yeni Bölüm Ekle
                   </button>
                 </div>
               </div>
@@ -648,7 +827,7 @@ export const BlogsComponent = () => {
                   onClick={handleAddBlogSubmit}
                   className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200"
                 >
-                  Add Blog
+                  Blogu Ekle
                 </button>
 
                 <button
@@ -661,7 +840,7 @@ export const BlogsComponent = () => {
                   }}
                   className="bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition duration-200"
                 >
-                  Cancel
+                  İptal
                 </button>
               </div>
             </div>
@@ -679,17 +858,17 @@ export const BlogsComponent = () => {
             >
               <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
                 <h3 className="text-xl text-black font-bold mb-4">
-                  Are you sure?
+                  Çıkmak istediğinize emin misiniz?
                 </h3>
                 <p className="mb-6 text-gray-800">
-                  Your changes will not be saved.
+                  Değişiklikleriniz kaydedilmeyecektir.
                 </p>
                 <div className="flex justify-end space-x-4">
                   <button
                     className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition"
                     onClick={() => setShowConfirmationModal(false)}
                   >
-                    Cancel
+                    İptal
                   </button>
                   <button
                     className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition"
@@ -698,7 +877,7 @@ export const BlogsComponent = () => {
                       setShowConfirmationModal(false);
                     }}
                   >
-                    Confirm
+                    Onayla
                   </button>
                 </div>
               </div>
@@ -720,14 +899,14 @@ export const BlogsComponent = () => {
               onClick={(e) => e.stopPropagation()} // Prevent modal content click from closing
             >
               <h3 className="text-2xl font-bold mb-6 text-gray-800">
-                Edit Blog
+                Blog Yazısını Düzenle
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Blog Title */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Blog Title
+                    Blog Başlığı
                   </label>
                   <input
                     type="text"
@@ -743,7 +922,7 @@ export const BlogsComponent = () => {
                 {/* Author */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Author
+                    Yazar
                   </label>
                   <input
                     type="text"
@@ -759,7 +938,7 @@ export const BlogsComponent = () => {
                 {/* Category */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Category
+                    Kategori
                   </label>
                   <input
                     type="text"
@@ -778,7 +957,7 @@ export const BlogsComponent = () => {
                 {/* Published Date */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Published Date
+                    Yayınlanma Tarihi
                   </label>
                   <input
                     type="date"
@@ -796,7 +975,7 @@ export const BlogsComponent = () => {
                 {/* Excerpt */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Excerpt
+                    Kısa Açıklama
                   </label>
                   <textarea
                     placeholder="Short description of the blog"
@@ -814,7 +993,7 @@ export const BlogsComponent = () => {
                 {/* Related Products */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Related Products (comma-separated)
+                    İlgili Ürünler (comma-separated)
                   </label>
                   <input
                     type="text"
@@ -833,55 +1012,51 @@ export const BlogsComponent = () => {
                 {/* Tags */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Tags (comma-separated)
+                    Kategoriler
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. skincare, health"
-                    value={newBlogData.tags}
-                    onChange={(e) =>
-                      setNewBlogData({ ...newBlogData, tags: e.target.value })
-                    }
-                    className="w-full p-3 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={() => openCategoryModal()}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                    >
+                      Kategorileri Seç
+                    </button>
+                    <span className="text-gray-700">
+                      {selectedCategories.map((cat) => cat.name).join(", ") ||
+                        "Seçilmedi"}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Image Upload */}
+                {/* Image Selection */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Image Upload
+                    Blog Görseli
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files ? e.target.files[0] : null;
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setNewBlogData({
-                            ...newBlogData,
-                            imageUrl: reader.result as string,
-                          });
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full p-3 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {newBlogData.imageUrl && (
-                    <img
-                      src={newBlogData.imageUrl}
-                      alt="Uploaded"
-                      className="mt-4 w-full h-64 object-cover rounded-lg shadow-lg"
-                    />
+                  <button
+                    onClick={openImageModal}
+                    className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                  >
+                    Görsel Seç
+                  </button>
+                  {selectedImageId && (
+                    <div className="mt-4">
+                      <img
+                        src={
+                          images.find((img) => img.id === selectedImageId)
+                            ?.url || newBlogData.imageUrl
+                        }
+                        alt="Selected Blog Image"
+                        className="w-full h-64 object-cover rounded-lg shadow-lg"
+                      />
+                    </div>
                   )}
                 </div>
 
                 {/* Read Time */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Read Time (minutes)
+                    Okuma Süresi (dakika)
                   </label>
                   <input
                     type="text"
@@ -900,7 +1075,7 @@ export const BlogsComponent = () => {
                 {/* Dynamic Content Sections */}
                 <div className="md:col-span-2">
                   <h4 className="text-lg font-semibold text-gray-700 mb-4">
-                    Content Sections
+                    İçerik
                   </h4>
                   {newBlogData.contentSections.map((section, index) => (
                     <div key={index} className="mb-6">
@@ -935,7 +1110,7 @@ export const BlogsComponent = () => {
                     onClick={addContentSection}
                     className="text-blue-600 hover:underline"
                   >
-                    + Add Section
+                    + Yeni Bölüm Ekle
                   </button>
                 </div>
               </div>
@@ -950,7 +1125,7 @@ export const BlogsComponent = () => {
                   }}
                   className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200"
                 >
-                  Update Blog
+                  Blogu Güncelle
                 </button>
 
                 <button
@@ -963,7 +1138,7 @@ export const BlogsComponent = () => {
                   }}
                   className="bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition duration-200"
                 >
-                  Cancel
+                  İptal
                 </button>
               </div>
             </div>

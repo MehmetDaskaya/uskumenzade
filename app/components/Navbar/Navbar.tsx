@@ -1,10 +1,12 @@
+// app/components/Navbar/Navbar.tsx
+
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { clearAccessToken } from "../../../redux/slices/authSlice"; // Import action to clear token
+import { clearAccessToken } from "../../../redux/slices/authSlice";
 import { RootState } from "@/redux/store";
 
 import uskumenzadeLogo from "../../../public/images/uskumenzade-logo.png";
@@ -16,16 +18,11 @@ interface NavbarProps {
 export const Navbar = ({ viewable = false }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenProfile, setIsOpenProfile] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   const dispatch = useDispatch();
   const router = useRouter();
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const toggleMenu = () => {
     setIsOpen((prev) => !prev);
@@ -43,10 +40,6 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
     localStorage.removeItem("authToken"); // Clear token from localStorage
     router.push("/signin"); // Redirect to sign-in page
   };
-
-  if (!mounted) {
-    return null; // or a loading spinner
-  }
 
   return (
     <header
@@ -114,19 +107,19 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                       href="/profile"
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                     >
-                      Profile
+                      Profil
                     </Link>
                     <Link
                       href="/settings"
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                     >
-                      Settings
+                      Ayarlar
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
                     >
-                      Logout
+                      Çıkış Yap
                     </button>
                   </>
                 ) : (
@@ -134,7 +127,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                     href="/signin"
                     className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                   >
-                    Login
+                    Giriş Yap
                   </Link>
                 )}
               </div>
@@ -200,20 +193,20 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                       onClick={toggleProfile}
                     >
-                      Profile
+                      Profil
                     </Link>
                     <Link
                       href="/settings"
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                       onClick={toggleProfile}
                     >
-                      Settings
+                      Ayarlar
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
                     >
-                      Logout
+                      Çıkış Yap
                     </button>
                   </>
                 ) : (
@@ -222,7 +215,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                     className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                     onClick={toggleProfile}
                   >
-                    Login
+                    Giriş Yap
                   </Link>
                 )}
               </div>

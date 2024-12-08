@@ -39,7 +39,7 @@ export default function LoginModalContent() {
         </div>
         <div className="text-right">
           <Link
-            href="/forgot-password"
+            href="/sifremi-unuttum"
             className="text-sm text-yellow-500 hover:underline"
           >
             Forgot Password?

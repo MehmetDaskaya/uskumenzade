@@ -26,9 +26,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "app/components/AdminPanel",
-    "app/urunler/detaylar/[id]/ProductDetailsClient.tsx",
-    "app/blog/detaylar/[id]/BlogDetailsClient.tsx",
+    "app/**/*",
     "next-i18next.config.js"
   ],
 

@@ -7,6 +7,7 @@ const nextConfig = {
       "assets.aceternity.com",
       "teami-store-demo.myshopify.com",
       "picsum.photos",
+      "localhost",
     ],
   },
 };

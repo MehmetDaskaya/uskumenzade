@@ -10,8 +10,6 @@ import {
 } from "@/app/components/ui/AppleCardsCarousel/AppleCardsCarousel";
 import Image from "next/image";
 import Link from "next/link";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
 import herbalTea from "@/public/images/herbal-tea.webp";
 import herbalOil from "@/public/images/herbal-oil.webp";
 import herbalCream from "@/public/images/herbal-cream.webp";
@@ -79,7 +77,6 @@ const data = [
 
 export default function HomeContent() {
   const [loading, setLoading] = useState(true);
-  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
 
   useEffect(() => {
     // Simulate loading delay, or remove if actual loading required
@@ -139,21 +136,6 @@ export default function HomeContent() {
         </h2>
         <Carousel items={cards} />
       </div>
-
-      {/* Conditionally render content based on login status */}
-      {accessToken ? (
-        <>
-          <div className="bg-green-50 p-6 text-green-800 font-semibold text-center">
-            Hoş geldiniz, değerli müşterimiz! Özel tekliflerimizi keşfedin.
-          </div>
-          {/* Display additional components or offers for logged-in users */}
-        </>
-      ) : (
-        <div className="bg-red-50 p-6 text-red-800 font-semibold text-center">
-          Lütfen daha fazlasını keşfetmek için giriş yapın!
-        </div>
-      )}
-
       <ProductListings />
     </div>
   );

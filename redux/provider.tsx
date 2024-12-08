@@ -10,7 +10,7 @@ export default function ReduxProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
-      store.dispatch(setAccessToken(token));
+      store.dispatch(setAccessToken({ accessToken: token })); // Pass as an object
     }
   }, []);
 

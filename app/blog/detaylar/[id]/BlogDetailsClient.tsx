@@ -2,22 +2,21 @@
 import Image from "next/image";
 import { FaLink, FaTwitter, FaFacebookF, FaLinkedinIn } from "react-icons/fa";
 
-interface ContentSection {
+interface Section {
+  content: string;
   heading: string;
   body: string;
 }
 
 interface Blog {
-  id: number;
+  id: string;
   title: string;
-  contentSections: ContentSection[];
-  author: string;
-  imageUrl: string;
-  publishedDate: string;
-  readTime: string;
   category: string;
-  excerpt: string; // Include excerpt
-  tags: string[]; // Include tags
+  author: string;
+  created_at: string;
+  images: { url: string }[];
+  sections: Section[];
+  tags: { name: string }[];
 }
 
 interface BlogDetailsClientProps {
@@ -35,7 +34,7 @@ export default function BlogDetailsClient({ blog }: BlogDetailsClientProps) {
               {blog.category}
             </span>
             <span>—</span>
-            <span>{new Date(blog.publishedDate).toLocaleDateString()}</span>
+            <span>{new Date(blog.created_at).toLocaleDateString()}</span>
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
             {blog.title}
@@ -50,17 +49,20 @@ export default function BlogDetailsClient({ blog }: BlogDetailsClientProps) {
             />
             <div>
               <p className="font-semibold">{blog.author}</p>
-              <p className="text-gray-500">{blog.readTime} min to read</p>
+              {/* eklenecek */}
+              {/* <p className="text-gray-500">{blog.readTime} min to read</p> */}
             </div>
           </div>
 
           {/* Excerpt Section */}
-          <p className="mt-4 mb-8 text-lg text-[#5e5c64]">{blog.excerpt}</p>
+          {/* eklenecek */}
+          {/* <p className="mt-4 mb-8 text-lg text-[#5e5c64]">{blog.excerpt}</p> */}
         </div>
         <div className="lg:w-2/5 relative mt-8 lg:mt-0">
+          {/* Blog Image */}
           <Image
-            src={blog.imageUrl}
-            alt={blog.title}
+            src={blog.images[0]?.url || "/placeholder.jpg"} // Provide a fallback image
+            alt={blog.title || "Placeholder Image"}
             layout="responsive"
             width={1000}
             height={400}
@@ -73,12 +75,18 @@ export default function BlogDetailsClient({ blog }: BlogDetailsClientProps) {
       <div className="container mx-auto flex flex-col lg:flex-row gap-12 px-4 lg:px-0 py-10">
         {/* Blog Content */}
         <div className="lg:w-2/3 leading-relaxed text-lg text-[#5e5c64]">
-          {blog.contentSections.map((section, index) => (
-            <div key={index}>
-              <h2 className="font-semibold text-xl mb-4">{section.heading}</h2>
-              <p className="mb-6">{section.body}</p>
-            </div>
-          ))}
+          {blog.sections.map((section, index) => {
+            const [heading, ...bodyParts] = section.content.split("\n\n");
+            const body = bodyParts.join("\n\n");
+            return (
+              <div key={index}>
+                <h2 className="font-semibold text-xl mb-4">
+                  {heading || "Başlık Yok"}
+                </h2>
+                <p className="mb-6">{body || "İçerik yok"}</p>
+              </div>
+            );
+          })}
 
           {/* Tags Section */}
           <div className="mt-8">
@@ -89,7 +97,7 @@ export default function BlogDetailsClient({ blog }: BlogDetailsClientProps) {
                   key={index}
                   className="px-3 py-1 bg-gray-200 rounded-full text-xs font-bold text-[#333]"
                 >
-                  {tag}
+                  {tag.name}
                 </span>
               ))}
             </div>
@@ -101,18 +109,19 @@ export default function BlogDetailsClient({ blog }: BlogDetailsClientProps) {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-4">İçerik Tablosu</h3>
             <ul className="space-y-2 text-sm">
-              {blog.contentSections.map((section, index) => (
-                <li key={index}>
-                  <a
-                    href={`#${section.heading
-                      .replace(/\s+/g, "-")
-                      .toLowerCase()}`}
-                    className="text-blue-600"
-                  >
-                    {index + 1}. {section.heading}
-                  </a>
-                </li>
-              ))}
+              {blog.sections.map((section, index) => {
+                const [heading] = section.content.split("\n\n"); // Extract the heading from the content
+                return (
+                  <li key={index}>
+                    <a
+                      href={`#${heading.replace(/\s+/g, "-").toLowerCase()}`}
+                      className="text-blue-600"
+                    >
+                      {index + 1}. {heading || "Bölüm Başlığı"}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 

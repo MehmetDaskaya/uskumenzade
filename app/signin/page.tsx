@@ -1,4 +1,4 @@
-// app/SignInPage.tsx
+// app/signin/page.tsx
 
 "use client";
 
@@ -7,7 +7,9 @@ import Link from "next/link";
 import { useDispatch } from "react-redux"; // Import useDispatch
 import { useRouter } from "next/navigation"; // Import useRouter
 import { setAccessToken } from "../../redux/slices/authSlice"; // Import the setAccessToken action
-import { signin } from "../api/auth/authApi"; // Adjust the path if necessary
+import { setUser } from "../../redux/slices/userSlice";
+import { signin, fetchCurrentUser } from "../api/auth/authApi"; // Adjust the path if necessary
+import { FcGoogle } from "react-icons/fc"; // Add this import at the top
 
 export default function SignInPage() {
   const router = useRouter(); // Initialize router
@@ -23,14 +25,35 @@ export default function SignInPage() {
     setSuccessMessage("");
 
     try {
+      // Sign in and retrieve token
       const response = await signin(email, password);
       const token = response.access_token;
 
-      dispatch(setAccessToken(token));
+      // Save token to Redux and localStorage
+      dispatch(setAccessToken({ accessToken: token }));
       localStorage.setItem("authToken", token);
+
+      // Fetch user data
+      const userData = await fetchCurrentUser(token);
+
+      // Dispatch user data to Redux
+      dispatch(
+        setUser({
+          id: userData.id,
+          fname: userData.fname,
+          lname: userData.lname,
+          email: userData.email,
+          role: userData.role,
+        })
+      );
+
+      // Console log the user data for debugging
+      console.log("User data response:", userData);
+
       setSuccessMessage("Login successful!");
 
-      router.push("/anasayfa"); // Redirect to anasayfa
+      // Redirect to a protected route
+      router.push("/anasayfa");
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message);
@@ -88,7 +111,7 @@ export default function SignInPage() {
           </div>
           <div className="text-right">
             <Link
-              href="/forgot-password"
+              href="/sifremi-unuttum"
               className="text-sm text-yellow-500 hover:underline"
             >
               Forgot Password?
@@ -109,11 +132,7 @@ export default function SignInPage() {
         </div>
 
         <button className="w-full flex items-center justify-center p-3 bg-white border rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300">
-          <img
-            src="/images/google-logo.png"
-            alt="Google"
-            className="w-5 h-5 mr-2"
-          />
+          <FcGoogle className="w-5 h-5 mr-2" />
           <span>Sign in with Google</span>
         </button>
 

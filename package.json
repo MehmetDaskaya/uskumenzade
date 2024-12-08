@@ -1,6 +1,7 @@
 {
   "name": "uskumenzade-website",
   "version": "0.1.0",
+  "proxy": "http://localhost:8000",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,11 +13,13 @@
     "@headlessui/react": "^0.0.0-insiders.5ca68a9",
     "@tabler/icons-react": "^3.19.0",
     "@types/recharts": "^1.8.29",
+    "axios": "^1.7.7",
     "chart.js": "^4.4.4",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^11.9.0",
     "i18next": "^23.15.1",
+    "jwt-decode": "^4.0.0",
     "next": "14.2.13",
     "next-i18next": "^15.3.1",
     "next-intl": "^3.20.0",
@@ -30,6 +33,7 @@
     "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
+    "@types/jwt-decode": "^3.1.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

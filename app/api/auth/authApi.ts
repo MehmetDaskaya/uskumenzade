@@ -1,11 +1,11 @@
-// api/authApi.ts
 import API_BASE_URL from "../../../util/config";
 
 // Helper function to handle fetch requests
 const fetchFromAPI = async (endpoint: string, options: RequestInit = {}) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
   if (!response.ok) {
-    throw new Error(`Error: ${response.statusText}`);
+    const errorData = await response.json();
+    throw new Error(errorData?.detail || `Error: ${response.statusText}`);
   }
   return response.json();
 };
@@ -16,12 +16,12 @@ export const signup = async (
   password: string,
   fname: string,
   lname: string,
-  role: string = "user",
+  role: string = "admin", // Ensure admin role
   is_active: boolean = true,
-  is_superuser: boolean = false,
-  is_verified: boolean = false
+  is_superuser: boolean = true, // Ensure superuser permissions
+  is_verified: boolean = true // Ensure verification
 ) => {
-  return fetchFromAPI("/uskumenzade/api/auth/register", {
+  const response = await fetchFromAPI("/uskumenzade/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -35,6 +35,9 @@ export const signup = async (
       is_verified,
     }),
   });
+
+  console.log("Signup response:", response); // Log response to debug
+  return response;
 };
 
 // Signin function
@@ -66,4 +69,60 @@ export const authenticate = async (email: string) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
   });
+};
+
+// Fetch current user information
+export const fetchCurrentUser = async (token: string) => {
+  const response = await fetch(`${API_BASE_URL}/uskumenzade/api/users/me`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error: ${response.statusText}`);
+  }
+
+  const userData = await response.json();
+  console.log("Fetched user data:", userData); // Log user data for debugging
+  return userData;
+};
+
+// Forgot password function
+export const requestPasswordReset = async (email: string) => {
+  const response = await fetch(
+    `${API_BASE_URL}/uskumenzade/api/auth/forgot-password`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    }
+  );
+
+  if (response.status === 202) {
+    return "Password reset link sent successfully.";
+  } else if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData?.detail || `Error: ${response.statusText}`);
+  }
+};
+
+// Reset Password function
+export const resetPassword = async (token: string, password: string) => {
+  const response = await fetch(
+    `${API_BASE_URL}/uskumenzade/api/auth/reset-password`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to reset password. Please check your token.");
+  }
+
+  return response.json();
 };
