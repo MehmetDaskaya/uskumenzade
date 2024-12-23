@@ -17,3 +17,4 @@ export { Footer } from "./Footer/Footer";
 export { Navbar } from "./Navbar/Navbar";
 export { Snackbar } from "./Snackbar/Snackbar";
 export { GoToTopButton } from "./GoToTopButton/GoToTopButton";
+export { Testimonials } from "./Testimonials/Testimonials";

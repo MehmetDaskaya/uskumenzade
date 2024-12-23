@@ -5,7 +5,6 @@ import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { clearAccessToken } from "../../../redux/slices/authSlice";
 import { fetchCurrentUser } from "@/app/api/auth/authApi"; // Import the function to fetch user data
-import { FaSpinner } from "react-icons/fa"; // For loading spinner
 import {
   FaUsers,
   FaBox,
@@ -26,6 +25,7 @@ import {
   BlogsComponent,
   DefinitionsComponent,
 } from "@/app/components";
+import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 
 export default function AdminPanel() {
   const dispatch = useDispatch();
@@ -47,7 +47,7 @@ export default function AdminPanel() {
       try {
         setLoading(true); // Show spinner while checking
         if (!accessToken) {
-          router.push("/signin"); // Redirect to login if no access token
+          router.push("/giris"); // Redirect to login if no access token
           return;
         }
 
@@ -58,8 +58,8 @@ export default function AdminPanel() {
           router.push("/"); // Redirect non-superusers to home page
         }
       } catch (error) {
-        console.error("Error verifying user:", error);
-        router.push("/signin"); // Redirect to login on error
+        console.error("Kullanıcı doğrulanamadı.", error);
+        router.push("/giris"); // Redirect to login on error
       } finally {
         setLoading(false); // Hide spinner after check
       }
@@ -93,11 +93,7 @@ export default function AdminPanel() {
 
   if (loading) {
     // Show loading spinner while verifying
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <FaSpinner className="text-4xl animate-spin text-yellow-500" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!isSuperUser) {

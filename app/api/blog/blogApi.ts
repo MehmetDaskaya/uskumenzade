@@ -63,12 +63,15 @@ export const createSection = async (sectionData: {
 export const addBlog = async (blogData: {
   title: string;
   author: string;
-  category: string;
+  category_id: string | null; // Use category_id here
   content: string;
   related_item_ids: string[];
   sections: { order: number; section_type: string; content: string }[];
   image_ids: string[];
   tag_ids: string[];
+  meta_tag_ids: string[];
+  description: string; // Add description field
+  read_time: string; // Add read_time field
 }) => {
   try {
     // Step 1: Create the blog without sections
@@ -77,11 +80,14 @@ export const addBlog = async (blogData: {
       {
         title: blogData.title,
         author: blogData.author,
-        category: blogData.category,
+        category_id: blogData.category_id, // Use category_id
         content: blogData.content,
         related_item_ids: blogData.related_item_ids,
         image_ids: blogData.image_ids,
         tag_ids: blogData.tag_ids,
+        meta_tag_ids: blogData.meta_tag_ids,
+        description: blogData.description, // Include description
+        read_time: blogData.read_time, // Include read_time
       },
       { headers: getAuthHeaders() }
     );
@@ -108,14 +114,20 @@ export const addBlog = async (blogData: {
 };
 
 // Update blog and sections
+// Update blog and sections
 export const updateBlog = async (
   id: string,
   blogData: {
     title: string;
     author: string;
-    category: string;
+    category_id: string | null; // Updated to accept category_id
     content: string;
     related_item_ids: string[];
+    image_ids: string[];
+    tag_ids: string[];
+    meta_tag_ids: string[];
+    description: string; // Include description
+    read_time: string; // Include read_time
     sections: {
       id?: string; // Existing or new section ID
       parent_section_id?: string; // Optional parent section ID
@@ -126,20 +138,32 @@ export const updateBlog = async (
   }
 ) => {
   try {
-    // Update the blog
+    // Step 1: Update the blog
     const response = await axios.patch(
       `${API_BASE_URL}/uskumenzade/api/blogs/${id}`,
-      { ...blogData, sections: undefined },
+      {
+        title: blogData.title,
+        author: blogData.author,
+        category_id: blogData.category_id, // Include category_id
+        content: blogData.content,
+        related_item_ids: blogData.related_item_ids,
+        image_ids: blogData.image_ids,
+        tag_ids: blogData.tag_ids,
+        meta_tag_ids: blogData.meta_tag_ids,
+        description: blogData.description, // Include description
+        read_time: blogData.read_time, // Include read_time
+      },
       { headers: getAuthHeaders() }
     );
 
-    // Update or create sections
+    // Step 2: Update or create sections
     for (const section of blogData.sections) {
       if (section.id) {
         // Update existing section
         await axios.patch(
           `${API_BASE_URL}/uskumenzade/api/sections/${section.id}`,
           {
+            blog_id: id,
             parent_section_id: section.parent_section_id, // If applicable
             section_type: section.section_type,
             order: section.order,

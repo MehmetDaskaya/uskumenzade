@@ -39,33 +39,13 @@ export function CategoryModal({
   const [editCategoryName, setEditCategoryName] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
 
-  const handleSaveSelectedCategories = async () => {
-    try {
-      // Create categories and retrieve their IDs
-      const validCategories = await Promise.all(
-        selectedCategories.map(async (category) => {
-          const existingCategory = categories.find(
-            (c) => c.name === category.name
-          );
-          if (existingCategory) {
-            return existingCategory;
-          } else {
-            const createdCategory = await dispatch(
-              addCategory({ name: category.name })
-            ).unwrap();
-            return createdCategory;
-          }
-        })
-      );
-
-      // Save valid categories as tags in the parent component
-      onCategorySelect(
-        validCategories.map((cat) => ({ id: cat.id, name: cat.name }))
-      );
+  const handleSaveSelectedCategories = () => {
+    if (selectedCategories.length > 0) {
+      console.log("Selected Categories:", selectedCategories);
+      onCategorySelect(selectedCategories); // Pass selected categories to parent
       onClose();
-    } catch (error) {
-      console.error("Error saving categories:", error);
-      showSnackbar("Failed to save categories.", "error");
+    } else {
+      console.error("No categories selected to save.");
     }
   };
 
@@ -154,7 +134,7 @@ export function CategoryModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-[9999]">
       <div className="bg-white w-full max-w-3xl p-6 rounded-lg shadow-lg">
         <h3 className="text-2xl text-black font-semibold mb-6">
           Kategori Yönetimi
@@ -275,20 +255,6 @@ export function CategoryModal({
                 </li>
               ))}
             </ul>
-            <div className="mt-6 flex justify-between items-center">
-              <button
-                onClick={handleSaveSelectedCategories}
-                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
-              >
-                Kaydet
-              </button>
-              <button
-                onClick={onClose}
-                className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
-              >
-                Kapat
-              </button>
-            </div>
           </div>
         </div>
 
@@ -298,6 +264,13 @@ export function CategoryModal({
             className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
           >
             Kapat
+          </button>
+
+          <button
+            onClick={handleSaveSelectedCategories}
+            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+          >
+            Kaydet
           </button>
         </div>
 

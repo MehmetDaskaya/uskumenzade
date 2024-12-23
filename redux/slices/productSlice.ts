@@ -7,10 +7,24 @@ import {
   deleteProduct,
 } from "@/app/api/product/productApi";
 
-// Define the initial state type
+// Define the shape of a product
+export interface Product {
+  images: any;
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  discounted_price: number;
+  stock: number;
+  how_to_use: string;
+  category_id: string;
+  image_ids: string[];
+}
+
+// Define the ProductState type
 interface ProductState {
-  products: any[]; // Array of products
-  product: any | null; // Single product
+  products: Product[]; // Array of products
+  product: Product | null; // Single product
   loading: boolean;
   error: string | null;
 }
@@ -25,50 +39,58 @@ const initialState: ProductState = {
 
 // Async Thunks
 export const fetchProducts = createAsyncThunk<
-  any[], // Return type (list of products)
+  Product[], // Return type (list of products)
   void, // Argument type (none in this case)
   { rejectValue: string } // Rejected value type
 >("products/fetchProducts", async (_, { rejectWithValue }) => {
   try {
     return await getProducts();
-  } catch (error: any) {
-    return rejectWithValue(error.message || "Failed to fetch products");
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return rejectWithValue(errorMessage || "Failed to fetch products");
   }
 });
 
 export const fetchProductById = createAsyncThunk<
-  any, // Return type (single product)
+  Product, // Return type (single product)
   string, // Argument type (product ID)
   { rejectValue: string } // Rejected value type
 >("products/fetchProductById", async (id, { rejectWithValue }) => {
   try {
     return await getProductById(id);
-  } catch (error: any) {
-    return rejectWithValue(error.message || "Failed to fetch product");
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return rejectWithValue(errorMessage || "Failed to fetch product");
   }
 });
 
 export const addProduct = createAsyncThunk<
-  any, // Return type (newly added product)
-  any, // Argument type (product data to add)
+  Product, // Return type (newly added product)
+  Omit<Product, "id">, // Argument type (product data without ID)
   { rejectValue: string } // Rejected value type
 >("products/addProduct", async (productData, { rejectWithValue }) => {
   try {
     return await createProduct(productData);
-  } catch (error: any) {
-    return rejectWithValue(error.message || "Failed to add product");
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return rejectWithValue(errorMessage || "Failed to add product");
   }
 });
 
 export const editProduct = createAsyncThunk<
-  any, // Return type (updated product)
-  { id: string; productData: any }, // Argument type (ID and product data)
+  Product, // Return type (updated product)
+  { id: string; productData: Omit<Product, "id"> }, // Argument type (ID and product data)
   { rejectValue: string } // Rejected value type
 >("products/editProduct", async ({ id, productData }, { rejectWithValue }) => {
   try {
     return await updateProduct(id, productData);
-  } catch (error: any) {
-    return rejectWithValue(error.message || "Failed to update product");
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return rejectWithValue(errorMessage || "Failed to update product");
   }
 });
 
@@ -79,8 +101,10 @@ export const deleteProductById = createAsyncThunk<
 >("products/deleteProduct", async (id, { rejectWithValue }) => {
   try {
     await deleteProduct(id);
-  } catch (error: any) {
-    return rejectWithValue(error.message || "Failed to delete product");
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return rejectWithValue(errorMessage || "Failed to delete product");
   }
 });
 
@@ -91,7 +115,6 @@ const productSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch products
       .addCase(fetchProducts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -105,7 +128,6 @@ const productSlice = createSlice({
         state.error = action.payload || "Unknown error occurred";
       })
 
-      // Fetch product by ID
       .addCase(fetchProductById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -119,7 +141,6 @@ const productSlice = createSlice({
         state.error = action.payload || "Unknown error occurred";
       })
 
-      // Add product
       .addCase(addProduct.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -133,7 +154,6 @@ const productSlice = createSlice({
         state.error = action.payload || "Unknown error occurred";
       })
 
-      // Edit product
       .addCase(editProduct.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -152,7 +172,6 @@ const productSlice = createSlice({
         state.error = action.payload || "Unknown error occurred";
       })
 
-      // Delete product
       .addCase(deleteProductById.pending, (state) => {
         state.loading = true;
         state.error = null;

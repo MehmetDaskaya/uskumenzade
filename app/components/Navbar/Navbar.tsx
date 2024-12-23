@@ -38,7 +38,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
   const handleLogout = () => {
     dispatch(clearAccessToken()); // Clear token from Redux
     localStorage.removeItem("authToken"); // Clear token from localStorage
-    router.push("/signin"); // Redirect to sign-in page
+    router.push("/giris"); // Redirect to sign-in page
   };
 
   return (
@@ -62,8 +62,17 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
           <Link href="/blog" className="text-gray-800 hover:text-yellow-600">
             Blog
           </Link>
-          <Link href="/about" className="text-gray-800 hover:text-yellow-600">
+          <Link
+            href="/hakkimizda"
+            className="text-gray-800 hover:text-yellow-600"
+          >
             Hakkımızda
+          </Link>
+          <Link
+            href="/iletisim"
+            className="text-gray-800 hover:text-yellow-600"
+          >
+            İletişim
           </Link>
           <Link
             href="/sepet"
@@ -104,19 +113,31 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                 {accessToken ? (
                   <>
                     <Link
-                      href="/profile"
+                      href="/profil"
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      onClick={() => setIsOpenProfile(false)}
                     >
                       Profil
                     </Link>
                     <Link
-                      href="/settings"
+                      href="/siparislerim"
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      onClick={() => setIsOpenProfile(false)}
+                    >
+                      Siparişlerim
+                    </Link>
+                    <Link
+                      href="/ayarlar"
+                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      onClick={() => setIsOpenProfile(false)}
                     >
                       Ayarlar
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpenProfile(false);
+                      }}
                       className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
                     >
                       Çıkış Yap
@@ -124,7 +145,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                   </>
                 ) : (
                   <Link
-                    href="/signin"
+                    href="/giris"
                     className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                   >
                     Giriş Yap
@@ -189,21 +210,31 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                 {accessToken ? (
                   <>
                     <Link
-                      href="/profile"
+                      href="/profil"
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                      onClick={toggleProfile}
+                      onClick={() => setIsOpenProfile(false)}
                     >
                       Profil
                     </Link>
                     <Link
-                      href="/settings"
+                      href="/siparislerim"
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                      onClick={toggleProfile}
+                      onClick={() => setIsOpenProfile(false)}
+                    >
+                      Siparişlerim
+                    </Link>
+                    <Link
+                      href="/ayarlar"
+                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      onClick={() => setIsOpenProfile(false)}
                     >
                       Ayarlar
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpenProfile(false);
+                      }}
                       className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
                     >
                       Çıkış Yap
@@ -211,7 +242,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                   </>
                 ) : (
                   <Link
-                    href="/signin"
+                    href="/giris"
                     className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                     onClick={toggleProfile}
                   >
@@ -243,11 +274,18 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
               Bloglar
             </Link>
             <Link
-              href="/about"
+              href="/hakkimizda"
               className="text-gray-800 hover:text-yellow-600"
               onClick={toggleMenu}
             >
               Hakkımızda
+            </Link>
+            <Link
+              href="/iletisim"
+              className="text-gray-800 hover:text-yellow-600"
+              onClick={toggleMenu}
+            >
+              İletişim
             </Link>
             <Link
               href="/sepet"

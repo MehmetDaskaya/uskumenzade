@@ -3,11 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
-import {
-  addImage,
-  loadImages,
-  setSelectedImage,
-} from "../../../redux/slices/imageSlice";
+import { addImage, loadImages } from "../../../redux/slices/imageSlice";
 import { updateImageApi, deleteImageApi } from "@/app/api/image/imageApi";
 import { Snackbar } from "../../components/index";
 import { FiTrash2, FiEdit2 } from "react-icons/fi";
@@ -178,10 +174,9 @@ export function ImageModal({
 
   const handleSelectImage = (imageId: string) => {
     if (onSelectImage) {
-      onSelectImage(imageId); // Call the prop method to update parent state
+      onSelectImage(imageId); // Send selected image ID to parent
     }
-    dispatch(setSelectedImage(imageId)); // Dispatch selected image to Redux
-    onClose(); // Close the modal
+    onClose(); // Close the modal after selection
   };
 
   // Calculate pagination
@@ -207,7 +202,7 @@ export function ImageModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-[9999]">
       <div className="bg-white w-full max-w-5xl p-6 rounded-lg shadow-lg overflow-y-auto">
         <h3 className="text-2xl text-black font-semibold mb-6">
           Resim Yönetimi

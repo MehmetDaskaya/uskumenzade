@@ -8,14 +8,15 @@ import {
   addBlog,
   updateBlog,
   deleteBlog,
-  createSection,
   fetchBlogById,
 } from "../../../api/blog/blogApi";
 import { ImageModal } from "../../index";
 import { CategoryModal } from "../../Modal/CategoryModal";
+import { TagModal } from "../../Modal/TagIdModal";
+import { MetaTagModal } from "../../Modal/MetaTagModal";
 
 interface Category {
-  id: string; // or number, based on your API's response
+  id: string;
   name: string;
 }
 
@@ -34,6 +35,16 @@ export const BlogsComponent = () => {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
+  const [showTagModal, setShowTagModal] = useState(false);
+  const [showMetaTagModal, setShowMetaTagModal] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedMetaTags, setSelectedMetaTags] = useState<string[]>([]);
+
+  const openTagModal = () => setShowTagModal(true);
+  const closeTagModal = () => setShowTagModal(false);
+
+  const openMetaTagModal = () => setShowMetaTagModal(true);
+  const closeMetaTagModal = () => setShowMetaTagModal(false);
 
   const openCategoryModal = () => setShowCategoryModal(true);
   const closeCategoryModal = () => setShowCategoryModal(false);
@@ -96,9 +107,9 @@ export const BlogsComponent = () => {
     contentSections: [
       {
         id: undefined,
-        content: "\n", // Initialize with an empty heading and body joined by "\n"
+        content: "\n",
         order: 0,
-        section_type: "body", // Default type, adjust as needed
+        section_type: "body",
         heading: "",
         body: "",
       },
@@ -137,42 +148,33 @@ export const BlogsComponent = () => {
   }, []);
 
   // Function to add a new blog
+  // Function to add a new blog
   const handleAddBlogSubmit = async () => {
     try {
-      // Ensure all selected categories have valid IDs
-      const validTagIds = selectedCategories.map((category) => category.id);
-
-      // Step 1: Create the blog without sections
-      const newBlog = {
+      // Prepare the payload
+      const newBlogPayload = {
         title: newBlogData.title || "",
         author: newBlogData.author || "",
-        category: newBlogData.category || "",
+        category_id:
+          selectedCategories.length > 0 ? selectedCategories[0].id : null, // Map category_id
         content: newBlogData.content || "No content provided",
         related_item_ids: newBlogData.related_item_ids || [],
         image_ids: selectedImageId ? [selectedImageId] : [],
-        tag_ids: validTagIds,
+        tag_ids: selectedTags.length > 0 ? selectedTags : [], // Ensure selected tags are passed
+        meta_tag_ids: selectedMetaTags.length > 0 ? selectedMetaTags : [], // Ensure selected meta tags are passed
+        description: newBlogData.excerpt || "Default Description", // Map description
+        read_time: newBlogData.readTime || "1", // Default to "1 minute" if not provided
+        sections: newBlogData.contentSections.map((section, index) => ({
+          order: index,
+          section_type: section.section_type || "body", // Use section_type or default to "body"
+          content: `${section.heading}\n\n${section.body}`, // Combine heading and body
+        })),
       };
 
-      const addedBlog = await addBlog({
-        ...newBlog,
-        sections: [], // Exclude sections from the initial blog creation
-      });
+      // Send payload to the API
+      const addedBlog = await addBlog(newBlogPayload);
 
-      // Step 2: Create sections for the newly created blog
-      const sections = newBlogData.contentSections.map((section, index) => ({
-        order: index,
-        section_type: "body",
-        content: `${section.heading}\n\n${section.body}`,
-      }));
-
-      for (const section of sections) {
-        await createSection({
-          blog_id: addedBlog.id,
-          ...section,
-        });
-      }
-
-      // Step 3: Fetch the updated blog to include sections
+      // Optional: Fetch updated blog data
       const updatedBlog = await fetchBlogById(addedBlog.id);
       setBlogs([...blogs, updatedBlog]);
 
@@ -180,6 +182,47 @@ export const BlogsComponent = () => {
       setShowAddModal(false);
     } catch (error) {
       console.error("Error adding blog:", error);
+    }
+  };
+
+  const handleEditBlogSubmit = async () => {
+    if (!currentBlog) return;
+
+    try {
+      const updatedBlogPayload = {
+        title: newBlogData.title || currentBlog.title,
+        author: newBlogData.author || currentBlog.author,
+        category_id:
+          selectedCategories.length > 0 ? selectedCategories[0].id : null, // Use category_id
+        content: newBlogData.content || "No content provided",
+        related_item_ids: newBlogData.related_item_ids || [],
+        image_ids: selectedImageId
+          ? [selectedImageId]
+          : currentBlog.images.map((img) => img.id),
+        tag_ids: selectedTags.length > 0 ? selectedTags : [],
+        meta_tag_ids: selectedMetaTags.length > 0 ? selectedMetaTags : [],
+        description: newBlogData.excerpt || "Default description", // Ensure description is sent
+        read_time: newBlogData.readTime || "1", // Default to "1 minute" if not provided
+        sections: newBlogData.contentSections.map((section, index) => ({
+          id: section.id,
+          order: index,
+          section_type: section.section_type || "body",
+          content: `${section.heading}\n\n${section.body}`,
+        })),
+      };
+
+      // Send the payload to the API
+      const editedBlog = await updateBlog(currentBlog.id, updatedBlogPayload);
+
+      // Update the local blog list
+      setBlogs(
+        blogs.map((blog) => (blog.id === currentBlog.id ? editedBlog : blog))
+      );
+      setShowEditModal(false);
+      resetBlogData();
+      setSelectedCategories([]);
+    } catch (error) {
+      console.error("Error updating blog:", error);
     }
   };
 
@@ -284,43 +327,6 @@ export const BlogsComponent = () => {
     });
 
     setShowEditModal(true);
-  };
-
-  const handleEditBlogSubmit = async () => {
-    if (!currentBlog) return;
-
-    const updatedBlog = {
-      title: newBlogData.title || currentBlog.title,
-      author: newBlogData.author || currentBlog.author,
-      category: newBlogData.category || currentBlog.category,
-      content: newBlogData.content || "No content provided",
-      related_item_ids: newBlogData.related_item_ids || [],
-      image_ids: selectedImageId
-        ? [selectedImageId]
-        : currentBlog.images.map((img) => img.id), // Include image IDs
-      tag_ids:
-        selectedCategories.length > 0
-          ? selectedCategories.map((cat) => cat.id)
-          : currentBlog.tags || [], // Include tag IDs
-      sections: newBlogData.contentSections.map((section, index) => ({
-        id: section.id, // Use the existing ID if it exists
-        order: index,
-        section_type: section.section_type,
-        content: `${section.heading}\n\n${section.body}`,
-      })),
-    };
-
-    try {
-      const editedBlog = await updateBlog(String(currentBlog.id), updatedBlog); // Ensure `id` is a string
-      setBlogs(
-        blogs.map((blog) => (blog.id === currentBlog.id ? editedBlog : blog))
-      );
-      setShowEditModal(false);
-      resetBlogData();
-      setSelectedCategories([]);
-    } catch (error) {
-      console.error("Error updating blog:", error);
-    }
   };
 
   // Manage content sections dynamically
@@ -526,6 +532,24 @@ export const BlogsComponent = () => {
         onCategorySelect={handleCategorySelect} // Pass the function here
       />
 
+      <TagModal
+        isOpen={showTagModal}
+        onClose={closeTagModal}
+        onTagSelect={(tags) => {
+          setSelectedTags(tags.map((tag) => tag.id)); // Save tag IDs
+          closeTagModal();
+        }}
+      />
+
+      <MetaTagModal
+        isOpen={showMetaTagModal}
+        onClose={closeMetaTagModal}
+        onMetaTagSelect={(metaTags) => {
+          setSelectedMetaTags(metaTags.map((metaTag) => metaTag.id)); // Save meta tag IDs
+          closeMetaTagModal();
+        }}
+      />
+
       {/* Pagination Controls */}
       {blogs.length > blogsPerPage && (
         <div className="mt-4 flex justify-center">
@@ -675,7 +699,7 @@ export const BlogsComponent = () => {
                     Kısa Açıklama
                   </label>
                   <textarea
-                    placeholder="Short description of the blog"
+                    placeholder="Blog yazısının kısa bir özeti"
                     value={newBlogData.excerpt}
                     onChange={(e) =>
                       setNewBlogData({
@@ -690,7 +714,7 @@ export const BlogsComponent = () => {
                 {/* Related Products */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    İlgili Ürünler (comma-separated)
+                    İlgili Ürünler (virgülle ayırın)
                   </label>
                   <input
                     type="text"
@@ -721,6 +745,46 @@ export const BlogsComponent = () => {
                     <span className="text-gray-700">
                       {selectedCategories.map((cat) => cat.name).join(", ") ||
                         "Seçilmedi"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
+                    Etiketler
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={openTagModal}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                    >
+                      Etiketleri Seç
+                    </button>
+                    <span className="text-gray-700">
+                      {selectedTags.length > 0
+                        ? selectedTags.join(", ")
+                        : "Seçilmedi"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Meta Tags */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
+                    Meta Etiketler
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={openMetaTagModal}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                    >
+                      Meta Etiketleri Seç
+                    </button>
+                    <span className="text-gray-700">
+                      {selectedMetaTags.length > 0
+                        ? selectedMetaTags.join(", ")
+                        : "Seçilmedi"}
                     </span>
                   </div>
                 </div>
@@ -1028,6 +1092,46 @@ export const BlogsComponent = () => {
                   </div>
                 </div>
 
+                {/* Tags */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
+                    Etiketler
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={openTagModal}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                    >
+                      Etiketleri Seç
+                    </button>
+                    <span className="text-gray-700">
+                      {selectedTags.length > 0
+                        ? selectedTags.join(", ")
+                        : "Seçilmedi"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Meta Tags */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
+                    Meta Etiketler
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={openMetaTagModal}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                    >
+                      Meta Etiketleri Seç
+                    </button>
+                    <span className="text-gray-700">
+                      {selectedMetaTags.length > 0
+                        ? selectedMetaTags.join(", ")
+                        : "Seçilmedi"}
+                    </span>
+                  </div>
+                </div>
+
                 {/* Image Selection */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
@@ -1118,11 +1222,7 @@ export const BlogsComponent = () => {
               {/* Action Buttons */}
               <div className="flex justify-end space-x-4 mt-6">
                 <button
-                  onClick={() => {
-                    if (confirm("Are you sure you want to update this blog?")) {
-                      handleEditBlogSubmit();
-                    }
-                  }}
+                  onClick={handleEditBlogSubmit}
                   className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200"
                 >
                   Blogu Güncelle

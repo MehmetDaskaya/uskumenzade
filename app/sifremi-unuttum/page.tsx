@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { requestPasswordReset } from "../api/auth/authApi"; // Adjust the path if necessary
+import { requestPasswordReset } from "../api/auth/authApi";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -20,39 +20,46 @@ export default function ForgotPasswordPage() {
       await requestPasswordReset(email);
 
       setSuccessMessage(
-        "Password reset link sent! Please check your email for further instructions."
+        "Şifre sıfırlama bağlantısı belirttiğiniz e-posta adresinize gönderildi. E-postalarınızı kontrol ediniz."
       );
-      setEmail(""); // Clear email input
+      setEmail("");
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Something went wrong. Please try again.");
+        setErrorMessage("Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.");
       }
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
-        <h2 className="text-2xl font-semibold text-center text-gray-800">
-          Reset Password
+    <div className="flex h-screen items-start justify-center bg-gradient-to-br from-yellow-50 to-gray-100 pt-8">
+      <div className="w-full max-w-md p-8 bg-white shadow-2xl rounded-2xl">
+        <h2 className="text-3xl font-bold text-center text-gray-800">
+          Şifre Sıfırla
         </h2>
         <p className="text-sm text-center text-gray-600 mt-2">
-          Enter your email to reset your password
+          Şifrenizi sıfırlamak için e-postanızı girin.
         </p>
 
         {errorMessage && (
-          <p className="text-red-500 text-center mt-4">{errorMessage}</p>
+          <p className="text-red-500 text-center mt-4 font-medium">
+            {errorMessage}
+          </p>
         )}
         {successMessage && (
-          <p className="text-green-500 text-center mt-4">{successMessage}</p>
+          <p className="text-green-500 text-center mt-4 font-medium">
+            {successMessage}
+          </p>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           <div>
-            <label htmlFor="email" className="text-sm text-gray-700">
-              Email Address
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              E-posta Adresi
             </label>
             <input
               id="email"
@@ -60,24 +67,24 @@ export default function ForgotPasswordPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-yellow-500"
-              placeholder="Enter your email"
+              className="w-full p-3 mt-1 text-black bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+              placeholder="E-posta adresinizi girin..."
             />
           </div>
           <button
             type="submit"
-            className="w-full p-3 text-white bg-yellow-500 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="w-full py-3 px-4 text-white bg-yellow-500 rounded-lg font-medium hover:bg-yellow-600 focus:outline-none focus:ring-4 focus:ring-yellow-400"
           >
-            Send Reset Link
+            Sıfırlama Linki Gönder
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center">
           <Link
-            href="/signin"
-            className="text-sm text-yellow-500 hover:underline"
+            href="/giris"
+            className="text-sm text-yellow-500 font-semibold hover:underline"
           >
-            Back to Sign In
+            Giriş Sayfasına Dön
           </Link>
         </div>
       </div>

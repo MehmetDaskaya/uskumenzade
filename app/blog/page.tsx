@@ -1,8 +1,6 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { fetchBlogs } from "../api/blog/blogApi"; // Adjust the import path as necessary
+import React from "react";
+import { fetchBlogsWithSSR } from "../api/blog/blogSSR"; // Adjust the path if necessary
+import { BlogsEffect } from "../components/BlogsEffect/BlogsEffect";
 
 // Define the Blog type
 interface Blog {
@@ -15,92 +13,106 @@ interface Blog {
   content: string;
 }
 
-const BlogsPage: React.FC = () => {
-  const [blogs, setBlogs] = useState<Blog[]>([]); // Use the Blog[] type for the state
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+async function getData() {
+  try {
+    const blogs: Blog[] = await fetchBlogsWithSSR();
 
-  useEffect(() => {
-    const getBlogs = async () => {
-      try {
-        const data = await fetchBlogs(); // Use the fetchBlogs function from blogApi.ts
-        setBlogs(data);
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          setError(error.message);
-        } else {
-          setError("An unexpected error occurred");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getBlogs();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-lg font-semibold">Yükleniyor...</p>
-      </div>
-    );
+    const categories: string[] = [
+      "Tümü",
+      ...Array.from(new Set(blogs.map((blog) => blog.category))),
+    ];
+    return { blogs, categories };
+  } catch {
+    throw new Error("Blog verileri alınırken bir hata oluştu.");
   }
+}
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-lg font-semibold text-red-500">
-          Bir hata oluştu: {error}
-        </p>
-      </div>
-    );
-  }
+interface BlogsPageProps {
+  searchParams: { kategori?: string };
+}
+
+const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
+  const { blogs, categories } = await getData();
+
+  // Filter blogs based on the selected category
+  const filteredBlogs =
+    searchParams.kategori && searchParams.kategori !== "Tümü"
+      ? blogs.filter((blog) => blog.category === searchParams.kategori)
+      : blogs;
 
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-4xl font-bold mb-6 text-center text-blue-600">
-        Üskümenzade Blog
-      </h1>
-      <p className="text-center text-gray-600 mb-8 text-lg">
-        İlham verici hikayeler ve bilgiler için en son blog yazılarımıza göz
-        atın.
-      </p>
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-gray-100">
+      {/* Hero Section */}
+      <div className="bg-yellow-500 text-white py-16">
+        <div className="container mx-auto text-center px-4">
+          <h1 className="text-5xl font-bold mb-4">Üskümenzade Blog</h1>
+          <p className="text-lg">
+            İlham verici hikayeler ve bilgiler için en yeni blog yazılarımıza
+            göz atın.
+          </p>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {blogs.map((blog) => (
-          <div
-            key={blog.id}
-            className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
+      {/* Main Section */}
+      <div className="container mx-auto py-16 px-4 flex gap-8">
+        {/* Blog Posts */}
+        <div className="flex-1">
+          <h2 className="text-4xl font-bold text-gray-900 mb-12">
+            {searchParams.kategori && searchParams.kategori !== "Tümü"
+              ? `${searchParams.kategori} Kategorisindeki Bloglar`
+              : "En Yeni Blog Yazılarımız"}
+          </h2>
+          <BlogsEffect
+            items={filteredBlogs.map((blog) => ({
+              title: blog.title,
+              description: `${blog.author} tarafından ${new Date(
+                blog.created_at
+              ).toLocaleDateString("tr-TR")} tarihinde yazıldı.`,
+              link: `/blog/detaylar/${blog.id}`,
+              image: blog.images[0]?.url || "/placeholder.jpg",
+            }))}
+          />
+        </div>
+
+        {/* Vertical Line Divider */}
+        <div className="w-px bg-gray-300"></div>
+
+        {/* Categories */}
+        <div className="w-1/4">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Kategoriler</h2>
+          <ul className="space-y-4">
+            {categories.map((category) => (
+              <li key={category}>
+                <a
+                  href={`?kategori=${category}`} // Use "kategori" in the query parameter
+                  className={`w-full text-left text-lg text-gray-700 hover:text-yellow-500 transition-colors ${
+                    searchParams.kategori === category
+                      ? "font-bold text-yellow-500"
+                      : ""
+                  }`}
+                >
+                  {category}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Call-to-Action Section */}
+      <div className="bg-yellow-500 text-white py-16">
+        <div className="container mx-auto text-center px-4">
+          <h2 className="text-3xl font-bold mb-4">Keşfetmeye Devam Edin</h2>
+          <p className="text-lg mb-6">
+            Daha fazla bilgi ve hikaye için diğer bloglarımızı inceleyin.
+          </p>
+          <a
+            href="/blog/detaylar"
+            className="bg-white text-yellow-500 px-6 py-3 rounded-lg font-bold hover:bg-gray-100"
           >
-            {/* Blog Image */}
-            <img
-              src={blog.images[0]?.url || "/placeholder.jpg"}
-              alt={blog.title}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-6">
-              {/* Blog Title */}
-              <h2 className="text-2xl font-semibold mb-2 text-gray-800">
-                {blog.title}
-              </h2>
-              {/* Blog Metadata */}
-              <p className="text-gray-600 mb-4 text-sm">
-                <span className="font-semibold">{blog.author}</span> tarafından{" "}
-                <span>
-                  {new Date(blog.created_at).toLocaleDateString("tr-TR")}
-                </span>{" "}
-                tarihinde yazıldı.
-              </p>
-              {/* Read More Link */}
-              <Link href={`/blog/detaylar/${blog.id}`}>
-                <div className="text-blue-500 hover:underline text-sm font-medium">
-                  Ayrıntılı Blog Yazısını Gör
-                </div>
-              </Link>
-            </div>
-          </div>
-        ))}
+            Tüm Blogları Gör
+          </a>
+        </div>
       </div>
     </div>
   );

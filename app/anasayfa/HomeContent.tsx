@@ -13,6 +13,7 @@ import Link from "next/link";
 import herbalTea from "@/public/images/herbal-tea.webp";
 import herbalOil from "@/public/images/herbal-oil.webp";
 import herbalCream from "@/public/images/herbal-cream.webp";
+import { InfiniteMovingCards } from "../components/MovingCards/MovingCards";
 
 const words = ["Çaylar", "Kremler", "Yağlar"];
 
@@ -136,7 +137,11 @@ export default function HomeContent() {
         </h2>
         <Carousel items={cards} />
       </div>
-      <ProductListings />
+      <div className="md:w-full bg-yellow-500">
+        <ProductListings />
+      </div>
+
+      <InfiniteMovingCards />
     </div>
   );
 }

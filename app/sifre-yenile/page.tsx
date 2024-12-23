@@ -125,7 +125,7 @@ export default function ResetPasswordPage() {
 
         <div className="mt-6 text-center">
           <Link
-            href="/signin"
+            href="/giris"
             className="text-sm text-yellow-500 hover:underline"
           >
             Back to Sign In

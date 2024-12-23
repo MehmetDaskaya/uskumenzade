@@ -18,7 +18,8 @@ interface Product {
   discounted_price: number;
   stock: number;
   how_to_use: string;
-  category_id: string;
+  category: { id: string; name: string };
+  category_id?: string; // Optional
   image_ids: string[];
 }
 
@@ -36,9 +37,10 @@ export const ProductManagementComponent = () => {
     discounted_price: 0,
     stock: 0,
     how_to_use: "",
-    category_id: "",
+    category: { id: "", name: "" }, // Provide the correct structure
     image_ids: [],
   });
+
   const [showImageModal, setShowImageModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
@@ -62,7 +64,7 @@ export const ProductManagementComponent = () => {
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category_id.toLowerCase().includes(searchQuery.toLowerCase())
+      product.category?.name.toLowerCase().includes(searchQuery.toLowerCase()) // Access the name inside category
   );
 
   // Pagination logic
@@ -80,32 +82,56 @@ export const ProductManagementComponent = () => {
   };
 
   // Handle Add Product
-  // Add Product
   const handleAddProduct = async () => {
     try {
-      const addedProduct = await createProduct(newProduct);
+      if (!newProduct.category_id) {
+        throw new Error("Category must be selected.");
+      }
+
+      const productPayload = {
+        ...newProduct,
+        category_id: newProduct.category_id, // Ensure category_id is defined
+      };
+
+      const addedProduct = await createProduct(productPayload);
       setProducts((prev) => [...prev, addedProduct]);
       resetForm();
     } catch (error) {
       console.error("Failed to add product:", error);
+      // alert(error.message); // Notify the user
     }
   };
 
   // Handle Edit Product
   const handleEditProduct = async () => {
     if (editingProduct) {
-      const updatedProduct = await updateProduct(
-        editingProduct.id!,
-        editingProduct
-      );
-      setProducts((prev) =>
-        prev.map((product) =>
-          product.id === updatedProduct.id ? updatedProduct : product
-        )
-      );
-      resetForm();
+      try {
+        if (!editingProduct.category_id) {
+          throw new Error("Category must be selected.");
+        }
+
+        const productPayload = {
+          ...editingProduct,
+          category_id: editingProduct.category_id, // Ensure category_id is defined
+        };
+
+        const updatedProduct = await updateProduct(
+          editingProduct.id!,
+          productPayload
+        );
+        setProducts((prev) =>
+          prev.map((product) =>
+            product.id === updatedProduct.id ? updatedProduct : product
+          )
+        );
+        resetForm();
+      } catch (error) {
+        console.error("Failed to edit product:", error);
+        // alert(error.message); // Notify the user
+      }
     }
   };
+
   // Handle Delete Product
   const handleDelete = async (id: string) => {
     await deleteProduct(id);
@@ -123,7 +149,7 @@ export const ProductManagementComponent = () => {
       discounted_price: 0,
       stock: 0,
       how_to_use: "",
-      category_id: "",
+      category: { id: "", name: "" }, // Provide the correct structure
       image_ids: [],
     });
   };
@@ -174,7 +200,9 @@ export const ProductManagementComponent = () => {
               <tr key={product.id} className="border-t">
                 <td className="p-4 text-gray-600">{product.id}</td>
                 <td className="p-4 text-gray-600">{product.name}</td>
-                <td className="p-4 text-gray-600">{product.category_id}</td>
+                <td className="p-4 text-gray-600">
+                  {product.category?.name || "No Category"}
+                </td>
                 <td className="p-4 text-gray-600">
                   {product.price.toFixed(2)} ₺
                 </td>
@@ -183,16 +211,18 @@ export const ProductManagementComponent = () => {
                   <button
                     onClick={() => {
                       setIsEditing(true);
-                      setEditingProduct(product);
+                      setEditingProduct({
+                        ...product,
+                        image_ids: product.image_ids || [], // Ensure image_ids is initialized
+                      });
                       setShowModal(true);
                     }}
                     className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
                   >
                     <FaEdit />
                   </button>
-
                   <button
-                    onClick={() => handleDelete(product.id!)}
+                    onClick={() => handleDelete(product.id)}
                     className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200"
                   >
                     <FaTrashAlt />
@@ -245,8 +275,8 @@ export const ProductManagementComponent = () => {
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white w-full max-w-4xl rounded-lg shadow-lg p-6">
-            <h3 className="text-xl font-bold mb-4">
-              {isEditing ? "Edit Product" : "Add New Product"}
+            <h3 className="text-xl text-gray-900 font-bold mb-4">
+              {isEditing ? "Ürün Bilgilerini Düzenle" : "Yeni Ürün Ekle"}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Category Selection */}
@@ -255,14 +285,20 @@ export const ProductManagementComponent = () => {
                   htmlFor="category"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Category
+                  Kategoriler
                 </label>
                 <button
                   onClick={openCategoryModal}
                   className="w-full bg-gray-200 text-gray-700 p-2 rounded-lg hover:bg-gray-300"
                 >
-                  Select Category
+                  Kategori Seç
                 </button>
+                <div className="mt-2 flex gap-2 flex-wrap text-gray-600">
+                  {(isEditing && editingProduct
+                    ? editingProduct.category
+                    : newProduct.category
+                  )?.name || "Kategori seçilmedi"}
+                </div>
               </div>
 
               {/* Images Selection */}
@@ -271,14 +307,54 @@ export const ProductManagementComponent = () => {
                   htmlFor="images"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Images
+                  Görseller <span className="text-red-500">*</span>
                 </label>
                 <button
                   onClick={openImageModal}
                   className="w-full bg-gray-200 text-gray-700 p-2 rounded-lg hover:bg-gray-300"
                 >
-                  Select Images
+                  Görsel Ekle
                 </button>
+                <div className="mt-2 flex gap-2 overflow-x-auto">
+                  {(isEditing && editingProduct
+                    ? editingProduct.image_ids || []
+                    : newProduct.image_ids
+                  ).map((id, index) => {
+                    const imagePath = `http://localhost:8000/uskumenzade/api/static/images/${id}.jpg`; // Replace with the correct image URL format
+                    return (
+                      <div
+                        key={index}
+                        className="w-24 h-24 bg-gray-200 border rounded-lg flex-shrink-0"
+                      >
+                        <img
+                          src={imagePath}
+                          alt={`Selected Image ${index + 1}`}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="horizontal-slider mt-2 flex gap-2 overflow-x-auto">
+                  {(isEditing && editingProduct
+                    ? editingProduct.image_ids || []
+                    : newProduct.image_ids
+                  ).map((id, index) => {
+                    const imagePath = `http://localhost:8000/uskumenzade/api/static/images/${id}.jpg`;
+                    return (
+                      <div
+                        key={index}
+                        className="w-24 h-24 bg-gray-200 border rounded-lg flex-shrink-0"
+                      >
+                        <img
+                          src={imagePath}
+                          alt={`Selected Image ${index + 1}`}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Name */}
@@ -287,13 +363,13 @@ export const ProductManagementComponent = () => {
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Product Name
+                  Ürün İsmi <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="name"
                   name="name"
                   type="text"
-                  placeholder="Enter product name"
+                  placeholder="Ürün ismini girin"
                   value={
                     isEditing ? editingProduct?.name || "" : newProduct.name
                   }
@@ -317,12 +393,12 @@ export const ProductManagementComponent = () => {
                   htmlFor="description"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Description
+                  Açıklama
                 </label>
                 <textarea
                   id="description"
                   name="description"
-                  placeholder="Enter product description"
+                  placeholder="Ürün açıklamasını girin"
                   value={
                     isEditing
                       ? editingProduct?.description || ""
@@ -351,13 +427,13 @@ export const ProductManagementComponent = () => {
                   htmlFor="price"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Price
+                  Fiyat <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="price"
                   name="price"
                   type="number"
-                  placeholder="Enter product price"
+                  placeholder="Ürün fiyatını girin"
                   value={
                     isEditing ? editingProduct?.price || "" : newProduct.price
                   }
@@ -381,13 +457,13 @@ export const ProductManagementComponent = () => {
                   htmlFor="discounted_price"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Discounted Price
+                  İndirimli Fiyat
                 </label>
                 <input
                   id="discounted_price"
                   name="discounted_price"
                   type="number"
-                  placeholder="Enter discounted price"
+                  placeholder="İndirimli fiyatı girin"
                   value={
                     isEditing
                       ? editingProduct?.discounted_price || ""
@@ -416,7 +492,7 @@ export const ProductManagementComponent = () => {
                   htmlFor="stock"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Stock
+                  Stok <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="stock"
@@ -446,12 +522,12 @@ export const ProductManagementComponent = () => {
                   htmlFor="how_to_use"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  How to Use
+                  Nasıl Kullanılır?
                 </label>
                 <textarea
                   id="how_to_use"
                   name="how_to_use"
-                  placeholder="Enter usage instructions"
+                  placeholder="Kullanma talimatlarını girin"
                   value={
                     isEditing
                       ? editingProduct?.how_to_use || ""
@@ -478,10 +554,29 @@ export const ProductManagementComponent = () => {
                 onClick={resetForm}
                 className="bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition duration-300"
               >
-                Cancel
+                İptal
               </button>
               <button
-                onClick={isEditing ? handleEditProduct : handleAddProduct}
+                onClick={() => {
+                  if (
+                    !newProduct.name ||
+                    !newProduct.price ||
+                    !newProduct.stock ||
+                    !newProduct.category_id ||
+                    newProduct.image_ids.length === 0
+                  ) {
+                    alert(
+                      "Please fill all required fields and select a category and images."
+                    );
+                    return;
+                  }
+
+                  if (isEditing) {
+                    handleEditProduct();
+                  } else {
+                    handleAddProduct();
+                  }
+                }}
                 className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300"
               >
                 {isEditing ? "Save Changes" : "Add Product"}
@@ -498,16 +593,21 @@ export const ProductManagementComponent = () => {
           onClose={closeImageModal}
           type="multi"
           onSelectImage={(imageId) => {
-            // Assuming `imageId` is a single string
             if (isEditing && editingProduct) {
-              setEditingProduct({
-                ...editingProduct,
-                image_ids: [...editingProduct.image_ids, imageId], // Append the image ID
-              });
+              setEditingProduct((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      image_ids: Array.from(
+                        new Set([...prev.image_ids, imageId])
+                      ), // Ensure no duplicates
+                    }
+                  : prev
+              );
             } else {
               setNewProduct((prev) => ({
                 ...prev,
-                image_ids: [...prev.image_ids, imageId], // Append the image ID
+                image_ids: Array.from(new Set([...prev.image_ids, imageId])), // Ensure no duplicates
               }));
             }
           }}
@@ -520,20 +620,29 @@ export const ProductManagementComponent = () => {
           isOpen={showCategoryModal}
           onClose={closeCategoryModal}
           onCategorySelect={(categories) => {
-            // Assuming `categories` is an array of `Category` objects
             if (categories.length > 0) {
-              const categoryId = categories[0].id; // Extract the first category's ID
+              const selectedCategory = categories[0]; // Use the first category for simplicity
               if (isEditing && editingProduct) {
-                setEditingProduct({
-                  ...editingProduct,
-                  category_id: categoryId, // Assign the extracted category ID
-                });
+                // Update the editing product state
+                setEditingProduct((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        category: selectedCategory, // Set full category object
+                        category_id: selectedCategory.id, // Ensure API compatibility
+                      }
+                    : prev
+                );
               } else {
+                // Update the new product state
                 setNewProduct((prev) => ({
                   ...prev,
-                  category_id: categoryId, // Assign the extracted category ID
+                  category: selectedCategory, // Set full category object
+                  category_id: selectedCategory.id, // Ensure API compatibility
                 }));
               }
+            } else {
+              console.error("No categories were selected.");
             }
           }}
         />

@@ -1,0 +1,27 @@
+/* Default styles for the testimonial slider */
+.testimonial-slider {
+  display: flex;
+  gap: 2rem;
+  animation: scroll-loop 20s linear infinite;
+  will-change: transform;
+}
+
+@keyframes scroll-loop {
+  0% {
+    transform: translateX(0); /* Start at the beginning */
+  }
+  100% {
+    transform: translateX(calc(-100%)); /* Move left by the total width */
+  }
+}
+
+/* Adjust behavior for mobile devices */
+@media (max-width: 768px) {
+  .testimonial-slider {
+    animation: none; /* Remove sliding animation */
+    flex-direction: column; /* Stack testimonials vertically */
+    justify-content: center;
+    gap: 1rem; /* Adjust spacing between testimonials */
+    transform: none; /* Reset transform property */
+  }
+}
