@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { fetchCurrentUser, updateUser, User } from "@/app/api/user/userApi";
 import {
-  fetchAddresses,
   createAddress,
   updateAddress,
   deleteAddress,
@@ -23,7 +22,6 @@ export default function Profile() {
   >({
     address: "",
     zip_code: "",
-    state: "",
     city: "",
     country: "",
     address_title: "",
@@ -35,15 +33,19 @@ export default function Profile() {
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
 
   // Fetch user and address data
+
   useEffect(() => {
     const fetchData = async () => {
       if (!accessToken) return;
+
       try {
+        // Fetch the user data, including addresses
         const userData = await fetchCurrentUser(accessToken);
-        const addressData = await fetchAddresses(accessToken);
         setUser(userData);
         setFormData(userData);
-        setAddresses(addressData);
+
+        // Use the addresses from the user data
+        setAddresses(userData.addresses || []);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -68,10 +70,10 @@ export default function Profile() {
       const updatedUser = await updateUser(formData, accessToken);
       setUser(updatedUser);
       setIsEditing(false);
-      alert("Profile updated successfully!");
+      alert("Profil bilgileri başarıyla güncellendi!");
     } catch (error) {
       console.error("Failed to update profile:", error);
-      alert("Failed to update profile. Please try again.");
+      alert("Profil bilgileri güncellenemedi. Tekrar deneyiniz.");
     } finally {
       setIsSubmitting(false);
     }
@@ -88,8 +90,7 @@ export default function Profile() {
   const handleAddressSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { address, zip_code, city, country, address_title, state } =
-      addressFormData;
+    const { address, zip_code, city, country, address_title } = addressFormData;
 
     // Update validation logic to reflect only the inputs present in the form
     if (!address || !zip_code || !city || !country || !address_title) {
@@ -104,7 +105,6 @@ export default function Profile() {
           {
             address,
             zip_code,
-            state: state || "",
             city,
             country,
             address_title,
@@ -123,7 +123,6 @@ export default function Profile() {
           {
             address,
             zip_code,
-            state: state || "",
             city,
             country,
             address_title,
@@ -139,7 +138,6 @@ export default function Profile() {
       setAddressFormData({
         address: "",
         zip_code: "",
-        state: "",
         city: "",
         country: "",
         address_title: "",
@@ -207,7 +205,7 @@ export default function Profile() {
                   placeholder="E-posta"
                   className="w-full mt-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 gap-6">
                   <input
                     type="text"
                     name="gsm_number"
@@ -278,11 +276,29 @@ export default function Profile() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <input
                   type="text"
+                  name="address_title"
+                  value={addressFormData.address_title || ""}
+                  onChange={handleAddressInputChange}
+                  placeholder="Adres Başlığı"
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                  required
+                />
+                <input
+                  type="text"
+                  name="contact_name"
+                  value={addressFormData.contact_name || ""}
+                  onChange={handleAddressInputChange}
+                  placeholder="İletişim İsmi"
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                  required
+                />
+                <input
+                  type="text"
                   name="address"
                   value={addressFormData.address || ""}
                   onChange={handleAddressInputChange}
                   placeholder="Adres"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
                   required
                 />
                 <input
@@ -291,24 +307,17 @@ export default function Profile() {
                   value={addressFormData.city || ""}
                   onChange={handleAddressInputChange}
                   placeholder="Şehir"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
                   required
                 />
-                <input
-                  type="text"
-                  name="state"
-                  value={addressFormData.state || ""}
-                  onChange={handleAddressInputChange}
-                  placeholder="Eyalet"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
+
                 <input
                   type="text"
                   name="zip_code"
                   value={addressFormData.zip_code || ""}
                   onChange={handleAddressInputChange}
                   placeholder="Posta Kodu"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
                   required
                 />
                 <input
@@ -317,16 +326,7 @@ export default function Profile() {
                   value={addressFormData.country || ""}
                   onChange={handleAddressInputChange}
                   placeholder="Ülke"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  required
-                />
-                <input
-                  type="text"
-                  name="address_title"
-                  value={addressFormData.address_title || ""}
-                  onChange={handleAddressInputChange}
-                  placeholder="Adres Başlığı"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
                   required
                 />
               </div>
@@ -370,6 +370,7 @@ export default function Profile() {
             <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
               Kayıtlı Adresler
             </h2>
+            {/* Saved Addresses Section */}
             <ul className="space-y-6">
               {addresses.map((addr) => (
                 <li
@@ -386,12 +387,7 @@ export default function Profile() {
                     <p className="text-gray-700">
                       <span className="font-medium">Şehir:</span> {addr.city}
                     </p>
-                    {addr.state && (
-                      <p className="text-gray-700">
-                        <span className="font-medium">Eyalet:</span>{" "}
-                        {addr.state}
-                      </p>
-                    )}
+
                     <p className="text-gray-700">
                       <span className="font-medium">Posta Kodu:</span>{" "}
                       {addr.zip_code}
@@ -401,7 +397,7 @@ export default function Profile() {
                     </p>
                     <p className="text-gray-700">
                       <span className="font-medium">İletişim:</span>{" "}
-                      {addr.contact_name}
+                      {addr.contact_name || "Belirtilmedi"}
                     </p>
                   </div>
                   <div className="space-x-4 flex-shrink-0">

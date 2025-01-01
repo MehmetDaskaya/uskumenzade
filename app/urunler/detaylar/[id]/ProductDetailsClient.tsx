@@ -2,14 +2,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 import { addItemToCart } from "@/redux/slices/cartSlice";
+import { getProducts } from "@/app/api/product/productApi";
+import { getHealthBenefits } from "@/app/api/benefits/benefitsApi";
 import { FaLeaf, FaShoppingCart, FaTruck } from "react-icons/fa";
 import LoadingSpinner from "../../../../app/components/LoadingSpinner/LoadingSpinner";
 import Modal from "../../../../app/components/Modal/Modal";
-import CheckOutModalContent from "../../../../app/components/Modal/CheckOutModalContent";
-import LoginModalContent from "../../../../app/components/Modal/LoginModalContent";
+import Link from "next/link";
+
+import SignInPage from "@/app/giris/page";
 
 interface Product {
   id: string;
@@ -21,6 +26,10 @@ interface Product {
   stock: number;
   health_benefits: string[];
   how_to_use: string;
+  category: {
+    id: string;
+    name: string;
+  };
 }
 
 interface ProductDetailsClientProps {
@@ -32,32 +41,97 @@ export default function ProductDetailsClient({
   product,
   isLoggedIn,
 }: ProductDetailsClientProps) {
+  const router = useRouter();
+
   const dispatch = useDispatch(); // Redux dispatch
+  const [quantity, setQuantity] = useState(1);
 
   const [isLoading, setIsLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [healthBenefits, setHealthBenefits] = useState<string[]>([]);
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken); // Move useSelector here
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 1000);
+
+    // Fetch health benefits
+    const fetchHealthBenefits = async () => {
+      try {
+        const benefits = await getHealthBenefits(0, 1000); // Adjust pagination if necessary
+        const productBenefits = benefits.filter(
+          (benefit: any) => benefit.item_id === product.id
+        );
+        setHealthBenefits(productBenefits.map((b: any) => b.benefit));
+      } catch (error) {
+        console.error("Failed to fetch health benefits:", error);
+      }
+    };
+
+    fetchHealthBenefits();
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [product.id]);
+
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      try {
+        const products = await getProducts(0, 1000);
+        let related = products.filter(
+          (p: Product) =>
+            p.category.id === product.category.id && p.id !== product.id
+        );
+
+        if (related.length === 0) {
+          related = products.filter((p: Product) => p.id !== product.id);
+        }
+
+        setRelatedProducts(related);
+      } catch (error) {
+        console.error("Error fetching related products:", error);
+      }
+    };
+
+    fetchRelatedProducts();
+  }, [product]);
+
+  const increaseQuantity = () => {
+    if (quantity < product.stock) {
+      setQuantity(quantity + 1);
+    }
+  };
+
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
+  };
 
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        discounted_price: product.discounted_price,
-        imageUrl: product.images?.[0]?.url || "/placeholder.png",
-        stock: product.stock,
-        quantity: 1, // Add 1 item initially
-      })
-    );
-    setIsAddedToCart(true);
-    setIsModalOpen(false); // Ensure modal doesn't prevent the cart update
+    if (!accessToken) {
+      // If no access token, open the login modal
+      setIsModalOpen(true);
+      return;
+    }
+
+    // If access token exists, proceed with adding to cart or navigate to cart
+    if (!isAddedToCart) {
+      dispatch(
+        addItemToCart({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          discounted_price: product.discounted_price,
+          imageUrl: product.images?.[0]?.url || "/placeholder.png",
+          stock: product.stock,
+          quantity,
+        })
+      );
+      setIsAddedToCart(true); // Mark as added to cart
+    } else {
+      router.push("/sepet"); // Navigate to cart
+    }
   };
 
   const closeModal = () => setIsModalOpen(false);
@@ -65,7 +139,6 @@ export default function ProductDetailsClient({
   if (isLoading) {
     return <LoadingSpinner />;
   }
-
   return (
     <div className="bg-yellow-500 min-h-screen py-8 px-8">
       {/* Hero Section */}
@@ -99,19 +172,26 @@ export default function ProductDetailsClient({
                 {product.description}
               </p>
 
+              {/* Health Benefits Section */}
               <h3 className="text-2xl font-semibold mb-4 text-gray-800">
                 Sağlığa Yararları
               </h3>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                {product.health_benefits.map((benefit, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center text-gray-700 bg-green-50 rounded-lg p-3 shadow-sm"
-                  >
-                    <FaLeaf className="text-green-500 mr-3" />
-                    <span>{benefit}</span>
-                  </li>
-                ))}
+                {healthBenefits.length > 0 ? (
+                  healthBenefits.map((benefit, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center text-gray-700 bg-green-50 rounded-lg p-3 shadow-sm"
+                    >
+                      <FaLeaf className="text-green-500 mr-3" />
+                      <span>{benefit}</span>
+                    </li>
+                  ))
+                ) : (
+                  <p className="text-gray-600">
+                    Bu ürün için sağlık yararları mevcut değil.
+                  </p>
+                )}
               </ul>
 
               <h3 className="text-2xl font-semibold mb-4 text-gray-800">
@@ -145,6 +225,24 @@ export default function ProductDetailsClient({
                   {product.stock} adet kaldı
                 </span>
               </p>
+              <div className="flex items-center space-x-4 justify-between mb-6">
+                <button
+                  onClick={decreaseQuantity}
+                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition duration-300"
+                  disabled={quantity === 1}
+                >
+                  -
+                </button>
+                <span className="text-xl font-semibold">{quantity}</span>
+                <button
+                  onClick={increaseQuantity}
+                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition duration-300"
+                  disabled={quantity === product.stock}
+                >
+                  +
+                </button>
+              </div>
+
               <div className="space-y-4">
                 <button
                   onClick={handleAddToCart}
@@ -153,7 +251,7 @@ export default function ProductDetailsClient({
                   }`}
                 >
                   <FaShoppingCart className="mr-2" />
-                  {isAddedToCart ? "Sepette!" : "Sepete Ekle"}
+                  {isAddedToCart ? "Sepete Git" : "Sepete Ekle"}
                 </button>
               </div>
 
@@ -181,19 +279,19 @@ export default function ProductDetailsClient({
         </div>
 
         {/* Related Products */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white mt-6 rounded-lg shadow-lg p-8">
           <h2 className="text-3xl font-bold mb-8 text-gray-800">
             Bunlar da hoşunuza gidebilir
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[...Array(4)].map((_, index) => (
+            {relatedProducts.map((relatedProduct) => (
               <div
-                key={index}
+                key={relatedProduct.id}
                 className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 transform hover:scale-105"
               >
                 <Image
-                  src={product.images?.[0]?.url || "/placeholder.png"}
-                  alt="Related Product"
+                  src={relatedProduct.images?.[0]?.url || "/placeholder.png"}
+                  alt={relatedProduct.name}
                   width={300}
                   height={200}
                   layout="responsive"
@@ -201,14 +299,16 @@ export default function ProductDetailsClient({
                 />
                 <div className="p-4">
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    {product.name}
+                    {relatedProduct.name}
                   </h3>
                   <p className="text-green-600 font-semibold mb-4">
-                    {product.discounted_price.toFixed(0)} ₺
+                    {relatedProduct.discounted_price.toFixed(0)} ₺
                   </p>
-                  <button className="w-full bg-green-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-green-700 transition duration-300">
-                    View Product
-                  </button>
+                  <Link href={`/urunler/detaylar/${relatedProduct.id}`}>
+                    <div className="w-full bg-green-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-green-700 transition duration-300 text-center block">
+                      Ürünü Görüntüle
+                    </div>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -219,7 +319,9 @@ export default function ProductDetailsClient({
       {/* Modal */}
       {isModalOpen && (
         <Modal onClose={closeModal}>
-          {isLoggedIn ? <CheckOutModalContent /> : <LoginModalContent />}
+          <div className="max-w-sm max-h-[540px] w-full h-full mx-auto rounded-lg shadow-lg overflow-hidden">
+            {isLoggedIn && <SignInPage />}
+          </div>
         </Modal>
       )}
     </div>

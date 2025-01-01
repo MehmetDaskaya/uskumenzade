@@ -1,6 +1,8 @@
 import API_BASE_URL from "../../../util/config";
 
 export const initializePayment = async (orderId: string, token: string) => {
+  const callbackUrl = `${window.location.origin}/payment-result`;
+
   const response = await fetch(
     `${API_BASE_URL}/uskumenzade/api/payments/initialize-checkout?order_id=${orderId}`,
     {
@@ -9,6 +11,9 @@ export const initializePayment = async (orderId: string, token: string) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({
+        callbackUrl, // Updated to the frontend URL
+      }),
     }
   );
 
@@ -16,7 +21,7 @@ export const initializePayment = async (orderId: string, token: string) => {
     throw new Error("Failed to initialize payment.");
   }
 
-  return response.json(); // The response should include a `checkout_url`
+  return response.json();
 };
 
 export interface PaymentCallbackResponse {
@@ -26,21 +31,28 @@ export interface PaymentCallbackResponse {
   paymentId?: string;
 }
 
-export const handlePaymentCallback =
-  async (): Promise<PaymentCallbackResponse> => {
-    const response = await fetch(
-      `${API_BASE_URL}/uskumenzade/api/payments/callback`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to handle payment callback");
+export const handlePaymentCallback = async (
+  token: string
+): Promise<PaymentCallbackResponse> => {
+  const response = await fetch(
+    `${API_BASE_URL}/uskumenzade/api/payments/callback`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token }), // Ensure the token is sent in the request body
+      redirect: "follow", // Follow redirect
     }
+  );
 
-    return response.json() as Promise<PaymentCallbackResponse>;
-  };
+  if (!response.ok) {
+    console.error("Callback API response error:", await response.text());
+    throw new Error("Failed to handle payment callback");
+  }
+
+  const responseData = await response.json();
+  console.log("Callback API response data:", responseData);
+
+  return responseData as PaymentCallbackResponse;
+};

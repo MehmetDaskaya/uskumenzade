@@ -65,7 +65,10 @@ export function ImageModal({
     if (!editImageId) return;
 
     if (!accessToken) {
-      showSnackbar("You are not authorized. Please log in.", "error");
+      showSnackbar(
+        "Giriş izniniz bulunmamaktadır. Tekrar giriş yapınız.",
+        "error"
+      );
       return;
     }
 
@@ -90,12 +93,18 @@ export function ImageModal({
 
   const handleUpload = async () => {
     if (!accessToken) {
-      showSnackbar("You are not authorized. Please log in.", "error");
+      showSnackbar(
+        "Giriş izniniz bulunmamaktadır. Tekrar giriş yapınız.",
+        "error"
+      );
       return;
     }
 
     if (!file || !alt_text) {
-      showSnackbar("Please select a file and provide alt text.", "error");
+      showSnackbar(
+        "Lütfen bir dosya seçin ve alternatif yazı ekleyin.",
+        "error"
+      );
       return;
     }
 
@@ -108,7 +117,7 @@ export function ImageModal({
       setalt_text("");
       dispatch(loadImages(type));
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Görsel yükleme hatası:", error);
       showSnackbar(
         "Görsel yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
         "error"

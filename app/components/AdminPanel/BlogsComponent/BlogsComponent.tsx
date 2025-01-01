@@ -20,6 +20,25 @@ interface Category {
   name: string;
 }
 
+interface BlogUpdatePayload {
+  title: string;
+  author: string;
+  content: string;
+  related_item_ids: string[];
+  description: string;
+  read_time: string;
+  sections: {
+    id: string | undefined;
+    order: number;
+    section_type: string;
+    content: string;
+  }[];
+  category_id: string | null;
+  image_ids: string[];
+  tag_ids: string[];
+  meta_tag_ids: string[];
+}
+
 export const BlogsComponent = () => {
   const images = useSelector((state: RootState) => state.image.images);
 
@@ -37,8 +56,6 @@ export const BlogsComponent = () => {
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
   const [showTagModal, setShowTagModal] = useState(false);
   const [showMetaTagModal, setShowMetaTagModal] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedMetaTags, setSelectedMetaTags] = useState<string[]>([]);
 
   const openTagModal = () => setShowTagModal(true);
   const closeTagModal = () => setShowTagModal(false);
@@ -68,17 +85,19 @@ export const BlogsComponent = () => {
     id: string;
     title: string;
     author: string;
-    category: string;
-    content: string;
-    related_item_ids: string[];
-    tags: string[];
-    images: Image[];
-    sections: Section[];
+    category_id: string;
+    category_name?: string;
+    content?: string;
+    items?: string[];
+    description?: string;
+    read_time?: number;
     created_at: string;
     updated_at: string;
-    excerpt?: string;
-    readTime?: string;
-    relatedProducts?: string[];
+    images?: Image[];
+    sections: Section[];
+    tags?: { id: string; name: string }[]; // Update tags to be an array of objects
+    meta_tags?: { id: string; name: string }[];
+    related_item_ids?: string[];
   }
 
   const [newBlogData, setNewBlogData] = useState<{
@@ -93,7 +112,7 @@ export const BlogsComponent = () => {
     contentSections: Section[];
     tags: string;
     imageUrl: string;
-    readTime: string;
+    read_time: string;
     relatedProducts: string;
   }>({
     id: undefined,
@@ -116,7 +135,7 @@ export const BlogsComponent = () => {
     ],
     tags: "",
     imageUrl: "",
-    readTime: "",
+    read_time: "",
     relatedProducts: "",
   });
 
@@ -133,6 +152,14 @@ export const BlogsComponent = () => {
 
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [showSnackbar, setShowSnackbar] = useState(false);
+
+  const [selectedTagNames, setSelectedTagNames] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
+  const [selectedMetaTagNames, setSelectedMetaTagNames] = useState<string[]>(
+    []
+  );
+  const [selectedMetaTagIds, setSelectedMetaTagIds] = useState<string[]>([]);
 
   useEffect(() => {
     const getBlogs = async () => {
@@ -157,13 +184,13 @@ export const BlogsComponent = () => {
         author: newBlogData.author || "",
         category_id:
           selectedCategories.length > 0 ? selectedCategories[0].id : null, // Map category_id
-        content: newBlogData.content || "No content provided",
+        content: newBlogData.content || "",
         related_item_ids: newBlogData.related_item_ids || [],
         image_ids: selectedImageId ? [selectedImageId] : [],
-        tag_ids: selectedTags.length > 0 ? selectedTags : [], // Ensure selected tags are passed
-        meta_tag_ids: selectedMetaTags.length > 0 ? selectedMetaTags : [], // Ensure selected meta tags are passed
-        description: newBlogData.excerpt || "Default Description", // Map description
-        read_time: newBlogData.readTime || "1", // Default to "1 minute" if not provided
+        tag_ids: selectedTagIds.length > 0 ? selectedTagIds : [], // Ensure selected tags are passed
+        meta_tag_ids: selectedMetaTagIds.length > 0 ? selectedMetaTagIds : [], // Ensure selected meta tags are passed
+        description: newBlogData.excerpt || "", // Map description
+        read_time: newBlogData.read_time || "1", // Default to "1 minute" if not provided
         sections: newBlogData.contentSections.map((section, index) => ({
           order: index,
           section_type: section.section_type || "body", // Use section_type or default to "body"
@@ -185,30 +212,88 @@ export const BlogsComponent = () => {
     }
   };
 
+  // const handleEditBlogSubmit = async () => {
+  //   if (!currentBlog) return;
+
+  //   try {
+  //     const updatedBlogPayload = {
+  //       title: newBlogData.title || currentBlog.title,
+  //       author: newBlogData.author || currentBlog.author,
+  //       category_id:
+  //         selectedCategories.length > 0
+  //           ? selectedCategories[0].id
+  //           : currentBlog.category_id, // Retain existing category_id if none selected
+  //       content:
+  //         newBlogData.content || currentBlog.content || "No content provided",
+  //       related_item_ids:
+  //         newBlogData.related_item_ids || currentBlog.related_item_ids || [],
+  //       image_ids: selectedImageId
+  //         ? [selectedImageId]
+  //         : currentBlog.images?.map((img) => img.id) || [],
+  //       tag_ids: selectedTagIds, // Extract only the IDs from selectedTagIds
+  //       meta_tag_ids:
+  //         selectedMetaTagIds.length > 0
+  //           ? selectedMetaTagIds
+  //           : currentBlog.meta_tags?.map((meta) => meta.id) || [], // Retain existing meta tags if none selected
+  //       description:
+  //         newBlogData.excerpt ||
+  //         currentBlog.description ||
+  //         "Default description", // Retain existing description if none provided
+  //       read_time: String(
+  //         newBlogData.read_time || currentBlog.read_time || "1"
+  //       ), // Convert to string
+  //       sections: newBlogData.contentSections.map((section, index) => ({
+  //         id: section.id, // Include the section ID for existing sections
+  //         order: index,
+  //         section_type: section.section_type || "body", // Default section type
+  //         content: `${section.heading}\n\n${section.body}`, // Combine heading and body
+  //       })),
+  //     };
+
+  //     // Send the payload to the API
+  //     const editedBlog = await updateBlog(currentBlog.id, updatedBlogPayload);
+
+  //     // Update the local blog list
+  //     setBlogs(
+  //       blogs.map((blog) => (blog.id === currentBlog.id ? editedBlog : blog))
+  //     );
+  //     setShowEditModal(false);
+  //     resetBlogData();
+  //     setSelectedCategories([]);
+  //   } catch (error) {
+  //     console.error("Error updating blog:", error);
+  //   }
+  // };
+
   const handleEditBlogSubmit = async () => {
     if (!currentBlog) return;
 
     try {
-      const updatedBlogPayload = {
+      const updatedBlogPayload: BlogUpdatePayload = {
         title: newBlogData.title || currentBlog.title,
         author: newBlogData.author || currentBlog.author,
-        category_id:
-          selectedCategories.length > 0 ? selectedCategories[0].id : null, // Use category_id
-        content: newBlogData.content || "No content provided",
-        related_item_ids: newBlogData.related_item_ids || [],
-        image_ids: selectedImageId
-          ? [selectedImageId]
-          : currentBlog.images.map((img) => img.id),
-        tag_ids: selectedTags.length > 0 ? selectedTags : [],
-        meta_tag_ids: selectedMetaTags.length > 0 ? selectedMetaTags : [],
-        description: newBlogData.excerpt || "Default description", // Ensure description is sent
-        read_time: newBlogData.readTime || "1", // Default to "1 minute" if not provided
+        content:
+          newBlogData.content || currentBlog.content || "No content provided",
+        related_item_ids:
+          newBlogData.related_item_ids || currentBlog.related_item_ids || [],
+        description:
+          newBlogData.excerpt ||
+          currentBlog.description ||
+          "Default description",
+        read_time: String(
+          newBlogData.read_time || currentBlog.read_time || "1"
+        ), // Convert to string
         sections: newBlogData.contentSections.map((section, index) => ({
-          id: section.id,
+          id: section.id, // Include the section ID for existing sections
           order: index,
-          section_type: section.section_type || "body",
-          content: `${section.heading}\n\n${section.body}`,
+          section_type: section.section_type || "body", // Default section type
+          content: `${section.heading}\n\n${section.body}`, // Combine heading and body
         })),
+        category_id: currentBlog.category_id, // Retain the existing category
+        image_ids: currentBlog.images?.map((img) => img.id) || [], // Retain existing images
+        tag_ids: currentBlog.tags?.map((tag: { id: string }) => tag.id) || [], // Send only IDs
+        meta_tag_ids:
+          currentBlog.meta_tags?.map((meta: { id: string }) => meta.id) || [], // Send only IDs
       };
 
       // Send the payload to the API
@@ -220,7 +305,6 @@ export const BlogsComponent = () => {
       );
       setShowEditModal(false);
       resetBlogData();
-      setSelectedCategories([]);
     } catch (error) {
       console.error("Error updating blog:", error);
     }
@@ -247,7 +331,7 @@ export const BlogsComponent = () => {
       ],
       tags: "",
       imageUrl: "",
-      readTime: "",
+      read_time: "",
       relatedProducts: "",
     });
     setSelectedImageId(null); // Reset selected image ID
@@ -297,36 +381,54 @@ export const BlogsComponent = () => {
     setCurrentPage(pageNumber);
   };
 
-  const handleEditBlog = (blog: Blog) => {
-    setCurrentBlog(blog);
+  const handleEditBlog = async (blog: Blog) => {
+    try {
+      // Set the current blog for editing
+      setCurrentBlog(blog);
 
-    setNewBlogData({
-      id: blog.id, // `id` is now correctly typed as `string | undefined`
-      title: blog.title,
-      author: blog.author,
-      category: blog.category,
-      content: blog.content || "",
-      related_item_ids: blog.related_item_ids || [],
-      publishedDate: blog.created_at.split("T")[0], // Use created_at date for initial value
-      excerpt: blog.excerpt || "",
-      contentSections: blog.sections.map((section: Section) => {
-        const [heading, ...bodyParts] = section.content.split("\n\n"); // Split the content into heading and body
-        return {
-          id: section.id, // Keep `id` from the section
-          content: section.content, // Preserve the full content
-          order: section.order, // Include the order
-          section_type: section.section_type, // Include the section type
-          heading: heading || "",
-          body: bodyParts.join("\n\n") || "", // Join the remaining parts as body
-        };
-      }),
-      tags: (blog.tags || []).join(", "), // Join tags into a string
-      imageUrl: blog.images[0]?.url || "",
-      readTime: blog.readTime || "",
-      relatedProducts: (blog.relatedProducts || []).join(", "), // Join related products
-    });
+      setNewBlogData({
+        id: blog.id,
+        title: blog.title,
+        author: blog.author,
+        category: blog.category_id || "", // Use category_id
+        content:
+          blog.sections
+            ?.map((section: Section) => section.content)
+            .join("\n\n") || "", // Combine all sections into content
+        related_item_ids: blog.related_item_ids || [],
+        publishedDate: blog.created_at.split("T")[0], // Use created_at date for initial value
+        excerpt: blog.description || "", // Map the description field
+        contentSections: blog.sections.map((section: Section) => {
+          const [heading, ...bodyParts] = section.content.split("\n\n"); // Split the content into heading and body
+          return {
+            id: section.id,
+            content: section.content,
+            order: section.order,
+            section_type: section.section_type,
+            heading: heading || "",
+            body: bodyParts.join("\n\n") || "",
+          };
+        }),
+        tags: blog.tags?.join(", ") || "", // Join tags into a comma-separated string
+        imageUrl: blog.images?.[0]?.url || "", // Use the first image URL if available
+        read_time: blog.read_time?.toString() || "1", // Convert read_time to a string
+        relatedProducts: blog.related_item_ids?.join(", ") || "", // Join related items
+      });
 
-    setShowEditModal(true);
+      // Set selected categories, tags, and meta tags
+      setSelectedCategories([
+        { id: blog.category_id, name: blog.category_name || "" },
+      ]);
+      setSelectedTagIds(blog.tags?.map((tag) => tag.id) || []); // Extract IDs
+      setSelectedMetaTagIds(blog.meta_tags?.map((meta) => meta.id) || []); // Extract IDs
+      setSelectedTagNames(blog.tags?.map((tag) => tag.name) || []); // Extract names
+
+      setSelectedMetaTagNames(blog.meta_tags?.map((meta) => meta.name) || []);
+
+      setShowEditModal(true);
+    } catch (error) {
+      console.error("Error setting blog for editing:", error);
+    }
   };
 
   // Manage content sections dynamically
@@ -366,14 +468,6 @@ export const BlogsComponent = () => {
     setNewBlogData({ ...newBlogData, contentSections: updatedSections });
   };
 
-  const handleCategorySelect = (categories: Category[]) => {
-    setSelectedCategories(categories); // Save selected categories
-    setNewBlogData((prevState) => ({
-      ...prevState,
-      tag_ids: categories.map((category) => category.id), // Map category IDs to tag_ids
-    }));
-  };
-
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       {showSnackbar && (
@@ -394,7 +488,7 @@ export const BlogsComponent = () => {
           placeholder="Blogları başlık, yazar veya kategori olarak arayın..."
           value={searchQuery}
           onChange={handleSearch}
-          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full p-2 border border-gray-300 bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
         <FaSearch className="ml-2 text-gray-500" />
       </div>
@@ -426,7 +520,7 @@ export const BlogsComponent = () => {
                 <td className="p-4 text-gray-600">{blog.id}</td>
                 <td className="p-4 text-gray-600">{blog.title}</td>
                 <td className="p-4 text-gray-600">{blog.author}</td>
-                <td className="p-4 text-gray-600">{blog.category}</td>
+                <td className="p-4 text-gray-600">{blog.category_id}</td>
                 <td className="p-4 text-gray-600">{blog.created_at}</td>
                 <td className="p-4 text-center">
                   <button
@@ -487,7 +581,7 @@ export const BlogsComponent = () => {
           ) : (
             <tr>
               <td colSpan={6} className="p-4 text-center text-gray-500">
-                Blog Bulunamadı.
+                Sistemde Blog Bulunamadı.
               </td>
             </tr>
           )}
@@ -529,14 +623,20 @@ export const BlogsComponent = () => {
       <CategoryModal
         isOpen={showCategoryModal}
         onClose={closeCategoryModal}
-        onCategorySelect={handleCategorySelect} // Pass the function here
+        onCategorySelect={(categories) => {
+          const categoryNames = categories.map((category) => category.name); // Extract names of the selected categories
+          console.log("Selected Category Names:", categoryNames); // Log category names to the console
+          setSelectedCategories(categories); // Save full category objects in state if needed
+          closeCategoryModal();
+        }}
       />
 
       <TagModal
         isOpen={showTagModal}
         onClose={closeTagModal}
         onTagSelect={(tags) => {
-          setSelectedTags(tags.map((tag) => tag.id)); // Save tag IDs
+          setSelectedTagNames(tags.map((tag) => tag.name)); // Store names for display
+          setSelectedTagIds(tags.map((tag) => tag.id)); // Store IDs for backend
           closeTagModal();
         }}
       />
@@ -545,7 +645,8 @@ export const BlogsComponent = () => {
         isOpen={showMetaTagModal}
         onClose={closeMetaTagModal}
         onMetaTagSelect={(metaTags) => {
-          setSelectedMetaTags(metaTags.map((metaTag) => metaTag.id)); // Save meta tag IDs
+          setSelectedMetaTagNames(metaTags.map((metaTag) => metaTag.name)); // Store names for display
+          setSelectedMetaTagIds(metaTags.map((metaTag) => metaTag.id)); // Store IDs for backend
           closeMetaTagModal();
         }}
       />
@@ -624,72 +725,35 @@ export const BlogsComponent = () => {
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Blog Title */}
+                {/* Blog Başlığı */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Blog Başlığı
                   </label>
                   <input
                     type="text"
-                    placeholder="Blog Title"
+                    placeholder="Blog Başlığı"
                     value={newBlogData.title}
                     onChange={(e) =>
                       setNewBlogData({ ...newBlogData, title: e.target.value })
                     }
-                    className="w-full p-3 bg-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3   text-black bg-gray-200 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
-                {/* Author */}
+                {/* Yazar İsmi */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Yazar
                   </label>
                   <input
                     type="text"
-                    placeholder="Author"
+                    placeholder="Yazar İsmi"
                     value={newBlogData.author}
                     onChange={(e) =>
                       setNewBlogData({ ...newBlogData, author: e.target.value })
                     }
-                    className="w-full p-3 bg-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Kategori
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Category"
-                    value={newBlogData.category}
-                    onChange={(e) =>
-                      setNewBlogData({
-                        ...newBlogData,
-                        category: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 bg-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                {/* Published Date */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Yayınlanma Tarihi
-                  </label>
-                  <input
-                    type="date"
-                    value={newBlogData.publishedDate}
-                    onChange={(e) =>
-                      setNewBlogData({
-                        ...newBlogData,
-                        publishedDate: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 bg-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3  text-black bg-gray-200 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -707,18 +771,18 @@ export const BlogsComponent = () => {
                         excerpt: e.target.value,
                       })
                     }
-                    className="w-full p-3 bg-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3  text-black bg-gray-200 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 {/* Related Products */}
-                <div className="md:col-span-2">
+                {/* <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    İlgili Ürünler (virgülle ayırın)
+                    İlgili Ürünler
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Herbal Cream, Lavender Oil"
+                    placeholder="İlgili kategorideki ürünler vb."
                     value={newBlogData.relatedProducts || ""}
                     onChange={(e) =>
                       setNewBlogData({
@@ -726,9 +790,9 @@ export const BlogsComponent = () => {
                         relatedProducts: e.target.value,
                       })
                     }
-                    className="w-full p-3 bg-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3  text-black bg-gray-200 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                </div>
+                </div> */}
 
                 {/* Tags */}
                 <div className="md:col-span-2">
@@ -750,6 +814,7 @@ export const BlogsComponent = () => {
                 </div>
 
                 {/* Tags */}
+                {/* Tags */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Etiketler
@@ -762,14 +827,14 @@ export const BlogsComponent = () => {
                       Etiketleri Seç
                     </button>
                     <span className="text-gray-700">
-                      {selectedTags.length > 0
-                        ? selectedTags.join(", ")
+                      {selectedTagNames.length > 0
+                        ? selectedTagNames.join(", ")
                         : "Seçilmedi"}
                     </span>
                   </div>
                 </div>
 
-                {/* Meta Tags */}
+                {/* Meta-Tags */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Meta Etiketler
@@ -782,8 +847,8 @@ export const BlogsComponent = () => {
                       Meta Etiketleri Seç
                     </button>
                     <span className="text-gray-700">
-                      {selectedMetaTags.length > 0
-                        ? selectedMetaTags.join(", ")
+                      {selectedMetaTagNames.length > 0
+                        ? selectedMetaTagNames.join(", ")
                         : "Seçilmedi"}
                     </span>
                   </div>
@@ -815,22 +880,22 @@ export const BlogsComponent = () => {
                   )}
                 </div>
 
-                {/* Read Time */}
+                {/* Okuma süresi */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Okuma Süresi (dakika)
                   </label>
                   <input
                     type="text"
-                    placeholder="Read time"
-                    value={newBlogData.readTime}
+                    placeholder="Okuma süresi"
+                    value={newBlogData.read_time}
                     onChange={(e) =>
                       setNewBlogData({
                         ...newBlogData,
-                        readTime: e.target.value,
+                        read_time: e.target.value,
                       })
                     }
-                    className="w-full p-3 bg-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3  text-black bg-gray-200 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -843,7 +908,7 @@ export const BlogsComponent = () => {
                     <div key={section.id || index} className="mb-6">
                       <input
                         type="text"
-                        placeholder={`Section ${index + 1} Heading`}
+                        placeholder={`Bölüm ${index + 1} Başlığı`}
                         value={section.heading}
                         onChange={(e) =>
                           handleContentSectionChange(
@@ -852,10 +917,10 @@ export const BlogsComponent = () => {
                             e.target.value
                           )
                         }
-                        className="w-full p-2 mb-2 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-2 mb-2 border  text-black bg-gray-200 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <textarea
-                        placeholder={`Section ${index + 1} Body`}
+                        placeholder={`Bölüm ${index + 1} İçeriği`}
                         value={section.body}
                         onChange={(e) =>
                           handleContentSectionChange(
@@ -864,7 +929,7 @@ export const BlogsComponent = () => {
                             e.target.value
                           )
                         }
-                        className="w-full p-2 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-2 border  text-black bg-gray-200 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
 
                       {/* Remove Section Button */}
@@ -967,72 +1032,35 @@ export const BlogsComponent = () => {
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Blog Title */}
+                {/* Blog Başlığı */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Blog Başlığı
                   </label>
                   <input
                     type="text"
-                    placeholder="Blog Title"
+                    placeholder="Blog Başlığı"
                     value={newBlogData.title}
                     onChange={(e) =>
                       setNewBlogData({ ...newBlogData, title: e.target.value })
                     }
-                    className="w-full p-3 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border  text-black bg-gray-200 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
-                {/* Author */}
+                {/* Yazar İsmi */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Yazar
                   </label>
                   <input
                     type="text"
-                    placeholder="Author"
+                    placeholder="Yazar İsmi"
                     value={newBlogData.author}
                     onChange={(e) =>
                       setNewBlogData({ ...newBlogData, author: e.target.value })
                     }
-                    className="w-full p-3 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Kategori
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Category"
-                    value={newBlogData.category}
-                    onChange={(e) =>
-                      setNewBlogData({
-                        ...newBlogData,
-                        category: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                {/* Published Date */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Yayınlanma Tarihi
-                  </label>
-                  <input
-                    type="date"
-                    value={newBlogData.publishedDate}
-                    onChange={(e) =>
-                      setNewBlogData({
-                        ...newBlogData,
-                        publishedDate: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border  text-black bg-gray-200 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -1042,7 +1070,7 @@ export const BlogsComponent = () => {
                     Kısa Açıklama
                   </label>
                   <textarea
-                    placeholder="Short description of the blog"
+                    placeholder="Blog yazısının kısa bir özeti"
                     value={newBlogData.excerpt}
                     onChange={(e) =>
                       setNewBlogData({
@@ -1050,18 +1078,18 @@ export const BlogsComponent = () => {
                         excerpt: e.target.value,
                       })
                     }
-                    className="w-full p-3 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border  text-black bg-gray-200 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 {/* Related Products */}
-                <div className="md:col-span-2">
+                {/* <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    İlgili Ürünler (comma-separated)
+                    İlgili Ürünler
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Herbal Cream, Lavender Oil"
+                    placeholder="İlgili kategorideki ürünler vb."
                     value={newBlogData.relatedProducts || ""}
                     onChange={(e) =>
                       setNewBlogData({
@@ -1069,12 +1097,12 @@ export const BlogsComponent = () => {
                         relatedProducts: e.target.value,
                       })
                     }
-                    className="w-full p-3 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border  text-black bg-gray-200 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                </div>
+                </div> */}
 
                 {/* Tags */}
-                <div className="md:col-span-2">
+                {/* <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Kategoriler
                   </label>
@@ -1090,10 +1118,11 @@ export const BlogsComponent = () => {
                         "Seçilmedi"}
                     </span>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Tags */}
-                <div className="md:col-span-2">
+
+                {/* <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Etiketler
                   </label>
@@ -1105,15 +1134,15 @@ export const BlogsComponent = () => {
                       Etiketleri Seç
                     </button>
                     <span className="text-gray-700">
-                      {selectedTags.length > 0
-                        ? selectedTags.join(", ")
+                      {selectedTagNames.length > 0
+                        ? selectedTagNames.join(", ")
                         : "Seçilmedi"}
                     </span>
                   </div>
-                </div>
+                </div> */}
 
-                {/* Meta Tags */}
-                <div className="md:col-span-2">
+                {/* Meta-Tags */}
+                {/* <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Meta Etiketler
                   </label>
@@ -1125,15 +1154,15 @@ export const BlogsComponent = () => {
                       Meta Etiketleri Seç
                     </button>
                     <span className="text-gray-700">
-                      {selectedMetaTags.length > 0
-                        ? selectedMetaTags.join(", ")
+                      {selectedMetaTagNames.length > 0
+                        ? selectedMetaTagNames.join(", ")
                         : "Seçilmedi"}
                     </span>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Image Selection */}
-                <div className="md:col-span-2">
+                {/* <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Blog Görseli
                   </label>
@@ -1155,24 +1184,24 @@ export const BlogsComponent = () => {
                       />
                     </div>
                   )}
-                </div>
+                </div> */}
 
-                {/* Read Time */}
+                {/* Okuma süresi */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
                     Okuma Süresi (dakika)
                   </label>
                   <input
                     type="text"
-                    placeholder="Read time"
-                    value={newBlogData.readTime}
+                    placeholder="Okuma süresi"
+                    value={newBlogData.read_time}
                     onChange={(e) =>
                       setNewBlogData({
                         ...newBlogData,
-                        readTime: e.target.value,
+                        read_time: e.target.value,
                       })
                     }
-                    className="w-full p-3 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border  text-black bg-gray-200 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -1185,7 +1214,7 @@ export const BlogsComponent = () => {
                     <div key={index} className="mb-6">
                       <input
                         type="text"
-                        placeholder={`Section ${index + 1} Heading`}
+                        placeholder={`Bölüm ${index + 1} Başlığı`}
                         value={section.heading}
                         onChange={(e) =>
                           handleContentSectionChange(
@@ -1194,10 +1223,10 @@ export const BlogsComponent = () => {
                             e.target.value
                           )
                         }
-                        className="w-full p-2 mb-2 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-2 mb-2 border  text-black bg-gray-200 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <textarea
-                        placeholder={`Section ${index + 1} Body`}
+                        placeholder={`Bölüm ${index + 1} İçeriği`}
                         value={section.body}
                         onChange={(e) =>
                           handleContentSectionChange(
@@ -1206,7 +1235,7 @@ export const BlogsComponent = () => {
                             e.target.value
                           )
                         }
-                        className="w-full p-2 border bg-gray-800 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-2 border  text-black bg-gray-200 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   ))}

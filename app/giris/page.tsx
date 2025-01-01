@@ -54,7 +54,13 @@ export default function SignInPage() {
       router.push("/anasayfa");
     } catch (error) {
       if (error instanceof Error) {
-        setErrorMessage(error.message);
+        if (error.message.includes("LOGIN_BAD_CREDENTIALS")) {
+          setErrorMessage(
+            "Girilen E-posta ve şifre bilgileri hatalı veya böyle bir hesap sistemde bulunmuyor."
+          );
+        } else {
+          setErrorMessage("Bir hata oluştu. Tekrar Deneyiniz.");
+        }
       } else {
         setErrorMessage("Bir hata oluştu. Tekrar Deneyiniz.");
       }

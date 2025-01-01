@@ -1,59 +1,43 @@
 "use client";
-
-import React, { useState } from "react";
-import { FaSearch, FaEdit, FaTrashAlt } from "react-icons/fa";
-
-interface Order {
-  id: number;
-  customerName: string;
-  orderDate: string;
-  status: string;
-  total: number;
-}
-
-const initialOrders: Order[] = [
-  {
-    id: 1,
-    customerName: "John Doe",
-    orderDate: "2023-05-01",
-    status: "Shipped",
-    total: 99.99,
-  },
-  {
-    id: 2,
-    customerName: "Jane Smith",
-    orderDate: "2023-05-02",
-    status: "Processing",
-    total: 149.99,
-  },
-  {
-    id: 3,
-    customerName: "Bob Johnson",
-    orderDate: "2023-05-03",
-    status: "Delivered",
-    total: 79.99,
-  },
-  {
-    id: 4,
-    customerName: "Alice Brown",
-    orderDate: "2023-05-04",
-    status: "Cancelled",
-    total: 199.99,
-  },
-  {
-    id: 5,
-    customerName: "Charlie Davis",
-    orderDate: "2023-05-05",
-    status: "Processing",
-    total: 129.99,
-  },
-];
+import React, { useState, useEffect } from "react";
+import { FaSearch, FaEye, FaTrashAlt } from "react-icons/fa";
+import { fetchOrders, deleteOrder, Order } from "@/app/api/order/orderApi";
+import { RootState } from "@/redux/store";
+import { useSelector } from "react-redux";
+import OrderDetailsModal from "../../Modal/OrderDetailsModal";
 
 export const OrderManagementComponent = () => {
-  const [orders, setOrders] = useState(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const ordersPerPage = 5;
+
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      setLoading(true);
+      try {
+        if (!accessToken) {
+          throw new Error("Authentication token is missing.");
+        }
+        const fetchedOrders = await fetchOrders(accessToken);
+        setOrders(fetchedOrders);
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+        setError("Failed to load orders. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, [accessToken]);
 
   // Handle order search
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +47,7 @@ export const OrderManagementComponent = () => {
   // Filter orders based on search query
   const filteredOrders = orders.filter(
     (order) =>
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.user.fname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.status.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -81,37 +65,51 @@ export const OrderManagementComponent = () => {
     setCurrentPage(pageNumber);
   };
 
-  // Handle Delete Order
-  const handleDelete = (id: number) => {
-    setOrders((prevOrders) => prevOrders.filter((order) => order.id !== id));
+  const handleViewDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
 
-    // Reset to first page if current page becomes empty
-    const updatedOrders = orders.filter((order) => order.id !== id);
-    const updatedFilteredOrders = updatedOrders.filter(
-      (order) =>
-        order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.status.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    const newTotalPages = Math.ceil(
-      updatedFilteredOrders.length / ordersPerPage
-    );
-    if (currentPage > newTotalPages) {
-      setCurrentPage(1);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedOrder(null);
+  };
+
+  // Handle Delete Order
+  const handleDelete = async (id: string) => {
+    try {
+      if (!accessToken) {
+        throw new Error("Authentication token'ınız bulunmuyor.");
+      }
+      await deleteOrder(id, accessToken);
+      setOrders((prevOrders) => prevOrders.filter((order) => order.id !== id));
+      alert("Sipariş başarılı bir şekilde silindi.");
+    } catch (err) {
+      console.error("Failed to delete order:", err);
+      alert("Siparişi silerken bir hata oluştu. Tekrar deneyiniz.");
     }
   };
 
+  if (loading) {
+    return <p>Siparişler Yükleniyor...</p>;
+  }
+
+  if (error) {
+    return <p className="text-red-500">{error}</p>;
+  }
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Manage Orders</h2>
+      <h2 className="text-2xl font-bold mb-4">Siparişleri Yönet</h2>
 
       {/* Search Bar */}
       <div className="mb-4 flex items-center">
         <input
           type="text"
-          placeholder="Search orders..."
+          placeholder="Sipariş ara..."
           value={searchQuery}
           onChange={handleSearch}
-          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
         <FaSearch className="ml-2 text-gray-500" />
       </div>
@@ -122,15 +120,17 @@ export const OrderManagementComponent = () => {
           <tr>
             <th className="p-4 text-left font-semibold text-gray-600">ID</th>
             <th className="p-4 text-left font-semibold text-gray-600">
-              Customer
+              Müşteri
             </th>
-            <th className="p-4 text-left font-semibold text-gray-600">Date</th>
+            <th className="p-4 text-left font-semibold text-gray-600">Tarih</th>
             <th className="p-4 text-left font-semibold text-gray-600">
-              Status
+              Sipariş Durumu
             </th>
-            <th className="p-4 text-left font-semibold text-gray-600">Total</th>
+            <th className="p-4 text-left font-semibold text-gray-600">
+              Toplam
+            </th>
             <th className="p-4 text-center font-semibold text-gray-600">
-              Actions
+              İşlemler
             </th>
           </tr>
         </thead>
@@ -139,16 +139,34 @@ export const OrderManagementComponent = () => {
             currentOrders.map((order) => (
               <tr key={order.id} className="border-t">
                 <td className="p-4 text-gray-600">{order.id}</td>
-                <td className="p-4 text-gray-600">{order.customerName}</td>
-                <td className="p-4 text-gray-600">{order.orderDate}</td>
-                <td className="p-4 text-gray-600">{order.status}</td>
-                <td className="p-4 text-gray-600">${order.total.toFixed(2)}</td>
+                <td className="p-4 text-gray-600">
+                  {order.user.fname} {order.user.lname}
+                </td>
+                <td className="p-4 text-gray-600">
+                  {new Date(order.created_at).toLocaleDateString()}
+                </td>
+                <td className="p-4 text-gray-600">
+                  {order.status === "paid" ? "Ödeme Yapıldı" : order.status}
+                </td>
+
+                <td className="p-4 text-gray-600">
+                  {order.amount.toFixed(2)} ₺
+                </td>
                 <td className="p-4 text-center">
-                  <button className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200">
-                    <FaEdit />
+                  <button
+                    onClick={() => handleViewDetails(order)}
+                    className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                  >
+                    <FaEye />
                   </button>
                   <button
-                    onClick={() => handleDelete(order.id)}
+                    onClick={() => {
+                      if (
+                        confirm("Siparişi silmek istediğinize emin misiniz?")
+                      ) {
+                        handleDelete(order.id);
+                      }
+                    }}
                     className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200"
                   >
                     <FaTrashAlt />
@@ -159,7 +177,7 @@ export const OrderManagementComponent = () => {
           ) : (
             <tr>
               <td colSpan={6} className="p-4 text-center text-gray-500">
-                No orders found.
+                Sistemde Sipariş Bulunamadı.
               </td>
             </tr>
           )}
@@ -183,6 +201,24 @@ export const OrderManagementComponent = () => {
             </button>
           ))}
         </div>
+      )}
+      {isModalOpen && selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={handleCloseModal}
+          onUpdateStatus={(orderId, status) => {
+            // Handle updating order status logic
+            setOrders((prevOrders) =>
+              prevOrders.map((order) =>
+                order.id === orderId ? { ...order, status } : order
+              )
+            );
+          }}
+          onInitiateRefund={(orderId) => {
+            // Handle refund initiation logic
+            alert(`Refund initiated for order: ${orderId}`);
+          }}
+        />
       )}
     </div>
   );

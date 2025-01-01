@@ -160,7 +160,7 @@ export default function Cart() {
                   placeholder="İndirim Kodu"
                   value={discountCode}
                   onChange={(e) => setDiscountCode(e.target.value)}
-                  className="w-full p-3 border rounded-md focus:outline-none focus:ring focus:ring-yellow-500"
+                  className="w-full p-3 bg-gray-200 text-black  border rounded-md focus:outline-none focus:ring focus:ring-yellow-500"
                 />
                 <button
                   onClick={handleDiscountApply}
@@ -171,8 +171,8 @@ export default function Cart() {
               </div>
 
               {/* Checkout Button */}
-              <Link href="/odeme">
-                <button className="w-full bg-green-600 text-white py-3 rounded-md font-semibold hover:bg-green-700 transition duration-300">
+              <Link href="odeme">
+                <button className="w-full mt-4 bg-green-600 text-white py-3 rounded-md font-semibold hover:bg-green-700 transition duration-300">
                   Ödeme Adımına Geç
                 </button>
               </Link>
@@ -185,14 +185,6 @@ export default function Cart() {
                   </div>
                 </Link>
               </div>
-
-              {/* Clear Cart Button */}
-              <button
-                onClick={() => dispatch(clearCart())}
-                className="w-full bg-red-600 text-white py-3 rounded-md font-semibold hover:bg-red-700 transition duration-300 mt-4"
-              >
-                Sepeti Boşalt
-              </button>
             </div>
           </div>
         </>

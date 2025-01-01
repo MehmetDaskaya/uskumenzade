@@ -5,7 +5,11 @@ const fetchFromAPI = async (endpoint: string, options: RequestInit = {}) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData?.detail || `Error: ${response.statusText}`);
+    const error = new Error(
+      errorData?.detail || `Error: ${response.statusText}`
+    );
+    (error as any).detail = errorData?.detail; // Attach the `detail` field explicitly
+    throw error;
   }
   return response.json();
 };
@@ -57,8 +61,10 @@ export const signin = async (email: string, password: string) => {
   );
 
   if (!response.ok) {
-    throw new Error(`Error: ${response.statusText}`);
+    const errorData = await response.json(); // Parse the response to extract error details
+    throw new Error(errorData?.detail || "Unknown error occurred");
   }
+
   return response.json();
 };
 

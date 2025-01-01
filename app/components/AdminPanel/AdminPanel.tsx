@@ -68,14 +68,6 @@ export default function AdminPanel() {
     verifySuperUser();
   }, [accessToken, router]);
 
-  // Example statistics data
-  const stats = {
-    users: 1240,
-    products: 560,
-    orders: 750,
-    revenue: 120000,
-  };
-
   // Handle active section
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
@@ -177,7 +169,7 @@ export default function AdminPanel() {
                   Blog Yönetimi
                 </button>
               </li>
-              <li>
+              {/* <li>
                 <button
                   className={`flex items-center p-3 w-full ${
                     activeSection === "raporlar" ? "bg-gray-700" : ""
@@ -187,7 +179,7 @@ export default function AdminPanel() {
                   <MdOutlineAnalytics className="mr-3" />
                   Raporlar ve Analitik
                 </button>
-              </li>
+              </li> */}
               <li>
                 <button
                   className={`flex items-center p-3 w-full ${
@@ -199,7 +191,7 @@ export default function AdminPanel() {
                   Tanımlar
                 </button>
               </li>
-              <li>
+              {/* <li>
                 <button
                   className={`flex items-center p-3 w-full ${
                     activeSection === "ayarlar" ? "bg-gray-700" : ""
@@ -209,7 +201,7 @@ export default function AdminPanel() {
                   <FaCog className="mr-3" />
                   Ayarlar
                 </button>
-              </li>
+              </li> */}
             </ul>
           </nav>
           <div className="p-4 border-t border-gray-700">
@@ -244,17 +236,7 @@ export default function AdminPanel() {
           </div>
 
           {/* Conditional Rendering based on activeSection */}
-          {activeSection === "yönetim paneli" && (
-            <DashboardComponent
-              stats={{
-                ...stats,
-                userGrowth: 0,
-                productGrowth: 0,
-                orderGrowth: 0,
-                revenueGrowth: 0,
-              }}
-            />
-          )}
+          {activeSection === "yönetim paneli" && <DashboardComponent />}
           {activeSection === "kullanıcılar" && <UserManagementComponent />}
           {activeSection === "ürünler" && <ProductManagementComponent />}
           {activeSection === "siparişler" && <OrderManagementComponent />}

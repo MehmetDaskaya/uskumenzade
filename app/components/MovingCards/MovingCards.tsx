@@ -32,7 +32,7 @@ export const InfiniteMovingCards = () => {
 
   return (
     <>
-      <InfiniteMovingCardsClient items={items} speed="normal" />
+      <InfiniteMovingCardsClient items={items} speed="slow" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

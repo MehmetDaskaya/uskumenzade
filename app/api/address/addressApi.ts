@@ -6,7 +6,6 @@ export interface Address {
   id?: string;
   address: string;
   zip_code: string;
-  state: string;
   city: string;
   country: string;
   address_title: string;
@@ -63,7 +62,10 @@ export const createAddress = async (
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(addressData),
+    body: JSON.stringify({
+      ...addressData,
+      contact_name: addressData.contact_name || "",
+    }),
   });
 
   if (!response.ok) {
@@ -87,7 +89,10 @@ export const updateAddress = async (
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(addressData),
+      body: JSON.stringify({
+        ...addressData,
+        contact_name: addressData.contact_name || "",
+      }),
     }
   );
 

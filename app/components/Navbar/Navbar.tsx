@@ -24,6 +24,21 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
 
+  const isTokenExpired = (token: string | null): boolean => {
+    if (!token) return true;
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+      const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+      return payload.exp < currentTime;
+    } catch (e) {
+      console.error("Failed to parse token:", e);
+      return true;
+    }
+  };
+
+  const isTokenValid = accessToken && !isTokenExpired(accessToken);
+
   const toggleMenu = () => {
     setIsOpen((prev) => !prev);
     if (isOpenProfile) setIsOpenProfile(false); // Close profile if menu is opened
@@ -110,7 +125,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
             </button>
             {isOpenProfile && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
-                {accessToken ? (
+                {isTokenValid ? (
                   <>
                     <Link
                       href="/profil"
@@ -205,9 +220,10 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                 />
               </svg>
             </button>
+
             {isOpenProfile && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
-                {accessToken ? (
+                {isTokenValid ? (
                   <>
                     <Link
                       href="/profil"
@@ -241,13 +257,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                     </button>
                   </>
                 ) : (
-                  <Link
-                    href="/giris"
-                    className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                    onClick={toggleProfile}
-                  >
-                    Giriş Yap
-                  </Link>
+                  <div className="block px-4 py-2 text-gray-800">Giriş Yap</div>
                 )}
               </div>
             )}

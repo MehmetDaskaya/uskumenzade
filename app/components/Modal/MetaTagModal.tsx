@@ -101,11 +101,11 @@ export function MetaTagModal({
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-[9999]">
       <div className="bg-white w-full max-w-3xl p-6 rounded-lg shadow-lg">
-        <h3 className="text-2xl font-bold mb-6">Meta Tag Management</h3>
+        <h3 className="text-2xl font-bold mb-6">Meta Etiket Yönetimi</h3>
 
         <div className="mb-6">
           <label htmlFor="metaTag-input" className="block mb-2">
-            New Meta Tag
+            Yeni Meta Etiket
           </label>
           <div className="flex items-center">
             <input
@@ -119,7 +119,7 @@ export function MetaTagModal({
               onClick={handleAddMetaTag}
               className="ml-3 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
             >
-              Add
+              Ekle
             </button>
           </div>
         </div>
@@ -127,9 +127,11 @@ export function MetaTagModal({
         <div className="flex flex-row">
           {/* Defined Meta Tags Section */}
           <div className="flex-1 mx-1">
-            <h4 className="text-lg font-semibold mb-4">Available Meta Tags</h4>
+            <h4 className="text-lg font-semibold mb-4">
+              Kayıtlı Meta Etiketler
+            </h4>
             {loading ? (
-              <p>Loading...</p>
+              <p>Yükleniyor...</p>
             ) : (
               <ul className="space-y-4">
                 {metaTags.map((metaTag) => (
@@ -154,13 +156,13 @@ export function MetaTagModal({
                           onClick={handleEditMetaTag}
                           className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600"
                         >
-                          Save
+                          Kaydet
                         </button>
                         <button
                           onClick={() => setEditMetaTagId(null)}
                           className="bg-gray-500 text-white px-3 py-1 rounded-lg hover:bg-gray-600"
                         >
-                          Cancel
+                          İptal
                         </button>
                       </div>
                     ) : (
@@ -198,7 +200,9 @@ export function MetaTagModal({
 
           {/* Selected Meta Tags Section */}
           <div className="flex-1 mx-1">
-            <h4 className="text-lg font-semibold mb-4">Selected Meta Tags</h4>
+            <h4 className="text-lg font-semibold mb-4">
+              Seçilen Meta Etiketler
+            </h4>
             <ul className="space-y-4">
               {selectedMetaTags.map((metaTag) => (
                 <li
@@ -210,7 +214,7 @@ export function MetaTagModal({
                     onClick={() => handleDeselectMetaTag(metaTag.id)}
                     className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
                   >
-                    Remove
+                    Kaldır
                   </button>
                 </li>
               ))}
@@ -223,13 +227,13 @@ export function MetaTagModal({
             onClick={onClose}
             className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
           >
-            Close
+            Kapat
           </button>
           <button
             onClick={handleSaveSelectedMetaTags}
             className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
           >
-            Save
+            Kaydet
           </button>
         </div>
       </div>

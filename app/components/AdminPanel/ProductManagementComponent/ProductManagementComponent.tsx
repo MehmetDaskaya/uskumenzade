@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import { FaEdit, FaTrashAlt, FaSearch, FaPlus } from "react-icons/fa";
 import {
+  createHealthBenefit,
+  deleteHealthBenefit,
+} from "@/app/api/benefits/benefitsApi";
+import {
   getProducts,
   createProduct,
   updateProduct,
@@ -21,6 +25,8 @@ interface Product {
   category: { id: string; name: string };
   category_id?: string; // Optional
   image_ids: string[];
+  images?: { id: string; url: string }[]; // Define the images property
+  health_benefits?: (string | { name: string })[]; // Support both strings and objects
 }
 
 export const ProductManagementComponent = () => {
@@ -88,17 +94,41 @@ export const ProductManagementComponent = () => {
         throw new Error("Category must be selected.");
       }
 
+      // Step 1: Create the product
       const productPayload = {
         ...newProduct,
+        health_benefits: [], // Exclude benefits for initial creation
         category_id: newProduct.category_id, // Ensure category_id is defined
       };
 
       const addedProduct = await createProduct(productPayload);
-      setProducts((prev) => [...prev, addedProduct]);
+
+      // Step 2: Create health benefits using the product ID
+
+      const benefits = newProduct.health_benefits || []; // Default to an empty array
+      for (const benefit of benefits) {
+        const benefitName =
+          typeof benefit === "object" && "name" in benefit
+            ? benefit.name
+            : benefit;
+
+        if (typeof benefitName === "string") {
+          await createHealthBenefit({
+            item_id: addedProduct.id, // Use the ID of the created product
+            benefit: benefitName,
+          });
+        } else {
+          console.warn("Skipping invalid benefit:", benefit);
+        }
+      }
+
+      // Step 3: Fetch the updated product with benefits and update the state
+      const updatedProduct = { ...addedProduct, health_benefits: benefits };
+      setProducts((prev) => [...prev, updatedProduct]);
       resetForm();
     } catch (error) {
       console.error("Failed to add product:", error);
-      // alert(error.message); // Notify the user
+      alert("Ürün eklenirken bir hata oluştu. Lütfen tekrar deneyin."); // Notify the user
     }
   };
 
@@ -110,24 +140,96 @@ export const ProductManagementComponent = () => {
           throw new Error("Category must be selected.");
         }
 
+        // Prepare product payload for update
         const productPayload = {
           ...editingProduct,
+          health_benefits: [], // Exclude benefits from the main update payload
           category_id: editingProduct.category_id, // Ensure category_id is defined
         };
 
         const updatedProduct = await updateProduct(
-          editingProduct.id!,
+          editingProduct.id,
           productPayload
         );
+
+        // Compare the current benefits with the original to determine deletions
+        const originalBenefits =
+          products.find((p) => p.id === editingProduct.id)?.health_benefits ||
+          [];
+        const currentBenefits = editingProduct.health_benefits || [];
+
+        // Determine which benefits to add
+        const benefitsToAdd = currentBenefits.filter(
+          (benefit) =>
+            !originalBenefits.some((originalBenefit) =>
+              typeof originalBenefit === "object" &&
+              "benefit" in originalBenefit
+                ? originalBenefit.benefit === benefit
+                : originalBenefit === benefit
+            )
+        );
+
+        // Determine which benefits to delete
+        const benefitsToDelete = originalBenefits.filter(
+          (originalBenefit) =>
+            !currentBenefits.some((currentBenefit) =>
+              typeof currentBenefit === "string"
+                ? currentBenefit === originalBenefit
+                : typeof originalBenefit === "object" &&
+                  "benefit" in originalBenefit &&
+                  originalBenefit.benefit === currentBenefit
+            )
+        );
+
+        // Add new benefits
+        await Promise.all(
+          benefitsToAdd.map(async (benefit) => {
+            const benefitName =
+              typeof benefit === "object" && "benefit" in benefit
+                ? benefit.benefit
+                : benefit;
+            if (typeof benefitName === "string") {
+              await createHealthBenefit({
+                item_id: updatedProduct.id,
+                benefit: benefitName,
+              });
+            }
+          })
+        );
+
+        // Delete removed benefits
+        // Delete removed benefits
+        await Promise.all(
+          benefitsToDelete.map(async (benefit) => {
+            const benefitId =
+              typeof benefit === "object" && "id" in benefit
+                ? benefit.id
+                : null;
+
+            if (typeof benefitId === "string") {
+              await deleteHealthBenefit(benefitId);
+            }
+          })
+        );
+
+        // Update state
+        const fullyUpdatedProduct = {
+          ...updatedProduct,
+          health_benefits: currentBenefits,
+        };
+
         setProducts((prev) =>
           prev.map((product) =>
-            product.id === updatedProduct.id ? updatedProduct : product
+            product.id === fullyUpdatedProduct.id
+              ? fullyUpdatedProduct
+              : product
           )
         );
+
         resetForm();
       } catch (error) {
         console.error("Failed to edit product:", error);
-        // alert(error.message); // Notify the user
+        alert("Ürün düzenlenirken bir hata oluştu. Lütfen tekrar deneyin.");
       }
     }
   };
@@ -171,13 +273,13 @@ export const ProductManagementComponent = () => {
           placeholder="İsim veya kategoriye göre ürün arayın..."
           value={searchQuery}
           onChange={handleSearch}
-          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full p-2 border border-gray-300 bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
         <FaSearch className="ml-2 text-gray-500" />
       </div>
 
       {/* Product Table */}
-      <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+      <table className="min-w-full bg-white border border-gray-300  text-black rounded-lg shadow-md">
         <thead className="bg-gray-100">
           <tr>
             <th className="p-4 text-left font-semibold text-gray-600">ID</th>
@@ -213,7 +315,20 @@ export const ProductManagementComponent = () => {
                       setIsEditing(true);
                       setEditingProduct({
                         ...product,
-                        image_ids: product.image_ids || [], // Ensure image_ids is initialized
+                        health_benefits:
+                          (
+                            product.health_benefits as Array<
+                              string | { benefit: string }
+                            >
+                          )?.map((benefit) =>
+                            typeof benefit === "object" && "benefit" in benefit
+                              ? benefit.benefit
+                              : benefit
+                          ) || [],
+
+                        image_ids:
+                          product.images?.map((image) => image.id) || [], // Populate image_ids from images
+                        category_id: product.category?.id, // Ensure category_id is set
                       });
                       setShowModal(true);
                     }}
@@ -221,8 +336,15 @@ export const ProductManagementComponent = () => {
                   >
                     <FaEdit />
                   </button>
+
                   <button
-                    onClick={() => handleDelete(product.id)}
+                    onClick={() => {
+                      if (
+                        confirm("Ürünü silmek istediğinizden emin misiniz?")
+                      ) {
+                        handleDelete(product.id);
+                      }
+                    }}
                     className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200"
                   >
                     <FaTrashAlt />
@@ -383,7 +505,7 @@ export const ProductManagementComponent = () => {
                       setNewProduct((prev) => ({ ...prev, name: value }));
                     }
                   }}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
                 />
               </div>
 
@@ -417,7 +539,7 @@ export const ProductManagementComponent = () => {
                       }));
                     }
                   }}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
                 />
               </div>
 
@@ -435,10 +557,14 @@ export const ProductManagementComponent = () => {
                   type="number"
                   placeholder="Ürün fiyatını girin"
                   value={
-                    isEditing ? editingProduct?.price || "" : newProduct.price
+                    isEditing
+                      ? editingProduct?.price || ""
+                      : newProduct.price || ""
                   }
                   onChange={(e) => {
-                    const value = parseFloat(e.target.value);
+                    const value = e.target.value
+                      ? parseFloat(e.target.value)
+                      : 0;
                     if (isEditing) {
                       setEditingProduct((prev) =>
                         prev ? { ...prev, price: value } : prev
@@ -447,7 +573,7 @@ export const ProductManagementComponent = () => {
                       setNewProduct((prev) => ({ ...prev, price: value }));
                     }
                   }}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
                 />
               </div>
 
@@ -467,10 +593,12 @@ export const ProductManagementComponent = () => {
                   value={
                     isEditing
                       ? editingProduct?.discounted_price || ""
-                      : newProduct.discounted_price
+                      : newProduct.discounted_price || ""
                   }
                   onChange={(e) => {
-                    const value = parseFloat(e.target.value);
+                    const value = e.target.value
+                      ? parseFloat(e.target.value)
+                      : 0;
                     if (isEditing) {
                       setEditingProduct((prev) =>
                         prev ? { ...prev, discounted_price: value } : prev
@@ -482,7 +610,7 @@ export const ProductManagementComponent = () => {
                       }));
                     }
                   }}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
                 />
               </div>
 
@@ -498,12 +626,16 @@ export const ProductManagementComponent = () => {
                   id="stock"
                   name="stock"
                   type="number"
-                  placeholder="Enter stock quantity"
+                  placeholder="Stok sayısını girin"
                   value={
-                    isEditing ? editingProduct?.stock || "" : newProduct.stock
+                    isEditing
+                      ? editingProduct?.stock || ""
+                      : newProduct.stock || ""
                   }
                   onChange={(e) => {
-                    const value = parseInt(e.target.value, 10);
+                    const value = e.target.value
+                      ? parseInt(e.target.value, 10)
+                      : 0;
                     if (isEditing) {
                       setEditingProduct((prev) =>
                         prev ? { ...prev, stock: value } : prev
@@ -512,7 +644,42 @@ export const ProductManagementComponent = () => {
                       setNewProduct((prev) => ({ ...prev, stock: value }));
                     }
                   }}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
+                />
+              </div>
+
+              {/* Benefits */}
+              <div>
+                <label
+                  htmlFor="benefits"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Sağlık Yararları (Virgülle Ayırarak Girin)
+                </label>
+                <input
+                  id="benefits"
+                  name="benefits"
+                  type="text"
+                  placeholder="Sağlık yararlarını girin, örn: Bağışıklık güçlendirici, Sindirimi düzenleyici"
+                  value={
+                    isEditing
+                      ? editingProduct?.health_benefits?.join(", ") || ""
+                      : newProduct.health_benefits?.join(", ")
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value.split(",");
+                    if (isEditing) {
+                      setEditingProduct((prev) =>
+                        prev ? { ...prev, health_benefits: value } : prev
+                      );
+                    } else {
+                      setNewProduct((prev) => ({
+                        ...prev,
+                        health_benefits: value,
+                      }));
+                    }
+                  }}
+                  className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
                 />
               </div>
 
@@ -543,7 +710,7 @@ export const ProductManagementComponent = () => {
                       setNewProduct((prev) => ({ ...prev, how_to_use: value }));
                     }
                   }}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
                 />
               </div>
             </div>
@@ -558,19 +725,27 @@ export const ProductManagementComponent = () => {
               </button>
               <button
                 onClick={() => {
+                  const productToValidate = isEditing
+                    ? editingProduct
+                    : newProduct;
+
                   if (
-                    !newProduct.name ||
-                    !newProduct.price ||
-                    !newProduct.stock ||
-                    !newProduct.category_id ||
-                    newProduct.image_ids.length === 0
+                    !productToValidate?.name ||
+                    !productToValidate?.price ||
+                    !productToValidate?.stock ||
+                    !productToValidate?.category_id ||
+                    productToValidate?.image_ids.length === 0
                   ) {
                     alert(
                       "Please fill all required fields and select a category and images."
                     );
+                    console.log("Validation failed:", productToValidate);
                     return;
                   }
 
+                  console.log(
+                    "Validation passed. Triggering handleEditProduct."
+                  );
                   if (isEditing) {
                     handleEditProduct();
                   } else {
@@ -579,7 +754,7 @@ export const ProductManagementComponent = () => {
                 }}
                 className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300"
               >
-                {isEditing ? "Save Changes" : "Add Product"}
+                {isEditing ? "Değişiklikleri Kaydet" : "Ürünü Ekle"}
               </button>
             </div>
           </div>

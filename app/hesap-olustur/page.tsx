@@ -18,12 +18,14 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Honeypot field state
   const [honeypot, setHoneypot] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
+    setErrorMessage(""); // Clear previous error messages
 
     // If honeypot field is filled, treat as spam
     if (honeypot) {
@@ -31,21 +33,41 @@ export default function SignUpPage() {
       return;
     }
 
+    // Password validation
+    if (password.trim() === "" || confirmPassword.trim() === "") {
+      setErrorMessage("Şifre alanları boş bırakılamaz!");
+      return; // Prevent submission
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("Şifreler eşleşmiyor! Lütfen tekrar deneyin.");
+      return; // Prevent submission
+    }
+
     try {
-      // Show loading spinner
-      setIsLoading(true);
+      setIsLoading(true); // Show loading spinner
 
       // Call the signup API
       await signup(email, password, fname, lname);
 
-      // Delay for 2 seconds to display the spinner before navigating
+      // Simulate delay and redirect to login
       setTimeout(() => {
         router.push("/giris");
       }, 2000);
-    } catch (error) {
-      // Stop loading spinner on error
-      console.log(error);
-      setIsLoading(false);
+    } catch (error: any) {
+      setIsLoading(false); // Stop loading spinner
+
+      // Log the full error for debugging
+      console.error("Signup error:", error);
+
+      // Access the error detail and set the appropriate message
+      if (error?.detail === "REGISTER_USER_ALREADY_EXISTS") {
+        setErrorMessage(
+          "Bu e-posta adresi ile daha önce bir hesap oluşturulmuş."
+        );
+      } else {
+        setErrorMessage("Hesap oluşturulurken bir hata oluştu.");
+      }
     }
   };
 
@@ -67,7 +89,13 @@ export default function SignUpPage() {
             Üskümenzade&apos;de hesap oluşturun ve fırsatlı fiyatlardan
             faydalanın.
           </p>
-          <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+          {errorMessage && (
+            <p className="text-red-500 text-center mt-4 font-medium">
+              {errorMessage}
+            </p>
+          )}
+
+          <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-6">
             {/* Honeypot field */}
             <div className="hidden">
               <label htmlFor="honeypot">Honeypot</label>

@@ -22,6 +22,11 @@ module.exports = {
         },
       },
     },
+    variants: {
+      extend: {
+        position: ["sticky"],
+      },
+    },
   },
   plugins: [],
 };

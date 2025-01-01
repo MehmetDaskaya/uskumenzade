@@ -19,6 +19,7 @@ export interface BasketItem {
   item_id: string;
 }
 
+// userApi.ts
 export interface Order {
   id: string;
   status: string;
@@ -28,6 +29,11 @@ export interface Order {
   shipping_address: Address;
   billing_address: Address;
   basket: BasketItem[];
+  user: {
+    fname: string;
+    lname: string;
+    email: string;
+  }; // Add this field
 }
 
 export interface User {

@@ -3,14 +3,12 @@
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { ImageModal, CategoryModal } from "../../../components/";
-import { BenefitsModal } from "../../Modal/BenefitsModal";
 import { TagModal } from "../../Modal/TagIdModal";
 import { MetaTagModal } from "../../Modal/MetaTagModal";
 
 export const DefinitionsComponent = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showBenefitsModal, setShowBenefitsModal] = useState(false);
   const [showTagModal, setShowTagModal] = useState(false);
   const [showMetaTagModal, setShowMetaTagModal] = useState(false);
 
@@ -19,9 +17,6 @@ export const DefinitionsComponent = () => {
 
   const openCategoryModal = () => setShowCategoryModal(true);
   const closeCategoryModal = () => setShowCategoryModal(false);
-
-  const openBenefitsModal = () => setShowBenefitsModal(true);
-  const closeBenefitsModal = () => setShowBenefitsModal(false);
 
   const openTagModal = () => setShowTagModal(true);
   const closeTagModal = () => setShowTagModal(false);
@@ -61,21 +56,6 @@ export const DefinitionsComponent = () => {
           >
             <FaPlus className="inline mr-2" />
             Kategori Ekranını Aç
-          </button>
-        </div>
-
-        {/* Manage Benefits Section */}
-        <div className="bg-gray-100 p-6 rounded-lg shadow-lg flex flex-col items-center">
-          <h3 className="text-lg font-semibold mb-4">Faydaları Yönet</h3>
-          <p className="text-gray-600 text-center mb-6">
-            Fayda ekle, güncelle veya sil
-          </p>
-          <button
-            onClick={openBenefitsModal}
-            className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition duration-300"
-          >
-            <FaPlus className="inline mr-2" />
-            Fayda Ekranını Aç
           </button>
         </div>
 
@@ -130,17 +110,6 @@ export const DefinitionsComponent = () => {
           onCategorySelect={(categories) => {
             console.log("Selected Categories:", categories);
             closeCategoryModal();
-          }}
-        />
-      )}
-
-      {showBenefitsModal && (
-        <BenefitsModal
-          isOpen={showBenefitsModal}
-          onClose={closeBenefitsModal}
-          onBenefitSelect={(benefits) => {
-            console.log("Selected Benefits:", benefits);
-            closeBenefitsModal();
           }}
         />
       )}

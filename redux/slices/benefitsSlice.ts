@@ -129,7 +129,8 @@ const healthBenefitSlice = createSlice({
       })
       .addCase(fetchHealthBenefits.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Unknown error occurred";
+        state.error =
+          action.payload || "Sağlık faydalarını çekerken bir hata oluştu.";
       })
 
       .addCase(fetchHealthBenefitById.pending, (state) => {
@@ -142,7 +143,9 @@ const healthBenefitSlice = createSlice({
       })
       .addCase(fetchHealthBenefitById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Unknown error occurred";
+        state.error =
+          action.payload ||
+          "Belirli bir sağlık faydasını çekerken bir hata oluştu.";
       })
 
       .addCase(addHealthBenefit.pending, (state) => {
@@ -155,7 +158,8 @@ const healthBenefitSlice = createSlice({
       })
       .addCase(addHealthBenefit.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Unknown error occurred";
+        state.error =
+          action.payload || "Sağlık faydası eklerken bir hata oluştu.";
       })
 
       .addCase(editHealthBenefit.pending, (state) => {
@@ -173,7 +177,8 @@ const healthBenefitSlice = createSlice({
       })
       .addCase(editHealthBenefit.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Unknown error occurred";
+        state.error =
+          action.payload || "Sağlık faydasını düzenlerken bir hata oluştu.";
       })
 
       .addCase(deleteHealthBenefitById.pending, (state) => {
@@ -188,7 +193,8 @@ const healthBenefitSlice = createSlice({
       })
       .addCase(deleteHealthBenefitById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Unknown error occurred";
+        state.error =
+          action.payload || "Sağlık faydasını silerken bir hata oluştu.";
       });
   },
 });

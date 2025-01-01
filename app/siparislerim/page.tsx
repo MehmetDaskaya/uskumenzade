@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchOrders, Order } from "@/app/api/order/orderApi";
+import { Order } from "@/app/api/order/orderApi";
+import { fetchCurrentUser } from "@/app/api/user/userApi";
+
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
 import Image from "next/image";
@@ -22,8 +24,18 @@ export default function OrderHistory() {
           setLoading(false);
           return;
         }
-        const fetchedOrders = await fetchOrders(accessToken);
-        setOrders(fetchedOrders);
+        const userData = await fetchCurrentUser(accessToken); // Fetch user data
+        const ordersWithUser = userData.orders
+          .map((order) => ({
+            ...order,
+            user: userData, // Add the user data manually
+          }))
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          ); // Sort orders last to first
+        setOrders(ordersWithUser || []); // Use the compatible type
         setError(null);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -66,25 +78,31 @@ export default function OrderHistory() {
                     Sipariş No: {order.id}
                   </p>
                 </div>
-                <div className="text-right">
-                  <button className="px-4 py-2 text-sm text-white bg-yellow-500 rounded hover:bg-yellow-600">
-                    Fatura Görüntüle
-                  </button>
+                {/* <div className="text-right">
                   <button className="px-4 py-2 ml-4 text-sm text-white bg-gray-600 rounded hover:bg-gray-700">
                     İade Talebi
                   </button>
-                </div>
+                </div> */}
               </div>
 
               {/* Order Status */}
               <div className="flex items-center justify-between py-4">
                 <div className="flex items-center space-x-3">
-                  <span className="text-green-600 font-medium">
-                    {order.status === "pending"
-                      ? "Siparişiniz Alındı"
+                  <span
+                    className={`font-medium ${
+                      order.status === "paid"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {order.status === "paid"
+                      ? "Ödeme Yapıldı"
+                      : order.status === "pending"
+                      ? "Ödeme Yapılmadı"
                       : "Durum Bilinmiyor"}
                   </span>
                 </div>
+
                 <div className="flex items-center space-x-3">
                   <p className="text-sm text-gray-500">Toplam Tutar:</p>
                   <p className="text-lg font-bold text-gray-800">

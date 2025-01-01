@@ -68,7 +68,7 @@ export const updateProduct = async (
     stock: number;
     how_to_use: string;
     category_id: string;
-    image_ids: string[];
+    image_ids: string[]; // Ensure this array allows up to 4 IDs
   }
 ) => {
   try {
