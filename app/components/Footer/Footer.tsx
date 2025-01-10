@@ -133,7 +133,7 @@ export const Footer = ({ viewable = false }: FooterProps) => {
 
       <div className="border-t border-gray-700 mt-8 pt-6">
         <p className="text-center text-sm text-gray-500">
-          &copy; 2024 Üskümenzade. Tüm Hakları Saklıdır.
+          &copy; 2025 Üskümenzade. Tüm Hakları Saklıdır.
         </p>
       </div>
     </footer>
