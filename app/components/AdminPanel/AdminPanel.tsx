@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { clearAccessToken } from "../../../redux/slices/authSlice";
-import { fetchCurrentUser } from "@/app/api/auth/authApi"; // Import the function to fetch user data
+import { fetchCurrentUser } from "@/app/api/auth/authApi";
 import {
   FaUsers,
   FaBox,
@@ -13,7 +13,7 @@ import {
   FaCog,
   FaBell,
 } from "react-icons/fa";
-import { MdOutlineAnalytics } from "react-icons/md";
+// import { MdOutlineAnalytics } from "react-icons/md";
 import { FiLogOut, FiMenu } from "react-icons/fi";
 import {
   DashboardComponent,

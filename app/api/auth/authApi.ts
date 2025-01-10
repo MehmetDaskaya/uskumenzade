@@ -1,14 +1,19 @@
 import API_BASE_URL from "../../../util/config";
 
+interface ExtendedError extends Error {
+  detail?: string;
+}
+
 // Helper function to handle fetch requests
 const fetchFromAPI = async (endpoint: string, options: RequestInit = {}) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
   if (!response.ok) {
     const errorData = await response.json();
-    const error = new Error(
+
+    const error: ExtendedError = new Error(
       errorData?.detail || `Error: ${response.statusText}`
     );
-    (error as any).detail = errorData?.detail; // Attach the `detail` field explicitly
+    error.detail = errorData?.detail;
     throw error;
   }
   return response.json();

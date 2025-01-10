@@ -1,12 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaLinkedinIn,
-} from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 
 interface FooterProps {
   viewable?: boolean;
@@ -46,12 +42,12 @@ export const Footer = ({ viewable = false }: FooterProps) => {
               </Link>
             </li>
             <li>
-              <Link href="/about" className="hover:text-yellow-500">
+              <Link href="/hakkimizda" className="hover:text-yellow-500">
                 Hakkımızda
               </Link>
             </li>
             <li>
-              <Link href="/contact" className="hover:text-yellow-500">
+              <Link href="/iletisim" className="hover:text-yellow-500">
                 İletişim
               </Link>
             </li>
@@ -63,22 +59,22 @@ export const Footer = ({ viewable = false }: FooterProps) => {
           <h3 className="text-xl font-semibold mb-4">Müşteri Servisi</h3>
           <ul className="space-y-2">
             <li>
-              <Link href="/shipping" className="hover:text-yellow-500">
+              <Link href="/iletisim" className="hover:text-yellow-500">
                 Kargo Bilgisi
               </Link>
             </li>
             <li>
-              <Link href="/returns" className="hover:text-yellow-500">
+              <Link href="/iletisim" className="hover:text-yellow-500">
                 İadeler
               </Link>
             </li>
             <li>
-              <Link href="/faq" className="hover:text-yellow-500">
+              <Link href="/iletisim" className="hover:text-yellow-500">
                 Sıkça Sorulan Sorular
               </Link>
             </li>
             <li>
-              <Link href="/support" className="hover:text-yellow-500">
+              <Link href="/iletisim" className="hover:text-yellow-500">
                 Destek
               </Link>
             </li>
@@ -118,7 +114,7 @@ export const Footer = ({ viewable = false }: FooterProps) => {
             href="https://www.twitter.com"
             className="hover:text-yellow-500"
           >
-            <FaTwitter size={24} />
+            <FaXTwitter size={24} />
           </Link>
           <Link
             href="https://www.instagram.com"

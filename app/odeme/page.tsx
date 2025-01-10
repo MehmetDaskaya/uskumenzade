@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { CreateOrderRequest, createOrder } from "@/app/api/order/orderApi";
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner";
+import UserInformationModal from "../components/Modal/UserInformationModal";
 import { Address } from "@/app/api/address/addressApi";
 import { fetchCurrentUser } from "@/app/api/user/userApi";
 import { RootState } from "@/redux/store";
@@ -13,6 +14,16 @@ import { initializePayment } from "@/app/api/payment/paymentApi";
 import { useRouter } from "next/navigation";
 
 export default function PlaceOrder() {
+  const [showModal, setShowModal] = useState(true); // Modal visibility state
+
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
+
+  const handleAddressUpdate = (updatedAddresses: Address[]) => {
+    setAddresses(updatedAddresses); // Update addresses when the modal updates
+  };
+
   const router = useRouter();
   const [paymentData, setPaymentData] = useState(null);
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
@@ -32,6 +43,13 @@ export default function PlaceOrder() {
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const cartItems = useSelector((state: RootState) => state.cart.items);
+
+  useEffect(() => {
+    if (!addresses.length && accessToken) {
+      // If no addresses exist, show the modal
+      setShowModal(true);
+    }
+  }, [addresses, accessToken]);
 
   useEffect(() => {
     const fetchUserAddresses = async () => {
@@ -101,7 +119,7 @@ export default function PlaceOrder() {
       setShowPaymentModal(true);
     } catch (error) {
       console.error("Failed to create order or initialize payment:", error);
-      alert("Failed to proceed with the order. Please try again.");
+      alert("Siparişe devam edilemiyor. Lütfen tekrar deneyiniz.");
     } finally {
       setIsSubmitting(false);
     }
@@ -317,6 +335,13 @@ export default function PlaceOrder() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <LoadingSpinner />
         </div>
+      )}
+      {showModal && (
+        <UserInformationModal
+          isVisible={showModal}
+          onClose={handleModalClose}
+          onUpdateAddresses={handleAddressUpdate}
+        />
       )}
     </div>
   );

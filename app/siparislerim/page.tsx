@@ -39,7 +39,7 @@ export default function OrderHistory() {
         setError(null);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
-        setError("Failed to load orders. Please try again.");
+        setError("Siparişler yüklenemedi. Giriş yapmayı deneyiniz.");
       } finally {
         setLoading(false);
       }
@@ -49,8 +49,8 @@ export default function OrderHistory() {
   }, [accessToken]);
 
   return (
-    <div className="container mx-auto px-6 py-12 bg-gray-100">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
+    <div className="container mx-auto px-6 py-12 bg-yellow-500">
+      <h1 className="text-4xl font-bold text-white mb-8 text-center">
         Sipariş Geçmişim
       </h1>
 

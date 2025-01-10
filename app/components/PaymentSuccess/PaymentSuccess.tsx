@@ -1,11 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { clearCartOnSuccess } from "@/redux/slices/cartSlice";
+import { fetchCurrentUser } from "@/app/api/auth/authApi";
 
 const PaymentSuccess = () => {
-  const router = useRouter();
+  const dispatch = useDispatch();
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -15,8 +17,31 @@ const PaymentSuccess = () => {
       const statusParam = searchParams.get("status");
 
       setStatus(statusParam);
+
+      if (statusParam === "success") {
+        handlePaymentSuccess();
+        console.log(status);
+      }
     }
   }, []);
+
+  const handlePaymentSuccess = async () => {
+    try {
+      const accessToken = localStorage.getItem("authToken");
+      if (!accessToken) {
+        console.error("No access token found");
+        return;
+      }
+
+      const userData = await fetchCurrentUser(accessToken);
+      const userEmail = userData?.email || null;
+
+      // Dispatch the clearCartOnSuccess action with userEmail
+      dispatch(clearCartOnSuccess(userEmail));
+    } catch (error) {
+      console.error("Error handling payment success:", error);
+    }
+  };
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full text-center">
@@ -26,6 +51,7 @@ const PaymentSuccess = () => {
         Siparişiniz başarıyla alınmıştır. Bizi tercih ettiğiniz için teşekkür
         ederiz.
       </p>
+      <p className="text-gray-700 mb-6">Bu sayfayı kapatabilirsiniz.</p>
     </div>
   );
 };

@@ -11,19 +11,30 @@ interface Blog {
   created_at: string;
   images: { url: string }[]; // Assuming multiple images
   content: string;
+  tags?: { name: string }[];
 }
 
 async function getData() {
   try {
     const blogs: Blog[] = await fetchBlogsWithSSR();
 
-    const categories: string[] = [
+    // Extract categories from blogs and include the first tag as a category
+    const categories = [
       "Tümü",
-      ...Array.from(new Set(blogs.map((blog) => blog.category))),
+      ...Array.from(
+        new Set(
+          blogs.flatMap((blog) => [
+            blog.category,
+            blog.tags?.[0]?.name, // Include the first tag's name if available
+          ])
+        )
+      ).filter(Boolean), // Remove undefined or null values
     ];
+
     return { blogs, categories };
-  } catch {
-    throw new Error("Blog verileri alınırken bir hata oluştu.");
+  } catch (error) {
+    console.error("Error fetching blogs data:", error);
+    return { blogs: [], categories: ["Tümü"] }; // Provide fallback
   }
 }
 
@@ -37,7 +48,11 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
   // Filter blogs based on the selected category
   const filteredBlogs =
     searchParams.kategori && searchParams.kategori !== "Tümü"
-      ? blogs.filter((blog) => blog.category === searchParams.kategori)
+      ? blogs.filter(
+          (blog) =>
+            blog.category === searchParams.kategori ||
+            blog.tags?.[0]?.name === searchParams.kategori
+        )
       : blogs;
 
   return (
@@ -84,7 +99,7 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
             {categories.map((category) => (
               <li key={category}>
                 <a
-                  href={`?kategori=${category}`} // Use "kategori" in the query parameter
+                  href={`?kategori=${category}`}
                   className={`w-full text-left text-lg text-gray-700 hover:text-yellow-500 transition-colors ${
                     searchParams.kategori === category
                       ? "font-bold text-yellow-500"
@@ -102,16 +117,33 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
       {/* Call-to-Action Section */}
       <div className="bg-yellow-500 text-white py-16">
         <div className="container mx-auto text-center px-4">
-          <h2 className="text-3xl font-bold mb-4">Keşfetmeye Devam Edin</h2>
-          <p className="text-lg mb-6">
-            Daha fazla bilgi ve hikaye için diğer bloglarımızı inceleyin.
-          </p>
-          <a
-            href="/blog/detaylar"
-            className="bg-white text-yellow-500 px-6 py-3 rounded-lg font-bold hover:bg-gray-100"
-          >
-            Tüm Blogları Gör
-          </a>
+          {blogs.length > 6 ? (
+            <>
+              <h2 className="text-3xl font-bold mb-4">Keşfetmeye Devam Edin</h2>
+              <p className="text-lg mb-6">
+                Daha fazla bilgi ve hikaye için diğer bloglarımızı inceleyin.
+              </p>
+              <a
+                href="/blog/detaylar"
+                className="bg-white text-yellow-500 px-6 py-3 rounded-lg font-bold hover:bg-gray-100"
+              >
+                Tüm Blogları Gör
+              </a>
+            </>
+          ) : (
+            <>
+              <h2 className="text-3xl font-bold mb-4">Ürünlerimizi Keşfedin</h2>
+              <p className="text-lg mb-6">
+                Daha fazlası için ürünlerimize göz atın.
+              </p>
+              <a
+                href="/urunler"
+                className="bg-white text-yellow-500 px-6 py-3 rounded-lg font-bold hover:bg-gray-100"
+              >
+                Ürünlere Git
+              </a>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -2,15 +2,16 @@
 
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/redux/store";
-
 import {
   removeItemFromCart,
   updateItemQuantity,
-  clearCart,
+  clearCartOnSuccess,
+  loadCartForUser,
 } from "@/redux/slices/cartSlice";
+import { fetchCurrentUser } from "../api/auth/authApi";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaTrashAlt } from "react-icons/fa";
 import { AiOutlineShoppingCart } from "react-icons/ai";
 
@@ -22,6 +23,58 @@ export default function Cart() {
 
   const [discountCode, setDiscountCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
+  const [isClient, setIsClient] = useState(false); // Ensure hydration consistency
+
+  // Ensure the component is client-side
+
+  useEffect(() => {
+    const initializeCart = async () => {
+      try {
+        const accessToken = localStorage.getItem("authToken");
+        let userEmail = null;
+
+        if (accessToken) {
+          const userData = await fetchCurrentUser(accessToken);
+          userEmail = userData?.email || null;
+        }
+
+        // Load the cart for the current user
+        dispatch(loadCartForUser(userEmail));
+      } catch (error) {
+        console.error("Error initializing cart:", error);
+      }
+    };
+
+    initializeCart();
+  }, [dispatch]);
+
+  useEffect(() => {
+    setIsClient(true);
+    const fetchUserAndHandleCart = async () => {
+      try {
+        const paymentStatus = localStorage.getItem("paymentStatus");
+        if (paymentStatus === "success") {
+          const accessToken = localStorage.getItem("authToken");
+          let userEmail = null;
+
+          if (accessToken) {
+            const userData = await fetchCurrentUser(accessToken);
+            userEmail = userData?.email || null;
+          }
+
+          // Always pass the `userEmail` or `null` to the action
+          dispatch(clearCartOnSuccess(userEmail));
+
+          // Clear payment status after successful cart clearing
+          localStorage.removeItem("paymentStatus");
+        }
+      } catch (error) {
+        console.error("Error clearing cart on success:", error);
+      }
+    };
+
+    fetchUserAndHandleCart();
+  }, [dispatch]);
 
   const handleDiscountApply = () => {
     if (discountCode === "DISCOUNT10") {
@@ -34,6 +87,8 @@ export default function Cart() {
 
   const discountAmount = appliedDiscount ? totalPrice * appliedDiscount : 0;
   const finalTotal = totalPrice - discountAmount;
+
+  if (!isClient) return null; // Render nothing on the server
 
   return (
     <div className="container bg-yellow-500 mx-auto px-4 md:px-16 py-8">
@@ -84,30 +139,53 @@ export default function Cart() {
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center border rounded-md">
                       <button
-                        onClick={() =>
-                          dispatch(
-                            updateItemQuantity({
-                              id: item.id,
-                              quantity: item.quantity - 1,
-                            })
-                          )
-                        }
+                        onClick={async () => {
+                          const accessToken = localStorage.getItem("authToken");
+                          if (!accessToken) {
+                            console.error("Access token is not available.");
+                            return; // Prevent further execution if accessToken is null
+                          }
+                          const userData = await fetchCurrentUser(accessToken);
+                          const userEmail = userData?.email;
+
+                          if (userEmail) {
+                            dispatch(
+                              updateItemQuantity({
+                                userId: userEmail,
+                                id: item.id,
+                                quantity: item.quantity - 1,
+                              })
+                            );
+                          }
+                        }}
                         disabled={item.quantity <= 1}
                         className="px-3 py-1 text-gray-600 hover:bg-gray-200 disabled:opacity-50"
                       >
                         -
                       </button>
+
                       <span className="px-4">{item.quantity}</span>
                       <button
-                        onClick={() =>
-                          dispatch(
-                            updateItemQuantity({
-                              id: item.id,
-                              quantity: item.quantity + 1,
-                            })
-                          )
-                        }
-                        disabled={item.quantity >= item.stock} // Disable if quantity reaches stock
+                        onClick={async () => {
+                          const accessToken = localStorage.getItem("authToken");
+                          if (!accessToken) {
+                            console.error("Access token is not available.");
+                            return; // Prevent further execution if accessToken is null
+                          }
+                          const userData = await fetchCurrentUser(accessToken);
+                          const userEmail = userData?.email;
+
+                          if (userEmail) {
+                            dispatch(
+                              updateItemQuantity({
+                                userId: userEmail,
+                                id: item.id,
+                                quantity: item.quantity + 1,
+                              })
+                            );
+                          }
+                        }}
+                        disabled={item.quantity >= item.stock}
                         className={`px-3 py-1 text-gray-600 hover:bg-gray-200 ${
                           item.quantity >= item.stock
                             ? "opacity-50 cursor-not-allowed"
@@ -121,7 +199,24 @@ export default function Cart() {
                       {(item.discounted_price * item.quantity).toFixed(2)} ₺
                     </p>
                     <button
-                      onClick={() => dispatch(removeItemFromCart(item.id))}
+                      onClick={async () => {
+                        const accessToken = localStorage.getItem("authToken");
+                        if (!accessToken) {
+                          console.error("Access token is not available.");
+                          return; // Prevent further execution if accessToken is null
+                        }
+                        const userData = await fetchCurrentUser(accessToken);
+                        const userEmail = userData?.email;
+
+                        if (userEmail) {
+                          dispatch(
+                            removeItemFromCart({
+                              userId: userEmail,
+                              id: item.id,
+                            })
+                          );
+                        }
+                      }}
                       className="text-red-500 hover:text-red-700 transition"
                     >
                       <FaTrashAlt size={18} />

@@ -1,5 +1,34 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+const isBrowser = typeof window !== "undefined";
+
+// Helper function to get user-specific cart key
+const getCartKey = (userId: string | null) =>
+  userId ? `cart_${userId}` : "cart";
+
+const loadFromLocalStorage = (userId: string | null) => {
+  if (!isBrowser) return undefined; // Ensure it runs only on the client
+  try {
+    const cartKey = getCartKey(userId);
+    const serializedState = localStorage.getItem(cartKey);
+    return serializedState ? JSON.parse(serializedState) : undefined;
+  } catch (e) {
+    console.error("Could not load cart from localStorage:", e);
+    return undefined;
+  }
+};
+
+const saveToLocalStorage = (state: CartState, userId: string | null) => {
+  if (!isBrowser) return; // Ensure it runs only on the client
+  try {
+    const cartKey = getCartKey(userId);
+    const serializedState = JSON.stringify(state);
+    localStorage.setItem(cartKey, serializedState);
+  } catch (e) {
+    console.error("Could not save cart to localStorage:", e);
+  }
+};
+
 // Define the shape of a cart item
 export interface CartItem {
   id: string;
@@ -13,12 +42,12 @@ export interface CartItem {
 
 // Define the CartState type
 interface CartState {
-  items: CartItem[]; // Array of cart items
-  totalQuantity: number; // Total number of items in the cart
-  totalPrice: number; // Total price of the cart
+  items: CartItem[];
+  totalQuantity: number;
+  totalPrice: number;
 }
 
-// Initial state
+// Load initial state from localStorage or default to empty
 const initialState: CartState = {
   items: [],
   totalQuantity: 0,
@@ -40,65 +69,115 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    // Add an item to the cart
-    addItemToCart: (state, action: PayloadAction<CartItem>) => {
+    loadCartForUser: (state, action: PayloadAction<string | null>) => {
+      // Load cart for the current user
+      const userId = action.payload;
+      const loadedState = loadFromLocalStorage(userId);
+      if (loadedState) {
+        state.items = loadedState.items;
+        state.totalQuantity = loadedState.totalQuantity;
+        state.totalPrice = loadedState.totalPrice;
+      } else {
+        state.items = [];
+        state.totalQuantity = 0;
+        state.totalPrice = 0;
+      }
+    },
+
+    addItemToCart: (
+      state,
+      action: PayloadAction<{ userId: string | null; item: CartItem }>
+    ) => {
+      const { userId, item } = action.payload;
       const existingItem = state.items.find(
-        (item) => item.id === action.payload.id
+        (cartItem) => cartItem.id === item.id
       );
 
       if (existingItem) {
-        // If the item is already in the cart, increase its quantity
-        existingItem.quantity += action.payload.quantity;
+        existingItem.quantity += item.quantity;
       } else {
-        // Otherwise, add it as a new item
-        state.items.push(action.payload);
+        state.items.push(item);
       }
 
-      // Recalculate totals
       const totals = calculateTotals(state.items);
       state.totalQuantity = totals.totalQuantity;
       state.totalPrice = totals.totalPrice;
+
+      saveToLocalStorage(state, userId); // Save to localStorage
     },
 
-    // Remove an item from the cart
-    removeItemFromCart: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter((item) => item.id !== action.payload);
-
-      // Recalculate totals
-      const totals = calculateTotals(state.items);
-      state.totalQuantity = totals.totalQuantity;
-      state.totalPrice = totals.totalPrice;
-    },
-
-    // Update the quantity of an item in the cart
     updateItemQuantity: (
       state,
-      action: PayloadAction<{ id: string; quantity: number }>
+      action: PayloadAction<{
+        userId: string | null;
+        id: string;
+        quantity: number;
+      }>
     ) => {
-      const item = state.items.find((item) => item.id === action.payload.id);
+      const { userId, id, quantity } = action.payload;
+
+      // Find the item in the cart
+      const item = state.items.find((cartItem) => cartItem.id === id);
       if (item) {
-        const newQuantity = action.payload.quantity;
+        const newQuantity = quantity;
         if (newQuantity > 0 && newQuantity <= item.stock) {
           item.quantity = newQuantity;
         }
       }
+
+      // Recalculate totals
+      const totals = calculateTotals(state.items);
+      state.totalQuantity = totals.totalQuantity;
+      state.totalPrice = totals.totalPrice;
+
+      // Save to localStorage (user-specific)
+      if (userId) {
+        saveToLocalStorage(state, userId);
+      }
     },
 
-    // Clear the cart
-    clearCart: (state) => {
+    removeItemFromCart: (
+      state,
+      action: PayloadAction<{ userId: string | null; id: string }>
+    ) => {
+      const { userId, id } = action.payload;
+      state.items = state.items.filter((item) => item.id !== id);
+
+      const totals = calculateTotals(state.items);
+      state.totalQuantity = totals.totalQuantity;
+      state.totalPrice = totals.totalPrice;
+
+      saveToLocalStorage(state, userId); // Save to localStorage
+    },
+
+    clearCart: (state, action: PayloadAction<string | null>) => {
+      const userId = action.payload;
       state.items = [];
       state.totalQuantity = 0;
       state.totalPrice = 0;
+
+      saveToLocalStorage(state, userId); // Save to localStorage
+    },
+
+    clearCartOnSuccess: (state, action: PayloadAction<string | null>) => {
+      const userId = action.payload;
+      state.items = [];
+      state.totalQuantity = 0;
+      state.totalPrice = 0;
+
+      saveToLocalStorage(state, userId); // Clear cart in localStorage
     },
   },
 });
 
 // Export actions
 export const {
+  loadCartForUser,
   addItemToCart,
-  removeItemFromCart,
   updateItemQuantity,
+  removeItemFromCart,
   clearCart,
+  clearCartOnSuccess,
 } = cartSlice.actions;
 
 // Export the reducer

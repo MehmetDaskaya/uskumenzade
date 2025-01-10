@@ -58,21 +58,21 @@ const data = [
     title: "Bitkisel formüllü çaylarımızı keşfedin.",
     src: herbalTea,
     content: <ProductsContent />,
-    link: "/blog/detaylar/1",
+    link: "/blog",
   },
   {
     category: "Bitkisel Yağlar",
     title: "Bitkisel yağlarımızın faydalarını öğrenin.",
     src: herbalOil,
     content: <ProductsContent />,
-    link: "/blog/detaylar/2",
+    link: "/blog",
   },
   {
     category: "Bitkisel Kremler",
     title: "Doğal bitkisel kremlerimizin faydalarını keşfedin.",
     src: herbalCream,
     content: <ProductsContent />,
-    link: "/blog/detaylar/3",
+    link: "/blog",
   },
 ];
 
@@ -103,9 +103,6 @@ export default function HomeContent() {
 
   return (
     <div className="bg-gray-50 text-gray-900 font-sans relative">
-      <div className="leaf-decoration leaf-left"></div>
-      <div className="leaf-decoration leaf-right"></div>
-
       {/* Hero Section */}
       <section
         className="relative bg-cover bg-center h-[40vh] sm:h-[80vh] flex items-center justify-center sm:justify-start px-4 sm:px-8"

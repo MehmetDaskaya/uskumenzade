@@ -26,6 +26,12 @@ export const fetchBlogs = async (token?: string) => {
 };
 
 export async function fetchBlogsWithSSR() {
-  const token = cookies().get("authToken")?.value; // Replace "authToken" with your cookie name
-  return fetchBlogs(token);
+  try {
+    const token = cookies().get("authToken")?.value; // Replace "authToken" with your cookie name
+    const blogs = await fetchBlogs(token);
+    return blogs;
+  } catch (error) {
+    console.error("Error fetching blogs in SSR:", error);
+    throw new Error("Blog verileri alınırken bir hata oluştu."); // Explicitly rethrow error
+  }
 }

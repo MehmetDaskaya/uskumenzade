@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 interface Blog {
   id: string;
@@ -11,9 +12,11 @@ const BlogCard = ({ blog }: { blog: Blog }) => {
   return (
     <Link href={`/blog/${blog.id}`}>
       <div className="border p-4 cursor-pointer">
-        <img
+        <Image
           src={blog.imageUrl}
           alt={blog.title}
+          width={500} // Set an appropriate width
+          height={192} // Set an appropriate height for the h-48 equivalent
           className="w-full h-48 object-cover"
         />
         <h2 className="text-lg font-bold mt-4">{blog.title}</h2>

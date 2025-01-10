@@ -6,7 +6,6 @@ import {
   FaBox,
   FaShoppingCart,
   FaDollarSign,
-  FaChartLine,
   FaArrowUp,
   FaArrowDown,
 } from "react-icons/fa";

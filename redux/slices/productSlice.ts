@@ -9,6 +9,7 @@ import {
 
 // Define the shape of a product
 export interface Product {
+  category: any;
   images: any;
   id: string;
   name: string;

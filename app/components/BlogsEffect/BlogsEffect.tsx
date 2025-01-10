@@ -13,6 +13,9 @@ export const BlogsEffect = ({
   }[];
   className?: string;
 }) => {
+  const truncateText = (text: string, limit: number) =>
+    text.length > limit ? `${text.substring(0, limit)}...` : text;
+
   return (
     <div
       className={cn(
@@ -36,8 +39,9 @@ export const BlogsEffect = ({
           </div>
           {/* Card Content */}
           <div className="bg-white rounded-b-2xl p-4 shadow-md">
-            <h4 className="text-gray-900 font-bold tracking-wide mt-2">
-              {item.title}
+            <h4 className="text-gray-900 font-bold tracking-wide mt-2 line-clamp-2">
+              {truncateText(item.title, 50)}{" "}
+              {/* Truncate title to 50 characters */}
             </h4>
             <p className="text-gray-600 tracking-wide leading-relaxed text-sm mt-1">
               {item.description}

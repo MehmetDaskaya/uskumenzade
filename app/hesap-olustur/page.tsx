@@ -54,19 +54,22 @@ export default function SignUpPage() {
       setTimeout(() => {
         router.push("/giris");
       }, 2000);
-    } catch (error: any) {
+    } catch (error) {
       setIsLoading(false); // Stop loading spinner
 
-      // Log the full error for debugging
-      console.error("Signup error:", error);
-
-      // Access the error detail and set the appropriate message
-      if (error?.detail === "REGISTER_USER_ALREADY_EXISTS") {
+      // Use type assertion or check for the structure of the error
+      if (
+        error instanceof Error &&
+        (error as { detail?: string }).detail === "REGISTER_USER_ALREADY_EXISTS"
+      ) {
         setErrorMessage(
           "Bu e-posta adresi ile daha önce bir hesap oluşturulmuş."
         );
-      } else {
+      } else if (error instanceof Error) {
         setErrorMessage("Hesap oluşturulurken bir hata oluştu.");
+      } else {
+        console.error("Unknown error:", error);
+        setErrorMessage("Bilinmeyen bir hata oluştu.");
       }
     }
   };

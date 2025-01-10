@@ -496,6 +496,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
+import Image from "next/image";
 
 import { FaTag } from "react-icons/fa";
 import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
@@ -521,12 +522,24 @@ export const ProductListings = ({
   const [selectedFilters, setSelectedFilters] = useState<{
     price: string[];
     stock: string[];
+    category: string[];
   }>({
     price: [],
     stock: [],
+    category: [],
   });
 
-  const [appliedFilters, setAppliedFilters] = useState(selectedFilters);
+  const [appliedFilters, setAppliedFilters] = useState<{
+    price: string[];
+    stock: string[];
+    category: string[];
+  }>({
+    price: [],
+    stock: [],
+    category: [],
+  });
+
+  const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
     dispatch(fetchProducts());
@@ -553,8 +566,9 @@ export const ProductListings = ({
   const applyFilters = () => setAppliedFilters({ ...selectedFilters });
 
   const resetFilters = () => {
-    setSelectedFilters({ price: [], stock: [] });
-    setAppliedFilters({ price: [], stock: [] });
+    setSelectedFilters({ price: [], stock: [], category: [] });
+    setAppliedFilters({ price: [], stock: [], category: [] });
+    setResetKey((prevKey) => prevKey + 1); // Trigger re-render of checkboxes
   };
 
   // Apply filters to the fetched products
@@ -574,7 +588,11 @@ export const ProductListings = ({
       appliedFilters.stock.length === 0 ||
       appliedFilters.stock.includes("Stokta Var") === product.stock > 0;
 
-    return priceFilter && stockFilter;
+    const categoryFilter =
+      appliedFilters.category.length === 0 ||
+      appliedFilters.category.includes(product.category.name);
+
+    return priceFilter && stockFilter && categoryFilter;
   });
 
   if (loading) {
@@ -591,12 +609,38 @@ export const ProductListings = ({
       <div className="flex flex-row">
         {isProductsPage && (
           <aside className="hidden md:block md:w-1/4 pr-8 mr-8 border-r border-yellow-400 h-auto">
-            {/* Filters */}
+            {/* Kategoriler */}
+            <div className="mb-8 p-4 bg-gray-100 rounded-lg shadow">
+              <h4 className="font-semibold text-lg mb-3 text-gray-800">
+                Kategoriler
+              </h4>
+              <ul className="space-y-3" key={`category-${resetKey}`}>
+                {Object.keys(
+                  products.reduce((uniqueCategories, product) => {
+                    uniqueCategories[product.category.name] = true;
+                    return uniqueCategories;
+                  }, {} as Record<string, boolean>)
+                ).map((cat) => (
+                  <li key={cat}>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox h-4 w-4 text-yellow-400 mr-2"
+                        onChange={() => toggleFilter("category", cat)}
+                      />
+                      <span className="text-gray-700">{cat}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Fiyat Aralığı */}
             <div className="mb-8 p-4 bg-gray-100 rounded-lg shadow">
               <h4 className="font-semibold text-lg mb-3 text-gray-800">
                 Fiyat Aralığı
               </h4>
-              <ul className="space-y-3">
+              <ul className="space-y-3" key={`price-${resetKey}`}>
                 {[
                   "100₺ - 200₺",
                   "200₺ - 300₺",
@@ -616,11 +660,13 @@ export const ProductListings = ({
                 ))}
               </ul>
             </div>
+
+            {/* Stok Durumu */}
             <div className="mb-8 p-4 bg-gray-100 rounded-lg shadow">
               <h4 className="font-semibold text-lg mb-3 text-gray-800">
                 Stok Durumu
               </h4>
-              <ul className="space-y-3">
+              <ul className="space-y-3" key={`stock-${resetKey}`}>
                 {["Stokta Var", "Stokta Yok"].map((status) => (
                   <li key={status}>
                     <label className="flex items-center">
@@ -635,6 +681,8 @@ export const ProductListings = ({
                 ))}
               </ul>
             </div>
+
+            {/* Filtre İşlemleri */}
             <button
               className="bg-gray-200 py-2 mb-2 px-4 w-full text-gray-600 font-semibold"
               onClick={resetFilters}
@@ -649,6 +697,7 @@ export const ProductListings = ({
             </button>
           </aside>
         )}
+
         {/* Product Listings */}
         <div className={`w-full ${isProductsPage && "lg:w-3/4"}`}>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -660,10 +709,12 @@ export const ProductListings = ({
               >
                 <div className="relative group bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4">
                   <div className="w-full h-48 mb-4 overflow-hidden rounded-md border border-gray-300">
-                    <img
+                    <Image
                       src={product.images?.[0]?.url || "/placeholder.png"}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      width={500} // Set an appropriate width
+                      height={192}
                     />
                   </div>
 
@@ -672,6 +723,13 @@ export const ProductListings = ({
                     <div className="absolute top-2 right-2 bg-yellow-500 text-white rounded-full p-2 w-12 h-12 flex flex-col items-center justify-center">
                       <FaTag className="text-lg" />
                       <span className="text-[10px]">İndirim</span>
+                    </div>
+                  )}
+                  {/* Out of Stock Badge */}
+                  {product.stock === 0 && (
+                    <div className="absolute top-2 left-2 bg-red-600 text-white rounded-full p-2 w-12 h-12 flex flex-col items-center justify-center">
+                      <FaTag className="text-lg" />
+                      <span className="text-[10px]">Tükendi</span>
                     </div>
                   )}
 

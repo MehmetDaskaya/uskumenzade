@@ -27,8 +27,7 @@ export default function AboutPage() {
         <div className="container mx-auto text-center px-4">
           <h1 className="text-4xl font-bold mb-4">Hakkımızda</h1>
           <p className="text-lg">
-            Özen ve gelenekle hazırlanan premium çaylar, doğal merhemler ve
-            kremler için güvenilir kaynağınız.
+            Özen ve gelenekle hazırlanan doğal çaylar için güvenilir kaynağınız.
           </p>
         </div>
       </div>
@@ -51,9 +50,8 @@ export default function AboutPage() {
           <div className="w-full md:w-1/2 flex flex-col justify-center">
             <p className="text-lg text-gray-800 mb-4">
               Uskumenzade olarak misyonumuz, doğal, sürdürülebilir ve yüksek
-              kaliteli ürünlerle yaşam kalitenizi artırmaktır. En iyi çaylardan
-              el yapımı merhem ve kremlere kadar her ürün, kaliteye olan
-              bağlılığımızın bir yansımasıdır.
+              kaliteli ürünlerle yaşam kalitenizi artırmaktır. Doğal çaylarımız,
+              kaliteye bağlılığımızın bir yansımasıdır.
             </p>
             <p className="text-lg text-gray-800">
               Vizyonumuz, doğayı her eve daha yakın hale getirerek modern yaşam
@@ -65,9 +63,8 @@ export default function AboutPage() {
           <div className="w-full md:w-1/2 flex flex-col justify-center">
             <p className="text-lg text-gray-800 mb-4">
               Uskumenzade olarak misyonumuz, doğal, sürdürülebilir ve yüksek
-              kaliteli ürünlerle yaşam kalitenizi artırmaktır. En iyi çaylardan
-              el yapımı merhem ve kremlere kadar her ürün, kaliteye olan
-              bağlılığımızın bir yansımasıdır.
+              kaliteli ürünlerle yaşam kalitenizi artırmaktır. Doğal çaylarımız,
+              kaliteye bağlılığımızın bir yansımasıdır.
             </p>
             <p className="text-lg text-gray-800">
               Vizyonumuz, doğayı her eve daha yakın hale getirerek modern yaşam

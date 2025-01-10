@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import { fetchCurrentUser, updateUser, User } from "@/app/api/user/userApi";
 import {
   createAddress,
@@ -12,6 +13,7 @@ import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
 
 export default function Profile() {
+  const [successMessage, setSuccessMessage] = useState<string>("");
   const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<Partial<User>>({});
   const [isEditing, setIsEditing] = useState(false);
@@ -54,6 +56,15 @@ export default function Profile() {
     fetchData();
   }, [accessToken]);
 
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
   // User Profile Handlers
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -69,8 +80,9 @@ export default function Profile() {
       if (!accessToken) return;
       const updatedUser = await updateUser(formData, accessToken);
       setUser(updatedUser);
+
       setIsEditing(false);
-      alert("Profil bilgileri başarıyla güncellendi!");
+      setSuccessMessage("Profil bilgileri başarıyla güncellendi!");
     } catch (error) {
       console.error("Failed to update profile:", error);
       alert("Profil bilgileri güncellenemedi. Tekrar deneyiniz.");
@@ -108,7 +120,7 @@ export default function Profile() {
             city,
             country,
             address_title,
-            contact_name: addressFormData.contact_name || "", // Optional contact name handling
+            contact_name: addressFormData.contact_name || "",
           },
           accessToken || ""
         );
@@ -117,7 +129,7 @@ export default function Profile() {
             addr.id === updatedAddress.id ? updatedAddress : addr
           )
         );
-        alert("Adres başarıyla güncellendi.");
+        setSuccessMessage("Adres başarıyla güncellendi.");
       } else {
         const newAddress = await createAddress(
           {
@@ -126,12 +138,12 @@ export default function Profile() {
             city,
             country,
             address_title,
-            contact_name: addressFormData.contact_name || "", // Optional contact name handling
+            contact_name: addressFormData.contact_name || "",
           },
           accessToken || ""
         );
         setAddresses((prev) => [...prev, newAddress]);
-        alert("Adres başarıyla eklendi.");
+        setSuccessMessage("Adres başarıyla eklendi.");
       }
 
       // Reset the form after submission
@@ -155,7 +167,7 @@ export default function Profile() {
       if (!accessToken) return;
       await deleteAddress(addressId, accessToken);
       setAddresses((prev) => prev.filter((addr) => addr.id !== addressId));
-      alert("Address deleted successfully!");
+      setSuccessMessage("Adres başarıyla silindi!");
     } catch (error) {
       console.error("Failed to delete address:", error);
       alert("Failed to delete address. Please try again.");
@@ -163,7 +175,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-12 bg-gray-100">
+    <div className="container mx-auto px-6 py-12 bg-yellow-500">
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md space-y-12">
         {/* User Profile Section */}
         <div>
@@ -171,61 +183,135 @@ export default function Profile() {
             Profilim
           </h1>
           {user ? (
+            // Replace the input fields with label + input structures, for example:
+
             <form onSubmit={handleUserSubmit} className="space-y-8">
               <div>
                 <h2 className="text-2xl font-semibold text-gray-700 mb-4">
                   Kişisel Bilgiler
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label
+                      htmlFor="fname"
+                      className="block text-gray-700 font-semibold mb-2"
+                    >
+                      Ad
+                    </label>
+                    <input
+                      id="fname"
+                      type="text"
+                      name="fname"
+                      value={formData.fname || ""}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Ad"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="lname"
+                      className="block text-gray-700 font-semibold mb-2"
+                    >
+                      Soyad
+                    </label>
+                    <input
+                      id="lname"
+                      type="text"
+                      name="lname"
+                      value={formData.lname || ""}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Soyad"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label
+                    htmlFor="email"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    E-posta
+                  </label>
                   <input
-                    type="text"
-                    name="fname"
-                    value={formData.fname || ""}
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email || ""}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    placeholder="Ad"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                  />
-                  <input
-                    type="text"
-                    name="lname"
-                    value={formData.lname || ""}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Soyad"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    placeholder="E-posta"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
                   />
                 </div>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  placeholder="E-posta"
-                  className="w-full mt-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                />
+
                 <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 gap-6">
-                  <input
-                    type="text"
-                    name="gsm_number"
-                    value={formData.gsm_number || ""}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="GSM Numarası"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                  />
-                  <input
-                    type="text"
-                    name="national_id"
-                    value={formData.national_id || ""}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Kimlik Numarası"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                  />
+                  <div>
+                    <label
+                      htmlFor="gsm_number"
+                      className="block text-gray-700 font-semibold mb-2"
+                    >
+                      Telefon Numarası
+                    </label>
+                    <input
+                      id="gsm_number"
+                      type="tel"
+                      name="gsm_number"
+                      value={formData.gsm_number || ""}
+                      onChange={(e) => {
+                        e.currentTarget.setCustomValidity("");
+                        handleInputChange(e);
+                      }}
+                      onInvalid={(e) => {
+                        e.currentTarget.setCustomValidity(
+                          "Telefon numarası +905557778899 formatında olmalı (13 karakter ve yalnızca rakam)."
+                        );
+                      }}
+                      disabled={!isEditing}
+                      required
+                      pattern="^\+[0-9]{12}$"
+                      maxLength={13}
+                      placeholder="Telefon Numarası"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="national_id"
+                      className="block text-gray-700 font-semibold mb-2"
+                    >
+                      TC Kimlik Numarası
+                    </label>
+                    <input
+                      id="national_id"
+                      type="text"
+                      name="national_id"
+                      value={formData.national_id || ""}
+                      onChange={(e) => {
+                        e.currentTarget.setCustomValidity("");
+                        handleInputChange(e);
+                      }}
+                      onInvalid={(e) => {
+                        e.currentTarget.setCustomValidity(
+                          "TC Kimlik numarası 11 karakter olmalı ve yalnızca rakamlardan oluşmalıdır."
+                        );
+                      }}
+                      disabled={!isEditing}
+                      required
+                      pattern="^[0-9]{11}$"
+                      maxLength={11}
+                      placeholder="TC Kimlik Numarası"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                    />
+                  </div>
                 </div>
               </div>
+
               <div className="flex justify-end space-x-4">
                 {isEditing ? (
                   <>
@@ -266,70 +352,130 @@ export default function Profile() {
         </div>
 
         {/* Address Section */}
-        <div className="flex space-x-8">
+        <div className="flex flex-col lg:flex-row lg:space-x-8 space-y-8 lg:space-y-0">
           {/* Address Management Section */}
-          <div className="w-1/2 bg-white p-6 rounded-lg shadow-md">
+          <div className="w-full lg:w-1/2 bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
-              Adres Yönetimi
+              {isAddressEditing ? "Adresi Düzenle" : "Adres Ekle"}
             </h2>
+
             <form onSubmit={handleAddressSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <input
-                  type="text"
-                  name="address_title"
-                  value={addressFormData.address_title || ""}
-                  onChange={handleAddressInputChange}
-                  placeholder="Adres Başlığı"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
-                  required
-                />
-                <input
-                  type="text"
-                  name="contact_name"
-                  value={addressFormData.contact_name || ""}
-                  onChange={handleAddressInputChange}
-                  placeholder="İletişim İsmi"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
-                  required
-                />
-                <input
-                  type="text"
-                  name="address"
-                  value={addressFormData.address || ""}
-                  onChange={handleAddressInputChange}
-                  placeholder="Adres"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
-                  required
-                />
-                <input
-                  type="text"
-                  name="city"
-                  value={addressFormData.city || ""}
-                  onChange={handleAddressInputChange}
-                  placeholder="Şehir"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
-                  required
-                />
+                <div>
+                  <label
+                    htmlFor="address_title"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    Adres Başlığı
+                  </label>
+                  <input
+                    id="address_title"
+                    type="text"
+                    name="address_title"
+                    value={addressFormData.address_title || ""}
+                    onChange={handleAddressInputChange}
+                    placeholder="Adres Başlığı"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    required
+                  />
+                </div>
 
-                <input
-                  type="text"
-                  name="zip_code"
-                  value={addressFormData.zip_code || ""}
-                  onChange={handleAddressInputChange}
-                  placeholder="Posta Kodu"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
-                  required
-                />
-                <input
-                  type="text"
-                  name="country"
-                  value={addressFormData.country || ""}
-                  onChange={handleAddressInputChange}
-                  placeholder="Ülke"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
-                  required
-                />
+                <div>
+                  <label
+                    htmlFor="contact_name"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    İletişim İsmi
+                  </label>
+                  <input
+                    id="contact_name"
+                    type="text"
+                    name="contact_name"
+                    value={addressFormData.contact_name || ""}
+                    onChange={handleAddressInputChange}
+                    placeholder="İletişim İsmi"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="address"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    Adres
+                  </label>
+                  <input
+                    id="address"
+                    type="text"
+                    name="address"
+                    value={addressFormData.address || ""}
+                    onChange={handleAddressInputChange}
+                    placeholder="Adres"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="city"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    Şehir
+                  </label>
+                  <input
+                    id="city"
+                    type="text"
+                    name="city"
+                    value={addressFormData.city || ""}
+                    onChange={handleAddressInputChange}
+                    placeholder="Şehir"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="zip_code"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    Posta Kodu
+                  </label>
+                  <input
+                    id="zip_code"
+                    type="text"
+                    name="zip_code"
+                    value={addressFormData.zip_code || ""}
+                    onChange={handleAddressInputChange}
+                    placeholder="Posta Kodu"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="country"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    Ülke
+                  </label>
+                  <input
+                    id="country"
+                    type="text"
+                    name="country"
+                    value={addressFormData.country || ""}
+                    onChange={handleAddressInputChange}
+                    placeholder="Ülke"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    required
+                  />
+                </div>
               </div>
+
               <div className="flex justify-end space-x-4">
                 {isAddressEditing ? (
                   <>
@@ -366,7 +512,7 @@ export default function Profile() {
           <div className="w-0.5 bg-gray-300"></div>
 
           {/* Saved Addresses Section */}
-          <div className="w-1/2 bg-white p-6 rounded-lg shadow-md">
+          <div className="w-full lg:w-1/2 bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
               Kayıtlı Adresler
             </h2>
@@ -408,13 +554,13 @@ export default function Profile() {
                       }}
                       className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
                     >
-                      Düzenle
+                      <FaEdit />
                     </button>
                     <button
                       onClick={() => handleDeleteAddress(addr.id!)}
                       className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                     >
-                      Sil
+                      <FaTrash />
                     </button>
                   </div>
                 </li>
@@ -423,6 +569,11 @@ export default function Profile() {
           </div>
         </div>
       </div>
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded shadow-md z-50 transition-opacity">
+          {successMessage}
+        </div>
+      )}
     </div>
   );
 }

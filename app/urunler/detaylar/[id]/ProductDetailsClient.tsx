@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { addItemToCart } from "@/redux/slices/cartSlice";
 import { getProducts } from "@/app/api/product/productApi";
+import { fetchCurrentUser } from "@/app/api/auth/authApi";
 import { getHealthBenefits } from "@/app/api/benefits/benefitsApi";
 import { FaLeaf, FaShoppingCart, FaTruck } from "react-icons/fa";
 import LoadingSpinner from "../../../../app/components/LoadingSpinner/LoadingSpinner";
@@ -37,6 +38,11 @@ interface ProductDetailsClientProps {
   isLoggedIn: boolean;
 }
 
+interface Benefit {
+  item_id: string;
+  benefit: string;
+}
+
 export default function ProductDetailsClient({
   product,
   isLoggedIn,
@@ -59,11 +65,11 @@ export default function ProductDetailsClient({
     // Fetch health benefits
     const fetchHealthBenefits = async () => {
       try {
-        const benefits = await getHealthBenefits(0, 1000); // Adjust pagination if necessary
+        const benefits: Benefit[] = await getHealthBenefits(0, 1000);
         const productBenefits = benefits.filter(
-          (benefit: any) => benefit.item_id === product.id
+          (benefit) => benefit.item_id === product.id
         );
-        setHealthBenefits(productBenefits.map((b: any) => b.benefit));
+        setHealthBenefits(productBenefits.map((b) => b.benefit));
       } catch (error) {
         console.error("Failed to fetch health benefits:", error);
       }
@@ -108,29 +114,39 @@ export default function ProductDetailsClient({
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!accessToken) {
       // If no access token, open the login modal
       setIsModalOpen(true);
       return;
     }
 
-    // If access token exists, proceed with adding to cart or navigate to cart
-    if (!isAddedToCart) {
-      dispatch(
-        addItemToCart({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          discounted_price: product.discounted_price,
-          imageUrl: product.images?.[0]?.url || "/placeholder.png",
-          stock: product.stock,
-          quantity,
-        })
-      );
-      setIsAddedToCart(true); // Mark as added to cart
-    } else {
-      router.push("/sepet"); // Navigate to cart
+    try {
+      // Fetch the current user to get the email
+      const userData = await fetchCurrentUser(accessToken);
+      const userEmail = userData?.email;
+
+      if (!isAddedToCart) {
+        dispatch(
+          addItemToCart({
+            userId: userEmail, // Use email as the unique identifier
+            item: {
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              discounted_price: product.discounted_price,
+              imageUrl: product.images?.[0]?.url || "/placeholder.png",
+              stock: product.stock,
+              quantity,
+            },
+          })
+        );
+        setIsAddedToCart(true); // Mark as added to cart
+      } else {
+        router.push("/sepet"); // Navigate to cart
+      }
+    } catch (error) {
+      console.error("Error fetching user data or adding to cart:", error);
     }
   };
 
@@ -246,12 +262,17 @@ export default function ProductDetailsClient({
               <div className="space-y-4">
                 <button
                   onClick={handleAddToCart}
+                  disabled={product.stock <= 0}
                   className={`w-full bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300 flex items-center justify-center ${
                     isAddedToCart ? "animate-pulse" : ""
                   }`}
                 >
                   <FaShoppingCart className="mr-2" />
-                  {isAddedToCart ? "Sepete Git" : "Sepete Ekle"}
+                  {isAddedToCart
+                    ? "Sepete Git"
+                    : product.stock <= 0
+                    ? "Ürün Tükenmiştir"
+                    : "Sepete Ekle"}
                 </button>
               </div>
 
