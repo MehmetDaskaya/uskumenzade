@@ -133,6 +133,8 @@ export const fetchAllUsers = async (
   offset = 0,
   limit = 1000
 ): Promise<User[]> => {
+  const url = `${API_BASE_URL}/uskumenzade/api/users?offset=${offset}&limit=${limit}`;
+  console.log("Requesting URL:", url);  // Log the full URL
   const response = await fetch(
     `${API_BASE_URL}/uskumenzade/api/users?offset=${offset}&limit=${limit}`,
     {

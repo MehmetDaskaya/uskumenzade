@@ -13,6 +13,7 @@ import {
   deleteProduct,
 } from "@/app/api/product/productApi";
 import { ImageModal, CategoryModal, Snackbar } from "../../../components";
+import API_BASE_URL from "@/util/config";
 
 interface Product {
   id: string;
@@ -488,7 +489,27 @@ export const ProductManagementComponent = () => {
                     ? editingProduct.image_ids || []
                     : newProduct.image_ids
                   ).map((id, index) => {
-                    const imagePath = `http://localhost:8000/uskumenzade/api/static/images/${id}.jpg`; // Replace with the correct image URL format
+                    const imagePath = `${API_BASE_URL}/uskumenzade/api/static/images/${id}.jpg`; // Replace with the correct image URL format
+                    return (
+                      <div
+                        key={index}
+                        className="w-24 h-24 bg-gray-200 border rounded-lg flex-shrink-0"
+                      >
+                        <img
+                          src={imagePath}
+                          alt={`Selected Image ${index + 1}`}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="horizontal-slider mt-2 flex gap-2 overflow-x-auto">
+                  {(isEditing && editingProduct
+                    ? editingProduct.image_ids || []
+                    : newProduct.image_ids
+                  ).map((id, index) => {
+                    const imagePath = `${API_BASE_URL}/uskumenzade/api/static/images/${id}.jpg`;
                     return (
                       <div
                         key={index}
