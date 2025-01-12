@@ -13,6 +13,7 @@ import {
   deleteProduct,
 } from "@/app/api/product/productApi";
 import { ImageModal, CategoryModal } from "../../../components"; // Assuming these are defined
+import API_BASE_URL from "@/util/config";
 
 interface Product {
   id: string;
@@ -442,7 +443,7 @@ export const ProductManagementComponent = () => {
                     ? editingProduct.image_ids || []
                     : newProduct.image_ids
                   ).map((id, index) => {
-                    const imagePath = `http://localhost:8000/uskumenzade/api/static/images/${id}.jpg`; // Replace with the correct image URL format
+                    const imagePath = `${API_BASE_URL}/uskumenzade/api/static/images/${id}.jpg`; // Replace with the correct image URL format
                     return (
                       <div
                         key={index}
@@ -462,7 +463,7 @@ export const ProductManagementComponent = () => {
                     ? editingProduct.image_ids || []
                     : newProduct.image_ids
                   ).map((id, index) => {
-                    const imagePath = `http://localhost:8000/uskumenzade/api/static/images/${id}.jpg`;
+                    const imagePath = `${API_BASE_URL}/uskumenzade/api/static/images/${id}.jpg`;
                     return (
                       <div
                         key={index}
