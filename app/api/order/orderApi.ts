@@ -69,6 +69,8 @@ export interface Order {
   user: User;
   shipping_address: Address;
   billing_address: Address;
+  shipping_address_id: string;
+  billing_address_id: string;
   basket: BasketItem[];
 }
 

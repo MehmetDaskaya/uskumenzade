@@ -1,27 +1,36 @@
+"use client";
 import React from "react";
 import Image from "next/image";
+import { FaTimes } from "react-icons/fa";
 import { Order } from "@/app/api/order/orderApi";
+import { useState } from "react";
 
 interface OrderDetailsModalProps {
   order: Order;
   onClose: () => void;
   onUpdateStatus: (orderId: string, newStatus: string) => void;
-  onInitiateRefund: (orderId: string) => void;
+  //   onInitiateRefund: (orderId: string) => void;
 }
 
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   order,
   onClose,
   onUpdateStatus,
-  onInitiateRefund,
+  //   onInitiateRefund,
 }) => {
   const statuses = [
-    "pending",
-    "processing",
-    "shipped",
-    "delivered",
-    "cancelled",
+    { key: "pending", label: "Beklemede" },
+    { key: "paid", label: "Ödeme Yapıldı" },
+    { key: "shipped", label: "Kargolandı" },
+    { key: "delivered", label: "Teslim Edildi" },
+    { key: "cancelled", label: "İptal Edildi" },
   ];
+
+  const [selectedStatus, setSelectedStatus] = useState(order.status);
+
+  const handleStatusChange = () => {
+    onUpdateStatus(order.id, selectedStatus);
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -30,7 +39,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
         >
-          ×
+          <FaTimes />
         </button>
         <h2 className="text-2xl font-bold mb-6">Sipariş Yönetimi</h2>
 
@@ -44,7 +53,18 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             <p className="text-sm text-gray-600">
               Sipariş Tarihi: {new Date(order.created_at).toLocaleDateString()}
             </p>
-            <p className="text-sm text-gray-600">Durum: {order.status}</p>
+            <p className="text-sm text-gray-600">
+              Durum:{" "}
+              {{
+                pending: "Beklemede",
+                processing: "İşleniyor",
+                shipped: "Kargolandı",
+                delivered: "Teslim Edildi",
+                cancelled: "İptal Edildi",
+                paid: "Ödeme Yapıldı",
+              }[order.status] || order.status}
+            </p>
+
             <p className="text-sm text-gray-600">
               Toplam: {order.amount.toFixed(2)} ₺
             </p>
@@ -135,30 +155,37 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         </div>
 
         {/* Admin Actions */}
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700">
-              Ürün Durumunu Güncelle
-            </h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-700">
+            Ürün Durumunu Güncelle
+          </h3>
+          <div className="flex flex-row">
             <select
-              onChange={(e) => onUpdateStatus(order.id, e.target.value)}
+              onChange={(e) => setSelectedStatus(e.target.value)}
               className="w-full p-3 bg-gray-200 text-black border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              defaultValue={order.status}
+              value={selectedStatus}
             >
               {statuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
+                <option key={status.key} value={status.key}>
+                  {status.label}
                 </option>
               ))}
             </select>
-          </div>
-          <div>
-            <button
-              onClick={() => onInitiateRefund(order.id)}
-              className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600"
-            >
-              İade başlat
-            </button>
+
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleStatusChange}
+                className="ml-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              >
+                Güncelle
+              </button>
+              {/* <button
+            onClick={() => onInitiateRefund(order.id)}
+            className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600"
+          >
+            İade Başlat
+          </button> */}
+            </div>
           </div>
         </div>
       </div>

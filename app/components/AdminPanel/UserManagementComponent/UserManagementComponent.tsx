@@ -7,8 +7,10 @@ import {
   deleteUser,
   fetchUserById,
   User,
+  updateUser,
 } from "@/app/api/user/userApi";
 import UserDetailsModal from "../../Modal/UserDetailsModal";
+import { Snackbar } from "../../index";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 
@@ -19,9 +21,32 @@ export const UserManagementComponent = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    string | null
+  >(null);
+  const [deleteTimer, setDeleteTimer] = useState<NodeJS.Timeout | null>(null);
+  const [snackbar, setSnackbar] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const showSnackbar = (message: string, type: "success" | "error") => {
+    setSnackbar({ message, type });
+    setTimeout(() => {
+      setSnackbar(null);
+    }, 3000); // Automatically hide the snackbar after 3 seconds
+  };
+
   const usersPerPage = 5;
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+
+  // Ensure cleanup of delete timer on unmount
+  useEffect(() => {
+    return () => {
+      if (deleteTimer) clearTimeout(deleteTimer);
+    };
+  }, [deleteTimer]);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -67,17 +92,6 @@ export const UserManagementComponent = () => {
     setCurrentPage(pageNumber);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      if (!accessToken) return;
-      await deleteUser(id, accessToken);
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-    } catch (err) {
-      console.error("Failed to delete user:", err);
-      alert("User deletion failed. Please try again.");
-    }
-  };
-
   const handleEdit = async (id: string) => {
     try {
       if (!accessToken) return;
@@ -86,6 +100,33 @@ export const UserManagementComponent = () => {
     } catch (err) {
       console.error("Failed to fetch user details:", err);
       alert("Failed to load user details. Please try again.");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      if (!accessToken) return;
+      await deleteUser(id, accessToken);
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+      setDeleteConfirmationId(null); // Clear confirmation
+      showSnackbar("Kullanıcı başarıyla silindi.", "success");
+    } catch (err) {
+      console.error("Failed to delete user:", err);
+      showSnackbar("Kullanıcı silinirken bir hata oluştu.", "error");
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    if (deleteConfirmationId === id) {
+      clearTimeout(deleteTimer!);
+      setDeleteConfirmationId(null);
+      handleDelete(id);
+    } else {
+      setDeleteConfirmationId(id);
+      const timer = setTimeout(() => {
+        setDeleteConfirmationId(null);
+      }, 5000);
+      setDeleteTimer(timer);
     }
   };
 
@@ -99,7 +140,7 @@ export const UserManagementComponent = () => {
           placeholder="Kullanıcı Ara..."
           value={searchQuery}
           onChange={handleSearch}
-          className="w-full p-2 border border-gray-300 bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full p-2 border border-gray-300 bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <FaSearch className="ml-2 text-gray-500" />
       </div>
@@ -138,18 +179,28 @@ export const UserManagementComponent = () => {
                   <td className="p-4 text-gray-600">{user.email}</td>
                   <td className="p-4 text-gray-600">{user.role}</td>
                   <td className="p-4 text-center">
-                    <button
-                      onClick={() => handleEdit(user.id)}
-                      className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(user.id)}
-                      className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200"
-                    >
-                      <FaTrashAlt />
-                    </button>
+                    <div className="flex justify-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(user.id)}
+                        className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(user.id)}
+                        className={`${
+                          deleteConfirmationId === user.id
+                            ? "bg-red-500 text-white mt-1 px-3 py-1 rounded-lg"
+                            : "bg-red-500 text-white p-2 rounded-lg"
+                        } hover:bg-red-600`}
+                      >
+                        {deleteConfirmationId === user.id ? (
+                          "Silme işlemini onaylamak için tıklayın."
+                        ) : (
+                          <FaTrashAlt />
+                        )}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -165,7 +216,7 @@ export const UserManagementComponent = () => {
                     onClick={() => handlePageChange(page)}
                     className={`mx-1 p-2 border rounded-lg ${
                       page === currentPage
-                        ? "bg-yellow-500 text-white"
+                        ? "bg-blue-500 text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
@@ -178,17 +229,52 @@ export const UserManagementComponent = () => {
         </>
       )}
 
-      <div className="mt-6">
-        <button className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300">
-          Yeni Kullanıcı Ekle
-        </button>
-      </div>
-
       {/* Modal */}
       {selectedUser && (
         <UserDetailsModal
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
+          onUpdateRole={async (userId, newRole, password) => {
+            try {
+              if (!accessToken) {
+                throw new Error("Authentication token is missing.");
+              }
+
+              // Make the API call to update the user's role
+              const updatedUser = await updateUser(
+                { role: newRole, password },
+                accessToken
+              );
+
+              // Update the state with the updated user details
+              setUsers((prevUsers) =>
+                prevUsers.map((user) =>
+                  user.id === userId
+                    ? { ...user, role: updatedUser.role }
+                    : user
+                )
+              );
+
+              setSnackbar({
+                message: "Kullanıcı rolü başarıyla güncellendi.",
+                type: "success",
+              });
+            } catch (error) {
+              console.error("Failed to update user role:", error);
+              setSnackbar({
+                message: "Kullanıcı rolü güncellenirken bir hata oluştu.",
+                type: "error",
+              });
+            }
+          }}
+        />
+      )}
+
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          onClose={() => setSnackbar(null)}
         />
       )}
     </div>

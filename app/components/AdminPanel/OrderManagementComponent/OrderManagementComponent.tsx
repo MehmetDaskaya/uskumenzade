@@ -1,9 +1,15 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaEye, FaTrashAlt } from "react-icons/fa";
-import { fetchOrders, deleteOrder, Order } from "@/app/api/order/orderApi";
+import {
+  fetchOrders,
+  deleteOrder,
+  Order,
+  updateOrder,
+} from "@/app/api/order/orderApi";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
+import { Snackbar } from "../../index";
 import OrderDetailsModal from "../../Modal/OrderDetailsModal";
 
 export const OrderManagementComponent = () => {
@@ -14,6 +20,23 @@ export const OrderManagementComponent = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const showSnackbar = (message: string, type: "success" | "error") => {
+    setSnackbar({ message, type });
+    setTimeout(() => {
+      setSnackbar(null);
+    }, 3000);
+  };
+
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    string | null
+  >(null);
+  const [deleteTimer, setDeleteTimer] = useState<NodeJS.Timeout | null>(null);
+
   const ordersPerPage = 5;
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
@@ -30,7 +53,7 @@ export const OrderManagementComponent = () => {
         setError(null);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
-        setError("Failed to load orders. Please try again.");
+        setError("Siparişler Yüklenemedi. Lütfen Tekrar Deneyin.");
       } finally {
         setLoading(false);
       }
@@ -79,16 +102,44 @@ export const OrderManagementComponent = () => {
   const handleDelete = async (id: string) => {
     try {
       if (!accessToken) {
-        throw new Error("Authentication token'ınız bulunmuyor.");
+        throw new Error(
+          "Doğrulama kodunuzun süresi dolmuş. Yeniden Giriş Yapın."
+        );
       }
       await deleteOrder(id, accessToken);
       setOrders((prevOrders) => prevOrders.filter((order) => order.id !== id));
-      alert("Sipariş başarılı bir şekilde silindi.");
+      setDeleteConfirmationId(null); // Clear confirmation state
+      showSnackbar("Sipariş başarılı bir şekilde silindi.", "success");
     } catch (err) {
       console.error("Failed to delete order:", err);
-      alert("Siparişi silerken bir hata oluştu. Tekrar deneyiniz.");
+      showSnackbar(
+        "Siparişi silerken bir hata oluştu. Tekrar deneyiniz.",
+        "error"
+      );
     }
   };
+
+  const handleDeleteClick = (id: string) => {
+    if (deleteConfirmationId === id) {
+      // Proceed with deletion
+      clearTimeout(deleteTimer!);
+      setDeleteConfirmationId(null);
+      handleDelete(id);
+    } else {
+      // Set confirmation state
+      setDeleteConfirmationId(id);
+      const timer = setTimeout(() => {
+        setDeleteConfirmationId(null); // Reset after 5 seconds
+      }, 5000);
+      setDeleteTimer(timer);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (deleteTimer) clearTimeout(deleteTimer);
+    };
+  }, [deleteTimer]);
 
   if (loading) {
     return <p>Siparişler Yükleniyor...</p>;
@@ -109,7 +160,7 @@ export const OrderManagementComponent = () => {
           placeholder="Sipariş ara..."
           value={searchQuery}
           onChange={handleSearch}
-          className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <FaSearch className="ml-2 text-gray-500" />
       </div>
@@ -146,31 +197,45 @@ export const OrderManagementComponent = () => {
                   {new Date(order.created_at).toLocaleDateString()}
                 </td>
                 <td className="p-4 text-gray-600">
-                  {order.status === "paid" ? "Ödeme Yapıldı" : order.status}
+                  {{
+                    pending: "Beklemede",
+                    processing: "İşleniyor",
+                    shipped: "Kargolandı",
+                    delivered: "Teslim Edildi",
+                    cancelled: "İptal Edildi",
+                    paid: "Ödeme Yapıldı",
+                  }[order.status] || order.status}
                 </td>
 
                 <td className="p-4 text-gray-600">
                   {order.amount.toFixed(2)} ₺
                 </td>
                 <td className="p-4 text-center">
-                  <button
-                    onClick={() => handleViewDetails(order)}
-                    className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                  >
-                    <FaEye />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (
-                        confirm("Siparişi silmek istediğinize emin misiniz?")
-                      ) {
-                        handleDelete(order.id);
-                      }
-                    }}
-                    className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200"
-                  >
-                    <FaTrashAlt />
-                  </button>
+                  <div className="flex justify-center space-x-2">
+                    <button
+                      onClick={() => handleViewDetails(order)}
+                      className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                    >
+                      <FaEye />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(order.id);
+                      }}
+                      className={`${
+                        deleteConfirmationId === order.id
+                          ? "bg-red-500 text-white mt-1 px-3 py-1 rounded-lg"
+                          : "bg-red-500 text-white p-2 rounded-lg"
+                      } hover:bg-red-600`}
+                    >
+                      {deleteConfirmationId === order.id ? (
+                        "Silme işlemini onaylamak için tıklayın."
+                      ) : (
+                        <FaTrashAlt />
+                      )}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))
@@ -193,7 +258,7 @@ export const OrderManagementComponent = () => {
               onClick={() => handlePageChange(page)}
               className={`mx-1 p-2 border rounded-lg ${
                 page === currentPage
-                  ? "bg-yellow-500 text-white"
+                  ? "bg-blue-500 text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
@@ -206,18 +271,71 @@ export const OrderManagementComponent = () => {
         <OrderDetailsModal
           order={selectedOrder}
           onClose={handleCloseModal}
-          onUpdateStatus={(orderId, status) => {
-            // Handle updating order status logic
-            setOrders((prevOrders) =>
-              prevOrders.map((order) =>
-                order.id === orderId ? { ...order, status } : order
-              )
-            );
+          onUpdateStatus={async (orderId, status) => {
+            try {
+              if (!accessToken) {
+                throw new Error("Authentication token is missing.");
+              }
+
+              // Extract necessary IDs from the selected order
+              const shippingAddressId = selectedOrder?.shipping_address?.id;
+              const billingAddressId = selectedOrder?.billing_address?.id;
+
+              if (!shippingAddressId || !billingAddressId) {
+                throw new Error(
+                  "Shipping address ID or billing address ID is missing."
+                );
+              }
+
+              // Ensure basket items are properly structured
+              const basket = selectedOrder?.basket
+                .filter((item) => item.item?.id) // Ensure item IDs exist
+                .map((item) => ({
+                  item_id: item.item!.id, // Use non-null assertion
+                  quantity: item.quantity,
+                }));
+
+              if (!basket || basket.length === 0) {
+                throw new Error("Basket is invalid or empty.");
+              }
+
+              // Send the payload with required fields
+              await updateOrder(
+                orderId,
+                {
+                  status,
+                  shipping_address_id: shippingAddressId, // Include only the ID
+                  billing_address_id: billingAddressId, // Include only the ID
+                  basket, // Pass the validated basket
+                },
+                accessToken
+              );
+
+              setOrders((prevOrders) =>
+                prevOrders.map((order) =>
+                  order.id === orderId ? { ...order, status } : order
+                )
+              );
+
+              showSnackbar("Sipariş durumu başarıyla güncellendi.", "success");
+            } catch (error) {
+              console.error("Failed to update order status:", error);
+              showSnackbar(
+                "Sipariş durumu güncellenirken bir hata oluştu.",
+                "error"
+              );
+            }
           }}
-          onInitiateRefund={(orderId) => {
-            // Handle refund initiation logic
-            alert(`Refund initiated for order: ${orderId}`);
-          }}
+          // onInitiateRefund={(orderId) => {
+          //   alert(`Refund initiated for order: ${orderId}`);
+          // }}
+        />
+      )}
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          onClose={() => setSnackbar(null)}
         />
       )}
     </div>

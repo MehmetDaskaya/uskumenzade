@@ -120,7 +120,7 @@ export default function HomeContent() {
 
           <div className="mt-6 sm:mt-8">
             <Link href="/urunler">
-              <button className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110">
+              <button className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110">
                 Ürünleri Gör
               </button>
             </Link>

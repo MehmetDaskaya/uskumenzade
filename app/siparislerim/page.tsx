@@ -29,13 +29,15 @@ export default function OrderHistory() {
           .map((order) => ({
             ...order,
             user: userData, // Add the user data manually
+            shipping_address_id: order.shipping_address.id, // Include shipping_address_id
+            billing_address_id: order.billing_address.id, // Include billing_address_id
           }))
           .sort(
             (a, b) =>
               new Date(b.created_at).getTime() -
               new Date(a.created_at).getTime()
           ); // Sort orders last to first
-        setOrders(ordersWithUser || []); // Use the compatible type
+        setOrders(ordersWithUser || []);
         setError(null);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -49,7 +51,7 @@ export default function OrderHistory() {
   }, [accessToken]);
 
   return (
-    <div className="container mx-auto px-6 py-12 bg-yellow-500">
+    <div className="mx-auto px-6 py-12 bg-yellow-500">
       <h1 className="text-4xl font-bold text-white mb-8 text-center">
         Sipariş Geçmişim
       </h1>
@@ -92,14 +94,19 @@ export default function OrderHistory() {
                     className={`font-medium ${
                       order.status === "paid"
                         ? "text-green-600"
-                        : "text-red-600"
+                        : order.status === "cancelled"
+                        ? "text-red-600"
+                        : "text-yellow-600"
                     }`}
                   >
-                    {order.status === "paid"
-                      ? "Ödeme Yapıldı"
-                      : order.status === "pending"
-                      ? "Ödeme Yapılmadı"
-                      : "Durum Bilinmiyor"}
+                    {{
+                      paid: "Ödeme Yapıldı",
+                      pending: "Ödeme Yapılmadı",
+                      processing: "İşleniyor",
+                      shipped: "Kargolandı",
+                      delivered: "Teslim Edildi",
+                      cancelled: "İptal Edildi",
+                    }[order.status] || "Durum Bilinmiyor"}
                   </span>
                 </div>
 

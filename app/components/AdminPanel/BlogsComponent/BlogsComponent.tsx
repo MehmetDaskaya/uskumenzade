@@ -10,7 +10,8 @@ import {
   deleteBlog,
   fetchBlogById,
 } from "../../../api/blog/blogApi";
-import { ImageModal } from "../../index";
+import { fetchCategories } from "@/app/api/category/categoryApi";
+import { ImageModal, Snackbar } from "../../index";
 import { CategoryModal } from "../../Modal/CategoryModal";
 import { TagModal } from "../../Modal/TagIdModal";
 import { MetaTagModal } from "../../Modal/MetaTagModal";
@@ -46,6 +47,7 @@ export const BlogsComponent = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const blogsPerPage = 5;
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -56,6 +58,28 @@ export const BlogsComponent = () => {
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
   const [showTagModal, setShowTagModal] = useState(false);
   const [showMetaTagModal, setShowMetaTagModal] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    string | null
+  >(null);
+  const [deleteTimer, setDeleteTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const [snackbar, setSnackbar] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const showSnackbar = (message: string, type: "success" | "error") => {
+    setSnackbar({ message, type });
+    setTimeout(() => {
+      setSnackbar(null);
+    }, 3000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (deleteTimer) clearTimeout(deleteTimer);
+    };
+  }, [deleteTimer]);
 
   const openTagModal = () => setShowTagModal(true);
   const closeTagModal = () => setShowTagModal(false);
@@ -95,7 +119,7 @@ export const BlogsComponent = () => {
     updated_at: string;
     images?: Image[];
     sections: Section[];
-    tags?: { id: string; name: string }[]; // Update tags to be an array of objects
+    tags?: { id: string; name: string }[];
     meta_tags?: { id: string; name: string }[];
     related_item_ids?: string[];
   }
@@ -147,12 +171,6 @@ export const BlogsComponent = () => {
     () => {}
   );
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [blogToDelete, setBlogToDelete] = useState<Blog | null>(null);
-
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [showSnackbar, setShowSnackbar] = useState(false);
-
   const [selectedTagNames, setSelectedTagNames] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
@@ -160,6 +178,19 @@ export const BlogsComponent = () => {
     []
   );
   const [selectedMetaTagIds, setSelectedMetaTagIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const getCategories = async () => {
+      try {
+        const fetchedCategories = await fetchCategories(); // Call your category API here
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    getCategories();
+  }, []);
 
   useEffect(() => {
     const getBlogs = async () => {
@@ -174,7 +205,6 @@ export const BlogsComponent = () => {
     getBlogs();
   }, []);
 
-  // Function to add a new blog
   // Function to add a new blog
   const handleAddBlogSubmit = async () => {
     try {
@@ -337,31 +367,31 @@ export const BlogsComponent = () => {
     setSelectedImageId(null); // Reset selected image ID
   };
 
-  // Function to show the Snackbar
-  const triggerSnackbar = (message: string) => {
-    setSnackbarMessage(message);
-    setShowSnackbar(true);
-    setTimeout(() => {
-      setShowSnackbar(false);
-    }, 3000);
-  };
-
-  const confirmDeleteBlog = (blog: Blog) => {
-    setBlogToDelete(blog);
-    setShowDeleteModal(true);
-  };
-
-  const handleDeleteConfirmed = async () => {
-    if (!blogToDelete) return;
-
+  const handleDelete = async (id: string) => {
     try {
-      await deleteBlog(blogToDelete.id);
-      setBlogs(blogs.filter((blog) => blog.id !== blogToDelete.id));
-      setShowDeleteModal(false);
-      triggerSnackbar("Blog deleted successfully.");
+      await deleteBlog(id);
+      setBlogs(blogs.filter((blog) => blog.id !== id));
+      setDeleteConfirmationId(null); // Reset confirmation state
+      showSnackbar("Blog deleted successfully!", "success");
     } catch (error) {
-      console.error("Error deleting blog:", error);
-      triggerSnackbar("Failed to delete blog.");
+      console.error("Failed to delete blog:", error);
+      showSnackbar("Failed to delete blog. Please try again.", "error");
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    if (deleteConfirmationId === id) {
+      // Proceed with deletion
+      clearTimeout(deleteTimer!);
+      setDeleteConfirmationId(null);
+      handleDelete(id);
+    } else {
+      // Set confirmation state
+      setDeleteConfirmationId(id);
+      const timer = setTimeout(() => {
+        setDeleteConfirmationId(null); // Reset after 5 seconds
+      }, 5000);
+      setDeleteTimer(timer);
     }
   };
 
@@ -470,15 +500,6 @@ export const BlogsComponent = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
-      {showSnackbar && (
-        <div
-          className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg"
-          style={{ zIndex: 9999 }}
-        >
-          {snackbarMessage}
-        </div>
-      )}
-
       <h2 className="text-2xl font-bold mb-6">Blog Yönetimi</h2>
 
       {/* Search Bar */}
@@ -488,7 +509,7 @@ export const BlogsComponent = () => {
           placeholder="Blogları başlık, yazar veya kategori olarak arayın..."
           value={searchQuery}
           onChange={handleSearch}
-          className="w-full p-2 border border-gray-300 bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full p-2 border border-gray-300 bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <FaSearch className="ml-2 text-gray-500" />
       </div>
@@ -505,9 +526,7 @@ export const BlogsComponent = () => {
             <th className="p-4 text-left font-semibold text-gray-600">
               Kategori
             </th>
-            <th className="p-4 text-left font-semibold text-gray-600">
-              Yayınlanma Tarihi
-            </th>
+            <th className="p-4 text-left font-semibold text-gray-600">Tarih</th>
             <th className="p-4 text-center font-semibold text-gray-600">
               İşlemler
             </th>
@@ -515,69 +534,51 @@ export const BlogsComponent = () => {
         </thead>
         <tbody>
           {currentBlogs.length > 0 ? (
-            currentBlogs.map((blog) => (
-              <tr key={blog.id} className="border-t">
-                <td className="p-4 text-gray-600">{blog.id}</td>
-                <td className="p-4 text-gray-600">{blog.title}</td>
-                <td className="p-4 text-gray-600">{blog.author}</td>
-                <td className="p-4 text-gray-600">{blog.category_id}</td>
-                <td className="p-4 text-gray-600">{blog.created_at}</td>
-                <td className="p-4 text-center">
-                  <button
-                    onClick={() => handleEditBlog(blog)}
-                    className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                  >
-                    <FaEdit />
-                  </button>
-
-                  {showDeleteModal && (
-                    <div
-                      className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50"
-                      onClick={() => setShowDeleteModal(false)}
-                    >
-                      <div
-                        className="bg-white p-6 rounded-lg shadow-xl max-w-sm mx-auto"
-                        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+            currentBlogs.map((blog) => {
+              const category = categories.find(
+                (cat) => cat.id === blog.category_id
+              );
+              return (
+                <tr key={blog.id} className="border-t">
+                  <td className="p-4 text-gray-600">{blog.id}</td>
+                  <td className="p-4 text-gray-600">{blog.title}</td>
+                  <td className="p-4 text-gray-600">{blog.author}</td>
+                  <td className="p-4 text-gray-600">
+                    {category ? category.name : "Kategori bulunamadı"}
+                  </td>
+                  <td className="p-4 text-gray-600">
+                    {new Date(blog.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="p-4 text-center">
+                    <div className="flex justify-center space-x-2">
+                      <button
+                        onClick={() => handleEditBlog(blog)}
+                        className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
                       >
-                        <h2 className="text-xl text-black font-semibold mb-4">
-                          Silme işlemini onayla
-                        </h2>
-                        <p className="text-gray-800">
-                          Bu blog yazısını silmek istediğinizden emin misiniz?
-                        </p>
-                        <div className="mt-6 flex justify-end space-x-4">
-                          <button
-                            onClick={() => setShowDeleteModal(false)} // Cancel delete
-                            className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-200"
-                          >
-                            İptal
-                          </button>
-                          <button
-                            onClick={handleDeleteConfirmed} // Confirm delete
-                            className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-200"
-                          >
-                            Sil
-                          </button>
-                        </div>
-                      </div>
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(blog.id);
+                        }}
+                        className={`${
+                          deleteConfirmationId === blog.id
+                            ? "bg-red-500 text-white px-3 mt-1 py-1 rounded-lg"
+                            : "bg-red-500 text-white p-2 rounded-lg"
+                        } hover:bg-red-600`}
+                      >
+                        {deleteConfirmationId === blog.id ? (
+                          "Silme işlemini onaylamak için tıklayın."
+                        ) : (
+                          <FaTrashAlt />
+                        )}
+                      </button>
                     </div>
-                  )}
-
-                  <button
-                    onClick={() =>
-                      confirmDeleteBlog({
-                        ...blog,
-                        content: blog.content ?? "Default Content", // Varsayılan içerik
-                        related_item_ids: blog.related_item_ids ?? [], // Varsayılan boş dizi
-                      })
-                    }
-                    className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200"
-                  >
-                    <FaTrashAlt />
-                  </button>
-                </td>
-              </tr>
-            ))
+                  </td>
+                </tr>
+              );
+            })
           ) : (
             <tr>
               <td colSpan={6} className="p-4 text-center text-gray-500">
@@ -600,13 +601,6 @@ export const BlogsComponent = () => {
         >
           <FaPlus className="mr-2" />
           Yeni Blog Ekle
-        </button>
-        <button
-          onClick={openImageModal}
-          className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
-        >
-          <FaPlus className="mr-2" />
-          Görsel Ekle
         </button>
       </div>
       {/* Image Modal */}
@@ -660,7 +654,7 @@ export const BlogsComponent = () => {
               onClick={() => handlePageChange(page)}
               className={`mx-1 p-2 border rounded-lg ${
                 page === currentPage
-                  ? "bg-yellow-500 text-white"
+                  ? "bg-blue-500 text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
@@ -1273,6 +1267,14 @@ export const BlogsComponent = () => {
             </div>
           </div>
         </>
+      )}
+
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          onClose={() => setSnackbar(null)}
+        />
       )}
     </div>
   );

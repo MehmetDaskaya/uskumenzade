@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// import { setSelectedCategories as reduxSetSelectedCategories } from "../../../redux/slices/categorySlice"; // Import the Redux action
-
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
 import {
@@ -12,12 +10,13 @@ import {
   deleteCategory,
 } from "../../../redux/slices/categorySlice";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
-import { Snackbar } from "../../components";
+import { Snackbar } from "../index";
 
 interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCategorySelect: (categories: Category[]) => void; // Ensure this is present
+  onCategorySelect: (categories: Category[]) => void;
+  definitionPage?: boolean;
 }
 
 interface Category {
@@ -29,6 +28,7 @@ export function CategoryModal({
   isOpen,
   onClose,
   onCategorySelect,
+  definitionPage = false,
 }: CategoryModalProps) {
   const dispatch = useDispatch<AppDispatch>();
   const categories = useSelector(
@@ -39,13 +39,26 @@ export function CategoryModal({
   const [editCategoryName, setEditCategoryName] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
 
+  // state for deletion confirmation
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    string | null
+  >(null);
+  const [deleteTimer, setDeleteTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const [snackbar, setSnackbar] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
   const handleSaveSelectedCategories = () => {
     if (selectedCategories.length > 0) {
-      console.log("Selected Categories:", selectedCategories);
-      onCategorySelect(selectedCategories); // Pass selected categories to parent
+      onCategorySelect(selectedCategories);
       onClose();
     } else {
-      console.error("No categories selected to save.");
+      setSnackbar({
+        message: "No categories selected to save.",
+        type: "error",
+      });
     }
   };
 
@@ -61,28 +74,6 @@ export function CategoryModal({
     );
   };
 
-  const [snackbar, setSnackbar] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
-
-  const showSnackbar = (message: string, type: "success" | "error") => {
-    setSnackbar({ message, type });
-  };
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categories = await dispatch(loadCategories()).unwrap(); // Load categories via Redux
-        console.log("Available categories from backend:", categories);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
-
-    fetchCategories();
-  }, [dispatch]);
-
   useEffect(() => {
     if (isOpen) {
       dispatch(loadCategories());
@@ -91,17 +82,19 @@ export function CategoryModal({
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) {
-      showSnackbar("Kategori adı boş olamaz.", "error");
+      setSnackbar({ message: "Kategori adı boş olamaz.", type: "error" });
       return;
     }
 
     try {
       await dispatch(addCategory({ name: newCategory.trim() })).unwrap();
       setNewCategory("");
-      showSnackbar("Kategori başarıyla eklendi!", "success");
-    } catch (error) {
-      console.error("Error adding category:", error);
-      showSnackbar("Kategori eklenirken bir hata oluştu.", "error");
+      setSnackbar({ message: "Kategori başarıyla eklendi!", type: "success" });
+    } catch {
+      setSnackbar({
+        message: "Kategori eklenirken bir hata oluştu.",
+        type: "error",
+      });
     }
   };
 
@@ -114,22 +107,52 @@ export function CategoryModal({
       ).unwrap();
       setEditCategoryId(null);
       setEditCategoryName("");
-      showSnackbar("Kategori başarıyla güncellendi!", "success");
-    } catch (error) {
-      console.error("Error updating category:", error);
-      showSnackbar("Kategori güncellenirken bir hata oluştu.", "error");
+      setSnackbar({
+        message: "Kategori başarıyla güncellendi!",
+        type: "success",
+      });
+    } catch {
+      setSnackbar({
+        message: "Kategori güncellenirken bir hata oluştu.",
+        type: "error",
+      });
     }
   };
 
   const handleDeleteCategory = async (id: string) => {
     try {
       await dispatch(deleteCategory(id)).unwrap();
-      showSnackbar("Kategori başarıyla silindi!", "success");
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      showSnackbar("Kategori silinirken bir hata oluştu.", "error");
+      setSnackbar({ message: "Kategori başarıyla silindi!", type: "success" });
+    } catch {
+      setSnackbar({
+        message: "Kategori silinirken bir hata oluştu.",
+        type: "error",
+      });
     }
   };
+
+  const handleDeleteClick = (id: string) => {
+    if (deleteConfirmationId === id) {
+      // Proceed with deletion
+      clearTimeout(deleteTimer!);
+      setDeleteConfirmationId(null);
+      handleDeleteCategory(id);
+    } else {
+      // Set confirmation state
+      setDeleteConfirmationId(id);
+      const timer = setTimeout(() => {
+        setDeleteConfirmationId(null);
+      }, 5000);
+      setDeleteTimer(timer);
+    }
+  };
+
+  // Ensure cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (deleteTimer) clearTimeout(deleteTimer);
+    };
+  }, [deleteTimer]);
 
   if (!isOpen) return null;
 
@@ -169,7 +192,7 @@ export function CategoryModal({
             <h4 className="text-xl text-black font-semibold mb-4">
               Tanımlanmış Kategoriler
             </h4>
-            <ul className="space-y-4">
+            <ul className="space-y-4 overflow-y-auto max-h-64 pr-2 scrollbar scrollbar-thumb-blue-500 scrollbar-track-gray-200">
               {categories.map((category) => (
                 <li
                   key={category.id}
@@ -204,7 +227,6 @@ export function CategoryModal({
                   ) : (
                     <span className="text-gray-800">{category.name}</span>
                   )}
-
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={(e) => {
@@ -219,11 +241,19 @@ export function CategoryModal({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteCategory(category.id);
+                        handleDeleteClick(category.id);
                       }}
-                      className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                      className={`${
+                        deleteConfirmationId === category.id
+                          ? "bg-red-500 text-white px-3 py-1 rounded-full"
+                          : "bg-red-500 text-white p-2 rounded-full"
+                      } hover:bg-red-600`}
                     >
-                      <FiTrash2 />
+                      {deleteConfirmationId === category.id ? (
+                        "Silme işlemini onaylamak için tıklayın."
+                      ) : (
+                        <FiTrash2 />
+                      )}
                     </button>
                   </div>
                 </li>
@@ -231,44 +261,48 @@ export function CategoryModal({
             </ul>
           </div>
 
-          {/* Divider */}
-          <div className="w-px bg-gray-300 mx-2"></div>
+          {!definitionPage && (
+            <>
+              {/* Divider */}
+              <div className="w-px bg-gray-300 mx-2"></div>
 
-          {/* Selected Categories Section */}
-          <div className="flex-1 mx-1">
-            <h4 className="text-xl text-black font-semibold mb-4">
-              Seçilen Kategoriler
-            </h4>
-            <ul className="space-y-4">
-              {selectedCategories.map((category) => (
-                <li
-                  key={category.id}
-                  className="flex items-center justify-between border p-3 rounded-lg shadow-sm bg-green-100"
-                >
-                  <span className="text-gray-800">{category.name}</span>
-                  <button
-                    onClick={() => handleDeselectCategory(category.id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
-                  >
-                    Kaldır
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+              {/* Selected Categories Section */}
+              <div className="flex-1 mx-1">
+                <h4 className="text-xl text-black font-semibold mb-4">
+                  Seçilen Kategoriler
+                </h4>
+                <ul className="space-y-4">
+                  {selectedCategories.map((category) => (
+                    <li
+                      key={category.id}
+                      className="flex items-center justify-between border p-3 rounded-lg shadow-sm bg-green-100"
+                    >
+                      <span className="text-gray-800">{category.name}</span>
+                      <button
+                        onClick={() => handleDeselectCategory(category.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                      >
+                        Kaldır
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
+            className="bg-gray-500 text-white mx-1 px-6 py-2 rounded-lg hover:bg-gray-600"
           >
             Kapat
           </button>
 
           <button
             onClick={handleSaveSelectedCategories}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+            className="bg-blue-500 text-white mx-1 px-6 py-2 rounded-lg hover:bg-blue-600"
           >
             Kaydet
           </button>

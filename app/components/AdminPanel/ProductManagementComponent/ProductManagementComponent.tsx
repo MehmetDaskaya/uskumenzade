@@ -12,7 +12,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "@/app/api/product/productApi";
-import { ImageModal, CategoryModal } from "../../../components"; // Assuming these are defined
+import { ImageModal, CategoryModal, Snackbar } from "../../../components";
 
 interface Product {
   id: string;
@@ -34,6 +34,11 @@ export const ProductManagementComponent = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    string | null
+  >(null);
+  const [deleteTimer, setDeleteTimer] = useState<NodeJS.Timeout | null>(null);
+
   const [isEditing, setIsEditing] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState<Omit<Product, "id">>({
@@ -43,7 +48,7 @@ export const ProductManagementComponent = () => {
     discounted_price: 0,
     stock: 0,
     how_to_use: "",
-    category: { id: "", name: "" }, // Provide the correct structure
+    category: { id: "", name: "" },
     image_ids: [],
   });
 
@@ -51,6 +56,18 @@ export const ProductManagementComponent = () => {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   const productsPerPage = 5;
+
+  const [snackbar, setSnackbar] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const showSnackbar = (message: string, type: "success" | "error") => {
+    setSnackbar({ message, type });
+    setTimeout(() => {
+      setSnackbar(null);
+    }, 3000);
+  };
 
   // Fetch products on component mount
   useEffect(() => {
@@ -94,18 +111,15 @@ export const ProductManagementComponent = () => {
         throw new Error("Category must be selected.");
       }
 
-      // Step 1: Create the product
       const productPayload = {
         ...newProduct,
-        health_benefits: [], // Exclude benefits for initial creation
-        category_id: newProduct.category_id, // Ensure category_id is defined
+        health_benefits: [],
+        category_id: newProduct.category_id,
       };
 
       const addedProduct = await createProduct(productPayload);
 
-      // Step 2: Create health benefits using the product ID
-
-      const benefits = newProduct.health_benefits || []; // Default to an empty array
+      const benefits = newProduct.health_benefits || [];
       for (const benefit of benefits) {
         const benefitName =
           typeof benefit === "object" && "name" in benefit
@@ -114,21 +128,20 @@ export const ProductManagementComponent = () => {
 
         if (typeof benefitName === "string") {
           await createHealthBenefit({
-            item_id: addedProduct.id, // Use the ID of the created product
+            item_id: addedProduct.id,
             benefit: benefitName,
           });
-        } else {
-          console.warn("Skipping invalid benefit:", benefit);
         }
       }
 
-      // Step 3: Fetch the updated product with benefits and update the state
       const updatedProduct = { ...addedProduct, health_benefits: benefits };
       setProducts((prev) => [...prev, updatedProduct]);
       resetForm();
+
+      showSnackbar("Product added successfully!", "success");
     } catch (error) {
       console.error("Failed to add product:", error);
-      alert("Ürün eklenirken bir hata oluştu. Lütfen tekrar deneyin."); // Notify the user
+      showSnackbar("Failed to add product. Please try again.", "error");
     }
   };
 
@@ -140,11 +153,10 @@ export const ProductManagementComponent = () => {
           throw new Error("Category must be selected.");
         }
 
-        // Prepare product payload for update
         const productPayload = {
           ...editingProduct,
-          health_benefits: [], // Exclude benefits from the main update payload
-          category_id: editingProduct.category_id, // Ensure category_id is defined
+          health_benefits: [],
+          category_id: editingProduct.category_id,
         };
 
         const updatedProduct = await updateProduct(
@@ -152,13 +164,11 @@ export const ProductManagementComponent = () => {
           productPayload
         );
 
-        // Compare the current benefits with the original to determine deletions
         const originalBenefits =
           products.find((p) => p.id === editingProduct.id)?.health_benefits ||
           [];
         const currentBenefits = editingProduct.health_benefits || [];
 
-        // Determine which benefits to add
         const benefitsToAdd = currentBenefits.filter(
           (benefit) =>
             !originalBenefits.some((originalBenefit) =>
@@ -169,7 +179,6 @@ export const ProductManagementComponent = () => {
             )
         );
 
-        // Determine which benefits to delete
         const benefitsToDelete = originalBenefits.filter(
           (originalBenefit) =>
             !currentBenefits.some((currentBenefit) =>
@@ -181,7 +190,6 @@ export const ProductManagementComponent = () => {
             )
         );
 
-        // Add new benefits
         await Promise.all(
           benefitsToAdd.map(async (benefit) => {
             const benefitName =
@@ -197,8 +205,6 @@ export const ProductManagementComponent = () => {
           })
         );
 
-        // Delete removed benefits
-        // Delete removed benefits
         await Promise.all(
           benefitsToDelete.map(async (benefit) => {
             const benefitId =
@@ -212,7 +218,6 @@ export const ProductManagementComponent = () => {
           })
         );
 
-        // Update state
         const fullyUpdatedProduct = {
           ...updatedProduct,
           health_benefits: currentBenefits,
@@ -227,18 +232,51 @@ export const ProductManagementComponent = () => {
         );
 
         resetForm();
+        showSnackbar("Ürün Başarıyla Güncellendi!", "success");
       } catch (error) {
         console.error("Failed to edit product:", error);
-        alert("Ürün düzenlenirken bir hata oluştu. Lütfen tekrar deneyin.");
+        showSnackbar(
+          "Ürün Düzenlenirken Hata Oluştu. Tekrar Deneyin.",
+          "error"
+        );
       }
     }
   };
 
   // Handle Delete Product
   const handleDelete = async (id: string) => {
-    await deleteProduct(id);
-    setProducts(products.filter((product) => product.id !== id));
+    try {
+      await deleteProduct(id);
+      setProducts(products.filter((product) => product.id !== id));
+      setDeleteConfirmationId(null); // Reset confirmation state
+      showSnackbar("Ürün Başarıyla Silindi!", "success");
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      showSnackbar("Ürün Silinemedi. Tekrar Deneyiniz.", "error");
+    }
   };
+
+  const handleDeleteClick = (id: string) => {
+    if (deleteConfirmationId === id) {
+      // Proceed with deletion
+      clearTimeout(deleteTimer!);
+      setDeleteConfirmationId(null);
+      handleDelete(id);
+    } else {
+      // Set confirmation state
+      setDeleteConfirmationId(id);
+      const timer = setTimeout(() => {
+        setDeleteConfirmationId(null); // Reset after 5 seconds
+      }, 5000);
+      setDeleteTimer(timer);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (deleteTimer) clearTimeout(deleteTimer);
+    };
+  }, [deleteTimer]);
 
   const resetForm = () => {
     setShowModal(false);
@@ -273,7 +311,7 @@ export const ProductManagementComponent = () => {
           placeholder="İsim veya kategoriye göre ürün arayın..."
           value={searchQuery}
           onChange={handleSearch}
-          className="w-full p-2 border border-gray-300 bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full p-2 border border-gray-300 bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <FaSearch className="ml-2 text-gray-500" />
       </div>
@@ -303,52 +341,60 @@ export const ProductManagementComponent = () => {
                 <td className="p-4 text-gray-600">{product.id}</td>
                 <td className="p-4 text-gray-600">{product.name}</td>
                 <td className="p-4 text-gray-600">
-                  {product.category?.name || "No Category"}
+                  {product.category?.name || "Kategori Yok"}
                 </td>
                 <td className="p-4 text-gray-600">
                   {product.price.toFixed(2)} ₺
                 </td>
                 <td className="p-4 text-gray-600">{product.stock}</td>
                 <td className="p-4 text-center">
-                  <button
-                    onClick={() => {
-                      setIsEditing(true);
-                      setEditingProduct({
-                        ...product,
-                        health_benefits:
-                          (
-                            product.health_benefits as Array<
-                              string | { benefit: string }
-                            >
-                          )?.map((benefit) =>
-                            typeof benefit === "object" && "benefit" in benefit
-                              ? benefit.benefit
-                              : benefit
-                          ) || [],
+                  <div className="flex justify-center space-x-2">
+                    <button
+                      onClick={() => {
+                        setIsEditing(true);
+                        setEditingProduct({
+                          ...product,
+                          health_benefits:
+                            (
+                              product.health_benefits as Array<
+                                string | { benefit: string }
+                              >
+                            )?.map((benefit) =>
+                              typeof benefit === "object" &&
+                              "benefit" in benefit
+                                ? benefit.benefit
+                                : benefit
+                            ) || [],
 
-                        image_ids:
-                          product.images?.map((image) => image.id) || [], // Populate image_ids from images
-                        category_id: product.category?.id, // Ensure category_id is set
-                      });
-                      setShowModal(true);
-                    }}
-                    className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                  >
-                    <FaEdit />
-                  </button>
+                          image_ids:
+                            product.images?.map((image) => image.id) || [], // Populate image_ids from images
+                          category_id: product.category?.id, // Ensure category_id is set
+                        });
+                        setShowModal(true);
+                      }}
+                      className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                    >
+                      <FaEdit />
+                    </button>
 
-                  <button
-                    onClick={() => {
-                      if (
-                        confirm("Ürünü silmek istediğinizden emin misiniz?")
-                      ) {
-                        handleDelete(product.id);
-                      }
-                    }}
-                    className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-200"
-                  >
-                    <FaTrashAlt />
-                  </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(product.id);
+                      }}
+                      className={`${
+                        deleteConfirmationId === product.id
+                          ? "bg-red-500 text-white px-3 mt-1 py-1 rounded-lg"
+                          : "bg-red-500 text-white p-2 rounded-lg"
+                      } hover:bg-red-600`}
+                    >
+                      {deleteConfirmationId === product.id ? (
+                        "Silme işlemini onaylamak için tıklayın."
+                      ) : (
+                        <FaTrashAlt />
+                      )}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))
@@ -371,7 +417,7 @@ export const ProductManagementComponent = () => {
               onClick={() => handlePageChange(page)}
               className={`mx-1 p-2 border rounded-lg ${
                 page === currentPage
-                  ? "bg-yellow-500 text-white"
+                  ? "bg-blue-500 text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
@@ -443,26 +489,6 @@ export const ProductManagementComponent = () => {
                     : newProduct.image_ids
                   ).map((id, index) => {
                     const imagePath = `http://localhost:8000/uskumenzade/api/static/images/${id}.jpg`; // Replace with the correct image URL format
-                    return (
-                      <div
-                        key={index}
-                        className="w-24 h-24 bg-gray-200 border rounded-lg flex-shrink-0"
-                      >
-                        <img
-                          src={imagePath}
-                          alt={`Selected Image ${index + 1}`}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="horizontal-slider mt-2 flex gap-2 overflow-x-auto">
-                  {(isEditing && editingProduct
-                    ? editingProduct.image_ids || []
-                    : newProduct.image_ids
-                  ).map((id, index) => {
-                    const imagePath = `http://localhost:8000/uskumenzade/api/static/images/${id}.jpg`;
                     return (
                       <div
                         key={index}
@@ -817,9 +843,16 @@ export const ProductManagementComponent = () => {
                 }));
               }
             } else {
-              console.error("No categories were selected.");
+              console.error("Kategori Seçilmedi.");
             }
           }}
+        />
+      )}
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          onClose={() => setSnackbar(null)}
         />
       )}
     </div>

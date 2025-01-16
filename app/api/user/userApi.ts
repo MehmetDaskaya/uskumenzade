@@ -33,7 +33,7 @@ export interface Order {
     fname: string;
     lname: string;
     email: string;
-  }; // Add this field
+  };
 }
 
 export interface User {

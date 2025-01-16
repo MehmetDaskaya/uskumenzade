@@ -4,12 +4,14 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { loadTags, addTag, editTag, removeTag } from "@/redux/slices/tagSlice";
+import { Snackbar } from "../index";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
 interface TagModalProps {
   isOpen: boolean;
   onClose: () => void;
   onTagSelect: (tags: Tag[]) => void;
+  definitionPage?: boolean;
 }
 
 interface Tag {
@@ -17,7 +19,12 @@ interface Tag {
   name: string;
 }
 
-export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
+export function TagModal({
+  isOpen,
+  onClose,
+  onTagSelect,
+  definitionPage = false,
+}: TagModalProps) {
   const dispatch = useDispatch<AppDispatch>();
   const tags = useSelector((state: RootState) => state.tags.tags);
   const loading = useSelector((state: RootState) => state.tags.loading);
@@ -25,7 +32,19 @@ export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
   const [editTagId, setEditTagId] = useState<string | null>(null);
   const [editTagName, setEditTagName] = useState("");
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    string | null
+  >(null);
+  const [deleteTimer, setDeleteTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const [snackbar, setSnackbar] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const showSnackbar = (message: string, type: "success" | "error") => {
+    setSnackbar({ message, type });
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -35,20 +54,21 @@ export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
 
   const handleAddTag = async () => {
     if (!newTagName.trim()) {
-      setErrorMessage("Tag name cannot be empty.");
+      showSnackbar("Etiket adı boş olamaz.", "error");
       return;
     }
     try {
       await dispatch(addTag(newTagName.trim())).unwrap();
       setNewTagName("");
-    } catch (error) {
-      console.error("Error adding tag:", error);
+      showSnackbar("Etiket başarıyla eklendi!", "success");
+    } catch {
+      showSnackbar("Etiket eklenirken bir hata oluştu.", "error");
     }
   };
 
   const handleEditTag = async () => {
     if (!editTagName.trim() || !editTagId) {
-      setErrorMessage("Tag name cannot be empty.");
+      showSnackbar("Etiket adı boş olamaz.", "error");
       return;
     }
     try {
@@ -57,16 +77,17 @@ export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
       ).unwrap();
       setEditTagId(null);
       setEditTagName("");
-    } catch (error) {
-      console.error("Error editing tag:", error);
+      showSnackbar("Etiket başarıyla güncellendi!", "success");
+    } catch {
+      showSnackbar("Etiket güncellenirken bir hata oluştu.", "error");
     }
   };
-
   const handleDeleteTag = async (tagId: string) => {
     try {
       await dispatch(removeTag(tagId)).unwrap();
-    } catch (error) {
-      console.error("Error deleting tag:", error);
+      showSnackbar("Etiket başarıyla silindi!", "success");
+    } catch {
+      showSnackbar("Etiket silinirken bir hata oluştu.", "error");
     }
   };
 
@@ -84,6 +105,29 @@ export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
     onTagSelect(selectedTags);
     onClose();
   };
+
+  const handleDeleteClick = (tagId: string) => {
+    if (deleteConfirmationId === tagId) {
+      // Proceed with deletion
+      clearTimeout(deleteTimer!);
+      setDeleteConfirmationId(null);
+      handleDeleteTag(tagId);
+    } else {
+      // Set confirmation state
+      setDeleteConfirmationId(tagId);
+      const timer = setTimeout(() => {
+        setDeleteConfirmationId(null);
+      }, 5000);
+      setDeleteTimer(timer);
+    }
+  };
+
+  // Ensure cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (deleteTimer) clearTimeout(deleteTimer);
+    };
+  }, [deleteTimer]);
 
   if (!isOpen) return null;
 
@@ -116,7 +160,6 @@ export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
               Ekle
             </button>
           </div>
-          {errorMessage && <p className="text-red-500 mt-2">{errorMessage}</p>}
         </div>
 
         <div className="flex">
@@ -128,7 +171,7 @@ export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
             {loading ? (
               <p>Yükleniyor...</p>
             ) : (
-              <ul className="space-y-4">
+              <ul className="space-y-4 overflow-y-auto max-h-64 pr-2 scrollbar scrollbar-thumb-blue-500 scrollbar-track-gray-200">
                 {tags.map((tag) => (
                   <li
                     key={tag.id}
@@ -163,7 +206,6 @@ export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
                     ) : (
                       <span className="text-gray-800">{tag.name}</span>
                     )}
-
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={(e) => {
@@ -178,11 +220,19 @@ export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteTag(tag.id);
+                          handleDeleteClick(tag.id);
                         }}
-                        className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                        className={`${
+                          deleteConfirmationId === tag.id
+                            ? "bg-red-500 text-white px-3 py-1 rounded-lg"
+                            : "bg-red-500 text-white p-2 rounded-full"
+                        } hover:bg-red-600`}
                       >
-                        <FiTrash2 />
+                        {deleteConfirmationId === tag.id ? (
+                          "Silme işlemini onaylamak için tıklayın."
+                        ) : (
+                          <FiTrash2 />
+                        )}
                       </button>
                     </div>
                   </li>
@@ -191,45 +241,60 @@ export function TagModal({ isOpen, onClose, onTagSelect }: TagModalProps) {
             )}
           </div>
 
-          {/* Selected Tags */}
-          <div className="flex-1 mx-1">
-            <h4 className="text-xl text-black font-semibold mb-4">
-              Seçilen Etiketler
-            </h4>
-            <ul className="space-y-4">
-              {selectedTags.map((tag) => (
-                <li
-                  key={tag.id}
-                  className="flex items-center justify-between border p-3 rounded-lg shadow-sm bg-green-100"
-                >
-                  <span className="text-gray-800">{tag.name}</span>
-                  <button
-                    onClick={() => handleDeselectTag(tag.id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
-                  >
-                    Kaldır
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Conditional Divider and Selected Tags */}
+          {!definitionPage && (
+            <>
+              {/* Divider */}
+              <div className="w-px bg-gray-300 mx-2"></div>
+
+              {/* Selected Tags */}
+              <div className="flex-1 mx-1">
+                <h4 className="text-xl text-black font-semibold mb-4">
+                  Seçilen Etiketler
+                </h4>
+                <ul className="space-y-4">
+                  {selectedTags.map((tag) => (
+                    <li
+                      key={tag.id}
+                      className="flex items-center justify-between border p-3 rounded-lg shadow-sm bg-green-100"
+                    >
+                      <span className="text-gray-800">{tag.name}</span>
+                      <button
+                        onClick={() => handleDeselectTag(tag.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                      >
+                        Kaldır
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
+            className="bg-gray-500 text-white mx-1 px-6 py-2 rounded-lg hover:bg-gray-600"
           >
             Kapat
           </button>
           <button
             onClick={handleSaveSelectedTags}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+            className="bg-blue-500 text-white mx-1 px-6 py-2 rounded-lg hover:bg-blue-600"
           >
             Kaydet
           </button>
         </div>
       </div>
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          onClose={() => setSnackbar(null)}
+        />
+      )}
     </div>
   );
 }

@@ -57,7 +57,7 @@ function StatCard({
           ) : (
             <FaArrowDown className="mr-1" />
           )}
-          {Math.abs(growth)}%
+          %{Math.abs(growth)}
         </div>
       </div>
       <h3 className="text-xl font-semibold text-gray-700 mb-2">{title}</h3>
@@ -371,7 +371,7 @@ export const DashboardComponent = () => {
                 <span>
                   {order.user.fname} {order.user.lname}
                 </span>
-                <span>${order.amount.toFixed(2)}</span>
+                <span>{order.amount.toFixed(2)} ₺</span>
                 <span>{new Date(order.created_at).toLocaleDateString()}</span>
               </li>
             ))}

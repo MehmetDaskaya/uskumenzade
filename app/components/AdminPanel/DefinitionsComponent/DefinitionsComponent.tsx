@@ -107,6 +107,7 @@ export const DefinitionsComponent = () => {
         <CategoryModal
           isOpen={showCategoryModal}
           onClose={closeCategoryModal}
+          definitionPage={true}
           onCategorySelect={(categories) => {
             console.log("Selected Categories:", categories);
             closeCategoryModal();
@@ -118,6 +119,7 @@ export const DefinitionsComponent = () => {
         <TagModal
           isOpen={showTagModal}
           onClose={closeTagModal}
+          definitionPage={true}
           onTagSelect={(tags) => {
             console.log("Selected Tags:", tags);
             closeTagModal();
@@ -129,6 +131,7 @@ export const DefinitionsComponent = () => {
         <MetaTagModal
           isOpen={showMetaTagModal}
           onClose={closeMetaTagModal}
+          definitionPage={true}
           onMetaTagSelect={(metaTags) => {
             console.log("Selected Meta Tags:", metaTags);
             closeMetaTagModal();

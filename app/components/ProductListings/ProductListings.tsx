@@ -600,7 +600,7 @@ export const ProductListings = ({
   }
 
   return (
-    <div className="container flex-col mx-auto px-4 md:px-16 py-8 flex bg-yellow-500 ">
+    <div className="flex-col mx-auto px-4 md:px-16 py-8 flex bg-yellow-500 ">
       <div className="w-full mb-4 ">
         <h1 className="text-3xl bg-white text-gray-700 font-bold text-center py-8 rounded-t-xl">
           Ürün Kataloğumuz

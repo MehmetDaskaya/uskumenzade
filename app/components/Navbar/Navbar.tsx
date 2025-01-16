@@ -1,13 +1,14 @@
 // app/components/Navbar/Navbar.tsx
 
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { clearAccessToken } from "../../../redux/slices/authSlice";
 import { RootState } from "@/redux/store";
+import { fetchCurrentUser } from "@/app/api/auth/authApi";
 
 import uskumenzadeLogo from "../../../public/images/uskumenzade-logo.png";
 
@@ -18,11 +19,28 @@ interface NavbarProps {
 export const Navbar = ({ viewable = false }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenProfile, setIsOpenProfile] = useState(false);
+  const [isSuperUser, setIsSuperUser] = useState(false);
 
   const dispatch = useDispatch();
   const router = useRouter();
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        if (accessToken) {
+          const userData = await fetchCurrentUser(accessToken);
+          setIsSuperUser(userData.is_superuser); // Update state with is_superuser
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setIsSuperUser(false);
+      }
+    };
+
+    fetchUserData();
+  }, [accessToken]); // Re-run if accessToken changes
 
   const isTokenExpired = (token: string | null): boolean => {
     if (!token) return true;
@@ -95,6 +113,14 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
           >
             Sepet
           </Link>
+          {isSuperUser && (
+            <Link
+              href="/admin"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Admin Paneli
+            </Link>
+          )}
 
           {/* Conditional Profile Dropdown */}
           <div className="relative">
@@ -304,6 +330,15 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
             >
               Sepet
             </Link>
+            {isSuperUser && (
+              <Link
+                href="/admin"
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                onClick={toggleMenu}
+              >
+                Admin Paneli
+              </Link>
+            )}
           </div>
         </div>
       )}

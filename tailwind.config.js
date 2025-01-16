@@ -23,10 +23,11 @@ module.exports = {
       },
     },
     variants: {
+      scrollbar: ["rounded"],
       extend: {
         position: ["sticky"],
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwind-scrollbar")],
 };

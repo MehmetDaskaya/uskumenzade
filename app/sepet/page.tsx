@@ -88,10 +88,10 @@ export default function Cart() {
   const discountAmount = appliedDiscount ? totalPrice * appliedDiscount : 0;
   const finalTotal = totalPrice - discountAmount;
 
-  if (!isClient) return null; // Render nothing on the server
+  if (!isClient) return null;
 
   return (
-    <div className="container bg-yellow-500 mx-auto px-4 md:px-16 py-8">
+    <div className=" bg-yellow-500 mx-auto px-4 md:px-16 py-8">
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 space-y-6">
           <AiOutlineShoppingCart className="text-yellow-200" size={150} />

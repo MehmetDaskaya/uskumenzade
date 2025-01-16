@@ -15,6 +15,6 @@ export { Carousel } from "./ui/AppleCardsCarousel/AppleCardsCarousel";
 export { ProductListings } from "./ProductListings/ProductListings";
 export { Footer } from "./Footer/Footer";
 export { Navbar } from "./Navbar/Navbar";
-export { Snackbar } from "./Snackbar/Snackbar";
 export { GoToTopButton } from "./GoToTopButton/GoToTopButton";
 export { Testimonials } from "./Testimonials/Testimonials";
+export { Snackbar } from "./Snackbar/Snackbar";

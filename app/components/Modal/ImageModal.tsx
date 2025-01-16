@@ -392,7 +392,6 @@ export function ImageModal({
             </div>
 
             {/* Pagination Controls */}
-            {/* Pagination Controls */}
             <div className="flex justify-center items-center mt-4 space-x-4">
               <button
                 onClick={handlePrevPage}
