@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="bg-gradient-to-br from-yellow-50 to-gray-100 min-h-screen">
+    <div className="bg-background min-h-screen">
       {/* Hero Section */}
-      <div className="bg-yellow-500 text-white py-16">
+      <div className="bg-secondary text-white py-16">
         <div className="container mx-auto text-center px-4">
           <h1 className="text-4xl font-bold mb-4">Bize Ulaşın</h1>
           <p className="text-lg">
@@ -34,16 +34,16 @@ export default function ContactPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="flex flex-col items-center bg-white rounded-lg shadow-lg p-6 text-center">
-            <FaMapMarkerAlt className="text-yellow-500 text-4xl mb-4" />
+            <FaMapMarkerAlt className="text-tertiary text-4xl mb-4" />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Adres</h3>
             <p className="text-gray-600">
-              Uskumenzade Ofis
+              Mehmet Akif, 23 Nisan Cd. No:68, 15300
               <br />
-              İstanbul, Türkiye
+              Bucak/Burdur
             </p>
           </div>
           <div className="flex flex-col items-center bg-white rounded-lg shadow-lg p-6 text-center">
-            <FaPhoneAlt className="text-yellow-500 text-4xl mb-4" />
+            <FaPhoneAlt className="text-tertiary text-4xl mb-4" />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               Telefon
             </h3>
@@ -54,7 +54,7 @@ export default function ContactPage() {
             </p>
           </div>
           <div className="flex flex-col items-center bg-white rounded-lg shadow-lg p-6 text-center">
-            <FaEnvelope className="text-yellow-500 text-4xl mb-4" />
+            <FaEnvelope className="text-tertiary text-4xl mb-4" />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               E-posta
             </h3>
@@ -68,7 +68,7 @@ export default function ContactPage() {
             <p className="text-gray-600">
               <a
                 href="https://wa.me/905551234567"
-                className="text-yellow-500 hover:underline"
+                className="text-tertiary hover:underline"
               >
                 +90 555 123 45 67
               </a>
@@ -96,7 +96,7 @@ export default function ContactPage() {
                 type="text"
                 id="name"
                 required
-                className="mt-1 p-3 bg-white text-gray-600 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                className="mt-1 p-3 bg-white text-gray-600 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
                 placeholder="Adınız"
               />
             </div>
@@ -111,7 +111,7 @@ export default function ContactPage() {
                 type="email"
                 id="email"
                 required
-                className="mt-1 p-3 bg-white text-gray-600 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                className="mt-1 p-3 bg-white text-gray-600 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
                 placeholder="E-posta adresiniz"
               />
             </div>
@@ -126,13 +126,13 @@ export default function ContactPage() {
                 id="message"
                 rows={4}
                 required
-                className="mt-1 p-3 bg-white text-gray-600 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                className="mt-1 p-3 bg-white text-gray-600 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
                 placeholder="Mesajınız"
               ></textarea>
             </div>
             <button
               type="submit"
-              className="w-full bg-yellow-500 text-white py-3 px-6 rounded-lg font-bold hover:bg-yellow-600 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+              className="w-full bg-secondary text-white py-3 px-6 rounded-lg font-bold hover:bg-tertiary focus:outline-none focus:ring-4 focus:ring-tertiary"
             >
               Gönder
             </button>
@@ -142,7 +142,7 @@ export default function ContactPage() {
         {/* Map Section */}
         <div className="rounded-lg overflow-hidden shadow-lg">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d243647.61875341277!2d28.9795301!3d41.0151377!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14caba3b3bb9c913%3A0x7f68be97d4b3a9b1!2sIstanbul!5e0!3m2!1sen!2str!4v1697387354832!5m2!1sen!2str"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d791.7808113669026!2d30.574253269631527!3d37.45781189825417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14c44120ba663679%3A0xf5096f80aae765f5!2sPamuk%20Dede!5e0!3m2!1sen!2str!4v1739155081024!5m2!1sen!2str"
             title="Uskumenzade Lokasyon"
             allowFullScreen
             loading="lazy"
@@ -152,7 +152,7 @@ export default function ContactPage() {
       </div>
 
       {/* Call-to-Action Section */}
-      <div className="bg-yellow-500 text-white py-16">
+      <div className="bg-secondary text-white py-16">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">
             Bizimle Hemen İletişime Geçin

@@ -45,7 +45,7 @@ export const ReportsComponent = () => {
         <select
           value={selectedRange}
           onChange={handleRangeChange}
-          className="ml-2 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="ml-2 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary"
         >
           <option value="Last 6 Months">Last 6 Months</option>
           <option value="Last Year">Last Year</option>

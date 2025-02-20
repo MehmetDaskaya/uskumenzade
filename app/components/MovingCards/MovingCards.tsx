@@ -1,49 +1,36 @@
 // InfiniteMovingCardsData.tsx
 import { InfiniteMovingCardsClient } from "./MovingCardsClient";
+import { testimonialsData } from "@/util/testimonialsData";
 
 export const InfiniteMovingCards = () => {
-  // Items data fetched or defined server-side for SSR
-  const items = [
-    {
-      quote: "Harika çaylar! Her sabah keyifle içiyorum.",
-      name: "Ahmet Yıldız",
-    },
-    {
-      quote: "Doğal kremler cildime çok iyi geldi, teşekkürler!",
-      name: "Fatma Kaya",
-    },
-    {
-      quote: "Üskümenzade'den alışveriş yapmak bir zevk.",
-      name: "Merve Çelik",
-    },
-    {
-      quote: "Merhemler gerçekten işe yarıyor, herkese tavsiye ederim.",
-      name: "Ali Demir",
-    },
-    {
-      quote: "Organik çayların tadı mükemmel, doğal hissettiriyor.",
-      name: "Ayşe Koç",
-    },
-    {
-      quote: "Siparişim hızlı ve sorunsuz geldi, harikasınız!",
-      name: "Hüseyin Arslan",
-    },
-  ];
-
   return (
     <>
-      <InfiniteMovingCardsClient items={items} speed="slow" />
+      <InfiniteMovingCardsClient reviews={testimonialsData} speed="slow" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "TestimonialPage",
-            name: "Infinite Moving Cards",
-            review: items.map((item) => ({
+            "@type": "ReviewPage",
+            name: "Customer Reviews",
+            review: testimonialsData.map((review) => ({
               "@type": "Review",
-              reviewBody: item.quote,
-              author: { "@type": "Person", name: item.name },
+              reviewBody: review.comment,
+              reviewRating: {
+                "@type": "Rating",
+                ratingValue: review.rating,
+                bestRating: 5,
+              },
+              author: {
+                "@type": "Person",
+                name: review.name,
+                image: review.userImage,
+              },
+              itemReviewed: {
+                "@type": "Product",
+                name: review.product,
+                image: review.productImage,
+              },
             })),
           }),
         }}

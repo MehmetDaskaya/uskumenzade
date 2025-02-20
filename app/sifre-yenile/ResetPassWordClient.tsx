@@ -83,7 +83,7 @@ export default function ResetPasswordPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-yellow-500"
+              className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-tertiary"
               placeholder="Enter your new password"
             />
             <button
@@ -104,7 +104,7 @@ export default function ResetPasswordPage() {
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-yellow-500"
+              className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-tertiary"
               placeholder="Re-enter your new password"
             />
             <button
@@ -117,17 +117,14 @@ export default function ResetPasswordPage() {
           </div>
           <button
             type="submit"
-            className="w-full p-3 text-white bg-yellow-500 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="w-full p-3 text-white bg-secondary rounded-md hover:bg-tertiary focus:outline-none focus:ring-2 focus:ring-tertiary"
           >
             Şifreyi Sıfırla
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <Link
-            href="/giris"
-            className="text-sm text-yellow-500 hover:underline"
-          >
+          <Link href="/giris" className="text-sm text-tertiary hover:underline">
             Giriş Sayfasına Geri Dön
           </Link>
         </div>

@@ -68,7 +68,7 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex h-screen items-start justify-center bg-gradient-to-br from-yellow-50 to-gray-100 pt-12">
+    <div className="flex h-screen items-start justify-center bg-background pt-12">
       <div className="w-full max-w-md p-8 bg-white shadow-2xl rounded-2xl">
         <h2 className="text-3xl font-bold text-center text-gray-800">
           Hoşgeldiniz
@@ -113,7 +113,7 @@ export default function SignInPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+              className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
               placeholder="E-postanızı girin..."
             />
           </div>
@@ -131,7 +131,7 @@ export default function SignInPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
                 placeholder="Şifrenizi girin..."
               />
               <button
@@ -146,14 +146,14 @@ export default function SignInPage() {
           <div className="flex justify-end">
             <Link
               href="/sifremi-unuttum"
-              className="text-sm text-yellow-500 hover:underline"
+              className="text-sm text-tertiary hover:underline"
             >
               Şifrenizi mi Unuttunuz?
             </Link>
           </div>
           <button
             type="submit"
-            className="w-full py-3 px-4 text-white bg-yellow-500 rounded-lg font-medium hover:bg-yellow-600 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+            className="w-full py-3 px-4 text-white bg-secondary rounded-lg font-medium hover:bg-tertiary focus:outline-none focus:ring-4 focus:ring-tertiary"
           >
             Giriş Yap
           </button>
@@ -163,7 +163,7 @@ export default function SignInPage() {
           Hesabınız yok mu?{" "}
           <Link
             href="/hesap-olustur"
-            className="text-yellow-500 font-semibold hover:underline"
+            className="text-tertiary font-semibold hover:underline"
           >
             Hesap Oluştur
           </Link>

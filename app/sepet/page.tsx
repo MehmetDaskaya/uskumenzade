@@ -91,7 +91,7 @@ export default function Cart() {
   if (!isClient) return null;
 
   return (
-    <div className=" bg-yellow-500 mx-auto px-4 md:px-16 py-8">
+    <div className=" bg-secondary mx-auto px-4 md:px-16 py-8">
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 space-y-6">
           <AiOutlineShoppingCart className="text-yellow-200" size={150} />
@@ -103,7 +103,7 @@ export default function Cart() {
             atın ve alışverişe başlayın!
           </p>
           <Link href="/urunler">
-            <button className="bg-yellow-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-yellow-600 transition duration-300">
+            <button className="bg-secondary text-white px-6 py-3 rounded-md font-semibold hover:bg-tertiary transition duration-300">
               Alışverişe Başla
             </button>
           </Link>
@@ -255,11 +255,11 @@ export default function Cart() {
                   placeholder="İndirim Kodu"
                   value={discountCode}
                   onChange={(e) => setDiscountCode(e.target.value)}
-                  className="w-full p-3 bg-gray-200 text-black  border rounded-md focus:outline-none focus:ring focus:ring-yellow-500"
+                  className="w-full p-3 bg-gray-200 text-black  border rounded-md focus:outline-none focus:ring focus:ring-tertiary"
                 />
                 <button
                   onClick={handleDiscountApply}
-                  className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 focus:outline-none"
+                  className="bg-secondary text-white px-4 py-2 rounded-md hover:bg-tertiary focus:outline-none"
                 >
                   Uygula
                 </button>
@@ -275,7 +275,7 @@ export default function Cart() {
               {/* Link to Products Page */}
               <div className="text-center mt-4">
                 <Link href="/urunler">
-                  <div className="text-yellow-500 hover:underline">
+                  <div className="text-tertiary hover:underline">
                     Alışverişe Devam Et
                   </div>
                 </Link>

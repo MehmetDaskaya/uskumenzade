@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex h-screen items-start justify-center bg-gradient-to-br from-yellow-50 to-gray-100 pt-8">
+    <div className="flex h-screen items-start justify-center bg-background pt-8">
       <div className="w-full max-w-md p-8 bg-white shadow-2xl rounded-2xl">
         <h2 className="text-3xl font-bold text-center text-gray-800">
           Şifre Sıfırla
@@ -67,13 +67,13 @@ export default function ForgotPasswordPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 mt-1 text-black bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+              className="w-full p-3 mt-1 text-black bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
               placeholder="E-posta adresinizi girin..."
             />
           </div>
           <button
             type="submit"
-            className="w-full py-3 px-4 text-white bg-yellow-500 rounded-lg font-medium hover:bg-yellow-600 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+            className="w-full py-3 px-4 text-white bg-secondary rounded-lg font-medium hover:bg-tertiary focus:outline-none focus:ring-4 focus:ring-tertiary"
           >
             Sıfırlama Linki Gönder
           </button>
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
         <div className="mt-8 text-center">
           <Link
             href="/giris"
-            className="text-sm text-yellow-500 font-semibold hover:underline"
+            className="text-sm text-tertiary font-semibold hover:underline"
           >
             Giriş Sayfasına Dön
           </Link>

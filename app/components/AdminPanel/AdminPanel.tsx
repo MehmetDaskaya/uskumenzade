@@ -97,7 +97,7 @@ export default function AdminPanel() {
       <div className="min-h-screen flex">
         {/* Mobile Burger Icon */}
         <button
-          className="absolute top-4 left-4 text-2xl md:hidden z-50 text-yellow-500"
+          className="absolute top-4 left-4 text-2xl md:hidden z-50 text-tertiary"
           onClick={() => setIsSidebarOpen((prev) => !prev)}
         >
           <FiMenu />
@@ -105,7 +105,7 @@ export default function AdminPanel() {
 
         {/* Sidebar */}
         <aside
-          className={`fixed inset-y-0 left-0 z-40 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 w-64 ${
+          className={`fixed inset-y-0 left-0 z-40 bg-adminPanelDark text-white transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 w-64 ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -117,8 +117,10 @@ export default function AdminPanel() {
               <li>
                 <button
                   className={`flex items-center p-3 w-full ${
-                    activeSection === "yönetim paneli" ? "bg-gray-700" : ""
-                  } hover:bg-gray-700`}
+                    activeSection === "yönetim paneli"
+                      ? "bg-adminPanelDark"
+                      : ""
+                  } hover:bg-adminPanelDark`}
                   onClick={() => handleSectionChange("yönetim paneli")}
                 >
                   <FaChartLine className="mr-3" />
@@ -128,8 +130,8 @@ export default function AdminPanel() {
               <li>
                 <button
                   className={`flex items-center p-3 w-full ${
-                    activeSection === "kullanıcılar" ? "bg-gray-700" : ""
-                  } hover:bg-gray-700`}
+                    activeSection === "kullanıcılar" ? "bg-adminPanelDark" : ""
+                  } hover:bg-adminPanelDark`}
                   onClick={() => handleSectionChange("kullanıcılar")}
                 >
                   <FaUsers className="mr-3" />
@@ -139,8 +141,8 @@ export default function AdminPanel() {
               <li>
                 <button
                   className={`flex items-center p-3 w-full ${
-                    activeSection === "ürünler" ? "bg-gray-700" : ""
-                  } hover:bg-gray-700`}
+                    activeSection === "ürünler" ? "bg-adminPanelDark" : ""
+                  } hover:bg-adminPanelDark`}
                   onClick={() => handleSectionChange("ürünler")}
                 >
                   <FaBox className="mr-3" />
@@ -150,8 +152,8 @@ export default function AdminPanel() {
               <li>
                 <button
                   className={`flex items-center p-3 w-full ${
-                    activeSection === "siparişler" ? "bg-gray-700" : ""
-                  } hover:bg-gray-700`}
+                    activeSection === "siparişler" ? "bg-adminPanelDark" : ""
+                  } hover:bg-adminPanelDark`}
                   onClick={() => handleSectionChange("siparişler")}
                 >
                   <FaShoppingCart className="mr-3" />
@@ -161,8 +163,8 @@ export default function AdminPanel() {
               <li>
                 <button
                   className={`flex items-center p-3 w-full ${
-                    activeSection === "bloglar" ? "bg-gray-700" : ""
-                  } hover:bg-gray-700`}
+                    activeSection === "bloglar" ? "bg-adminPanelDark" : ""
+                  } hover:bg-adminPanelDark`}
                   onClick={() => handleSectionChange("bloglar")}
                 >
                   <FaBox className="mr-3" />
@@ -172,8 +174,8 @@ export default function AdminPanel() {
               {/* <li>
                 <button
                   className={`flex items-center p-3 w-full ${
-                    activeSection === "raporlar" ? "bg-gray-700" : ""
-                  } hover:bg-gray-700`}
+                    activeSection === "raporlar" ? "bg-adminPanelDark" : ""
+                  } hover:bg-adminPanelDark`}
                   onClick={() => handleSectionChange("raporlar")}
                 >
                   <MdOutlineAnalytics className="mr-3" />
@@ -183,8 +185,8 @@ export default function AdminPanel() {
               <li>
                 <button
                   className={`flex items-center p-3 w-full ${
-                    activeSection === "tanımlar" ? "bg-gray-700" : ""
-                  } hover:bg-gray-700`}
+                    activeSection === "tanımlar" ? "bg-adminPanelDark" : ""
+                  } hover:bg-adminPanelDark`}
                   onClick={() => handleSectionChange("tanımlar")}
                 >
                   <FaCog className="mr-3" />
@@ -194,8 +196,8 @@ export default function AdminPanel() {
               {/* <li>
                 <button
                   className={`flex items-center p-3 w-full ${
-                    activeSection === "ayarlar" ? "bg-gray-700" : ""
-                  } hover:bg-gray-700`}
+                    activeSection === "ayarlar" ? "bg-adminPanelDark" : ""
+                  } hover:bg-adminPanelDark`}
                   onClick={() => handleSectionChange("ayarlar")}
                 >
                   <FaCog className="mr-3" />
@@ -206,7 +208,7 @@ export default function AdminPanel() {
           </nav>
           <div className="p-4 border-t border-gray-700">
             <button
-              className="flex items-center p-3 w-full hover:bg-gray-700"
+              className="flex items-center p-3 w-full hover:bg-adminPanelDark"
               onClick={() => {
                 dispatch(clearAccessToken()); // Clear token from Redux
                 localStorage.removeItem("authToken"); // Clear token from localStorage

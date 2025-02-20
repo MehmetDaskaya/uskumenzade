@@ -1,4 +1,3 @@
-// app/urunler/detaylar/[id]/ProductDetailsClient.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,7 +13,6 @@ import { FaLeaf, FaShoppingCart, FaTruck } from "react-icons/fa";
 import LoadingSpinner from "../../../../app/components/LoadingSpinner/LoadingSpinner";
 import Modal from "../../../../app/components/Modal/Modal";
 import Link from "next/link";
-
 import SignInPage from "@/app/giris/page";
 
 interface Product {
@@ -48,21 +46,18 @@ export default function ProductDetailsClient({
   isLoggedIn,
 }: ProductDetailsClientProps) {
   const router = useRouter();
-
-  const dispatch = useDispatch(); // Redux dispatch
+  const dispatch = useDispatch();
   const [quantity, setQuantity] = useState(1);
-
   const [isLoading, setIsLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [healthBenefits, setHealthBenefits] = useState<string[]>([]);
-  const accessToken = useSelector((state: RootState) => state.auth.accessToken); // Move useSelector here
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 1000);
 
-    // Fetch health benefits
     const fetchHealthBenefits = async () => {
       try {
         const benefits: Benefit[] = await getHealthBenefits(0, 1000);
@@ -116,20 +111,18 @@ export default function ProductDetailsClient({
 
   const handleAddToCart = async () => {
     if (!accessToken) {
-      // If no access token, open the login modal
       setIsModalOpen(true);
       return;
     }
 
     try {
-      // Fetch the current user to get the email
       const userData = await fetchCurrentUser(accessToken);
       const userEmail = userData?.email;
 
       if (!isAddedToCart) {
         dispatch(
           addItemToCart({
-            userId: userEmail, // Use email as the unique identifier
+            userId: userEmail,
             item: {
               id: product.id,
               name: product.name,
@@ -141,9 +134,9 @@ export default function ProductDetailsClient({
             },
           })
         );
-        setIsAddedToCart(true); // Mark as added to cart
+        setIsAddedToCart(true);
       } else {
-        router.push("/sepet"); // Navigate to cart
+        router.push("/sepet");
       }
     } catch (error) {
       console.error("Error fetching user data or adding to cart:", error);
@@ -155,192 +148,198 @@ export default function ProductDetailsClient({
   if (isLoading) {
     return <LoadingSpinner />;
   }
+
   return (
-    <div className="bg-yellow-500 min-h-screen py-8 px-8">
-      {/* Hero Section */}
-      <div className="relative h-[60vh] w-full overflow-hidden rounded-t-3xl bg-gray-100">
-        <Image
-          src={product.images?.[0]?.url || "/placeholder.png"}
-          alt={product.name}
-          layout="fill"
-          objectFit="contain"
-          className="transition-transform duration-500 transform hover:scale-110"
-        />
-        <div className="absolute inset-0 flex items-end justify-center">
-          <div className="text-center">
-            <h1 className="text-3xl md:text-5xl font-bold text-gray-800 mb-4 tracking-wide">
+    <div className="bg-secondary min-h-screen py-8 px-4 sm:px-8">
+      {/* Product Details Section */}
+      <div className="max-w-7xl mx-auto bg-background rounded-xl shadow-lg overflow-hidden">
+        <div className="flex flex-col lg:flex-row">
+          {/* Left Column - Product Image */}
+          <div className="lg:w-1/2 p-6 flex justify-center items-center">
+            <Image
+              src={product.images?.[0]?.url || "/placeholder.png"}
+              alt={product.name}
+              width={600}
+              height={600}
+              className="object-contain rounded-lg"
+              priority
+            />
+          </div>
+
+          {/* Right Column - Product Details */}
+          <div className="lg:w-1/2 p-6 flex flex-col justify-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
               {product.name}
             </h1>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="flex flex-col lg:flex-row gap-12">
-          {/* Left Column */}
-          <div className="lg:w-2/3">
-            <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
-              <h2 className="text-4xl font-bold mb-6 text-gray-800 border-b pb-4">
-                {product.name} Hakkında Bilgiler
-              </h2>
-              <p className="text-gray-600 mb-8 leading-relaxed text-lg">
-                {product.description}
-              </p>
-
-              {/* Health Benefits Section */}
-              <h3 className="text-2xl font-semibold mb-4 text-gray-800">
-                Sağlığa Yararları
-              </h3>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                {healthBenefits.length > 0 ? (
-                  healthBenefits.map((benefit, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center text-gray-700 bg-green-50 rounded-lg p-3 shadow-sm"
-                    >
-                      <FaLeaf className="text-green-500 mr-3" />
-                      <span>{benefit}</span>
-                    </li>
-                  ))
-                ) : (
-                  <p className="text-gray-600">
-                    Bu ürün için sağlık yararları mevcut değil.
+            <div className="flex items-center space-x-4 mb-6">
+              {product.price !== product.discounted_price ? (
+                <>
+                  <p className="text-3xl font-semibold text-green-600">
+                    {product.discounted_price.toFixed(0)} ₺
                   </p>
-                )}
-              </ul>
-
-              <h3 className="text-2xl font-semibold mb-4 text-gray-800">
-                Nasıl Kullanılır
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-6 mb-8">
-                <p className="text-gray-700 leading-relaxed">
-                  {product.how_to_use}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="lg:w-1/3">
-            <div className="bg-white rounded-xl shadow-lg p-8 sticky top-8">
-              <h2 className="text-3xl font-bold mb-4 text-gray-800">
-                {product.name}
-              </h2>
-              <div className="flex items-center space-x-4 mb-6">
-                <p className="text-3xl font-semibold text-yellow-500">
-                  {product.discounted_price.toFixed(0)} ₺
-                </p>
-                <p className="text-xl line-through text-gray-400">
+                  <p className="text-xl line-through text-gray-400">
+                    {product.price.toFixed(0)} ₺
+                  </p>
+                </>
+              ) : (
+                <p className="text-3xl font-semibold text-green-600">
                   {product.price.toFixed(0)} ₺
                 </p>
-              </div>
-              <p className="text-gray-600 mb-6">
-                Stok:{" "}
-                <span className="font-semibold text-green-600">
-                  {product.stock} adet kaldı
-                </span>
-              </p>
-              <div className="flex items-center space-x-4 justify-between mb-6">
+              )}
+            </div>
+
+            <p className="text-gray-600 mb-6">
+              Stok:{" "}
+              <span className="font-semibold text-green-600">
+                {product.stock} adet kaldı
+              </span>
+            </p>
+
+            {/* Quantity Controls */}
+            <div className="flex items-center  space-x-4 mb-6">
+              <div className="flex items-center bg-white rounded-lg">
                 <button
                   onClick={decreaseQuantity}
-                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition duration-300"
+                  className="px-4 py-2 text-gray-800 hover:bg-gray-200 rounded-l-lg"
                   disabled={quantity === 1}
                 >
                   -
                 </button>
-                <span className="text-xl font-semibold">{quantity}</span>
+                <span className="px-4 py-2 text-lg font-semibold w-12 text-center">
+                  {quantity}
+                </span>
+
                 <button
                   onClick={increaseQuantity}
-                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition duration-300"
+                  className="px-4 py-2 text-gray-800 hover:bg-gray-200 rounded-r-lg"
                   disabled={quantity === product.stock}
                 >
                   +
                 </button>
               </div>
-
-              <div className="space-y-4">
-                <button
-                  onClick={handleAddToCart}
-                  disabled={product.stock <= 0}
-                  className={`w-full bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300 flex items-center justify-center ${
-                    isAddedToCart ? "animate-pulse" : ""
-                  }`}
-                >
-                  <FaShoppingCart className="mr-2" />
-                  {isAddedToCart
-                    ? "Sepete Git"
-                    : product.stock <= 0
-                    ? "Ürün Tükenmiştir"
-                    : "Sepete Ekle"}
-                </button>
-              </div>
-
-              {/* Shipping Section */}
-              <div className="mt-8 border-t pt-6">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                  Kargo Bilgisi
-                </h3>
-                <div className="flex items-center text-gray-700 mb-4">
-                  <FaTruck className="text-green-500 mr-3 text-2xl" />
-                  <div>
-                    <p className="font-semibold">Ücretsiz Kargo</p>
-                    <p className="text-sm">
-                      100₺ ve üzeri alışverişlerde geçerlidir.
-                    </p>
-                  </div>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  Yaklaşık Kargo Süresi:{" "}
-                  <span className="font-semibold">3-5 iş günü</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Related Products */}
-        <div className="bg-white mt-6 rounded-lg shadow-lg p-8">
-          <h2 className="text-3xl font-bold mb-8 text-gray-800">
-            Bunlar da hoşunuza gidebilir
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {relatedProducts.map((relatedProduct) => (
-              <div
-                key={relatedProduct.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 transform hover:scale-105"
+              <button
+                onClick={handleAddToCart}
+                disabled={product.stock <= 0}
+                className={`flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300 ${
+                  isAddedToCart ? "animate-pulse" : ""
+                }`}
               >
-                <Image
-                  src={relatedProduct.images?.[0]?.url || "/placeholder.png"}
-                  alt={relatedProduct.name}
-                  width={300}
-                  height={200}
-                  layout="responsive"
-                  className="object-cover"
-                />
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    {relatedProduct.name}
-                  </h3>
-                  <p className="text-green-600 font-semibold mb-4">
-                    {relatedProduct.discounted_price.toFixed(0)} ₺
+                <FaShoppingCart className="inline-block mr-2" />
+                {isAddedToCart
+                  ? "Sepete Git"
+                  : product.stock <= 0
+                  ? "Ürün Tükenmiştir"
+                  : "Sepete Ekle"}
+              </button>
+            </div>
+
+            {/* Shipping Info */}
+            <div className="mt-6 border-t pt-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Kargo Bilgisi
+              </h3>
+              <div className="flex items-center space-x-3">
+                <FaTruck className="text-green-600 text-2xl" />
+                <div>
+                  <p className="font-semibold">Ücretsiz Kargo</p>
+                  <p className="text-sm text-gray-600">
+                    100₺ ve üzeri alışverişlerde geçerlidir.
                   </p>
-                  <Link href={`/urunler/detaylar/${relatedProduct.id}`}>
-                    <div className="w-full bg-green-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-green-700 transition duration-300 text-center block">
-                      Ürünü Görüntüle
-                    </div>
-                  </Link>
                 </div>
               </div>
-            ))}
+              <p className="text-gray-600 text-sm mt-2">
+                Yaklaşık Kargo Süresi:{" "}
+                <span className="font-semibold">3-5 iş günü</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Product Description and Benefits */}
+      <div className="max-w-7xl mx-auto mt-8">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Ürün Açıklaması
+          </h2>
+          <p className="text-gray-700 leading-relaxed mb-8">
+            {product.description}
+          </p>
+
+          {/* Health Benefits */}
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">
+            Sağlığa Yararları
+          </h3>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {healthBenefits.length > 0 ? (
+              healthBenefits.map((benefit, index) => (
+                <li
+                  key={index}
+                  className="flex items-center bg-green-50 rounded-lg p-4"
+                >
+                  <FaLeaf className="text-green-600 mr-3" />
+                  <span className="text-gray-700">{benefit}</span>
+                </li>
+              ))
+            ) : (
+              <p className="text-gray-600">
+                Bu ürün için sağlık yararları mevcut değil.
+              </p>
+            )}
+          </ul>
+
+          {/* How to Use */}
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">
+            Nasıl Kullanılır
+          </h3>
+          <div className="bg-gray-50 rounded-lg p-6">
+            <p className="text-gray-700 leading-relaxed">
+              {product.how_to_use}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Related Products */}
+      <div className="max-w-7xl mx-auto mt-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Bunlar da hoşunuza gidebilir
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {relatedProducts.map((relatedProduct) => (
+            <div
+              key={relatedProduct.id}
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+            >
+              <Image
+                src={relatedProduct.images?.[0]?.url || "/placeholder.png"}
+                alt={relatedProduct.name}
+                width={300}
+                height={200}
+                className="object-cover w-full h-48"
+              />
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {relatedProduct.name}
+                </h3>
+                <p className="text-green-600 font-semibold mb-4">
+                  {relatedProduct.discounted_price.toFixed(0)} ₺
+                </p>
+                <Link href={`/urunler/detaylar/${relatedProduct.id}`}>
+                  <div className="w-full bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-300 text-center">
+                    Ürünü Görüntüle
+                  </div>
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Login Modal */}
       {isModalOpen && (
         <Modal onClose={closeModal}>
-          <div className="max-w-sm max-h-[540px] w-full h-full mx-auto rounded-lg shadow-lg overflow-hidden">
+          <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-6">
             {isLoggedIn && <SignInPage />}
           </div>
         </Modal>

@@ -138,7 +138,7 @@ export const ProductManagementComponent = () => {
       setProducts((prev) => [...prev, updatedProduct]);
       resetForm();
 
-      showSnackbar("Product added successfully!", "success");
+      showSnackbar("Ürün Başarıyla Eklendi!", "success");
     } catch (error) {
       console.error("Failed to add product:", error);
       showSnackbar("Failed to add product. Please try again.", "error");
@@ -150,7 +150,7 @@ export const ProductManagementComponent = () => {
     if (editingProduct) {
       try {
         if (!editingProduct.category_id) {
-          throw new Error("Category must be selected.");
+          throw new Error("Bir kategori seçilmeli.");
         }
 
         const productPayload = {

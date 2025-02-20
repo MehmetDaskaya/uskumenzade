@@ -219,7 +219,7 @@ export default function UserInformationModal({
                           onChange={handleInputChange}
                           disabled={!isEditing}
                           placeholder="Ad"
-                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                         />
                       </div>
 
@@ -238,7 +238,7 @@ export default function UserInformationModal({
                           onChange={handleInputChange}
                           disabled={!isEditing}
                           placeholder="Soyad"
-                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                         />
                       </div>
                     </div>
@@ -258,7 +258,7 @@ export default function UserInformationModal({
                         onChange={handleInputChange}
                         disabled={!isEditing}
                         placeholder="E-posta"
-                        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                       />
                     </div>
 
@@ -289,7 +289,7 @@ export default function UserInformationModal({
                           pattern="^\+[0-9]{12}$"
                           maxLength={13}
                           placeholder="Telefon Numarası"
-                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                         />
                       </div>
 
@@ -319,7 +319,7 @@ export default function UserInformationModal({
                           pattern="^[0-9]{11}$"
                           maxLength={11}
                           placeholder="TC Kimlik Numarası"
-                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                         />
                       </div>
                     </div>
@@ -350,7 +350,7 @@ export default function UserInformationModal({
                       <button
                         type="button"
                         onClick={() => setIsEditing(true)}
-                        className="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+                        className="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-tertiary"
                       >
                         Düzenle
                       </button>
@@ -392,7 +392,7 @@ export default function UserInformationModal({
                       value={addressFormData.address_title || ""}
                       onChange={handleAddressInputChange}
                       placeholder="Adres Başlığı"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                       required
                     />
                   </div>
@@ -411,7 +411,7 @@ export default function UserInformationModal({
                       value={addressFormData.contact_name || ""}
                       onChange={handleAddressInputChange}
                       placeholder="İletişim İsmi"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                       required
                     />
                   </div>
@@ -430,7 +430,7 @@ export default function UserInformationModal({
                       value={addressFormData.address || ""}
                       onChange={handleAddressInputChange}
                       placeholder="Adres"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                       required
                     />
                   </div>
@@ -449,7 +449,7 @@ export default function UserInformationModal({
                       value={addressFormData.city || ""}
                       onChange={handleAddressInputChange}
                       placeholder="Şehir"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                       required
                     />
                   </div>
@@ -468,7 +468,7 @@ export default function UserInformationModal({
                       value={addressFormData.zip_code || ""}
                       onChange={handleAddressInputChange}
                       placeholder="Posta Kodu"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                       required
                     />
                   </div>
@@ -487,7 +487,7 @@ export default function UserInformationModal({
                       value={addressFormData.country || ""}
                       onChange={handleAddressInputChange}
                       placeholder="Ülke"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                       required
                     />
                   </div>

@@ -3,8 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
-import { addImage, loadImages } from "../../../redux/slices/imageSlice";
-import { updateImageApi, deleteImageApi } from "@/app/api/image/imageApi";
+import { loadImages } from "../../../redux/slices/imageSlice";
+import {
+  updateImageApi,
+  deleteImageApi,
+  uploadImage,
+} from "@/app/api/image/imageApi";
 import { Snackbar } from "../../components/index";
 import { FiTrash2, FiEdit2 } from "react-icons/fi";
 
@@ -109,12 +113,15 @@ export function ImageModal({
     }
 
     try {
-      await dispatch(
-        addImage({ file, alt_text, type: imageType, token: accessToken })
-      ).unwrap();
+      await uploadImage(file, alt_text, imageType, accessToken);
       showSnackbar("Görsel başarıyla yüklendi!", "success");
+
+      // Reset fields after successful upload
       setFile(null);
       setalt_text("");
+      setImageType("gallery");
+
+      // Reload images to reflect new uploads
       dispatch(loadImages(type));
     } catch (error) {
       console.error("Görsel yükleme hatası:", error);
@@ -212,7 +219,7 @@ export function ImageModal({
 
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-[9999]">
-      <div className="bg-white w-full max-w-5xl p-6 rounded-lg shadow-lg overflow-y-auto">
+      <div className="bg-white w-full max-w-5xl p-6 py-2 rounded-lg shadow-lg overflow-y-auto">
         <h3 className="text-2xl text-black font-semibold mb-6">
           Resim Yönetimi
         </h3>
@@ -457,17 +464,20 @@ export function ImageModal({
             <div className="space-y-4">
               <label
                 htmlFor="file-upload"
-                className="block w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 cursor-pointer"
+                className="block w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 cursor-pointer overflow-hidden"
               >
                 {file ? (
-                  <span className="text-sm text-gray-700">{file.name}</span>
+                  <span className="text-sm text-gray-700 truncate max-w-[80%]">
+                    {file.name}
+                  </span>
                 ) : (
-                  <span className="text-sm px-4">
+                  <span className="text-sm px-4 text-center">
                     Resim yüklemek için tıklayın veya resmi buraya sürükleyin.
-                    (Maksimum 2MB)
+                    (Maksimum 50MB)
                   </span>
                 )}
               </label>
+
               <input
                 id="file-upload"
                 type="file"

@@ -4,13 +4,20 @@ import { cn } from "@/util/utils";
 import React, { useEffect, useState } from "react";
 
 export const InfiniteMovingCardsClient = ({
-  items,
+  reviews,
   direction = "left",
-  speed = "fast",
+  speed = "normal",
   pauseOnHover = true,
   className,
 }: {
-  items: { quote: string; name: string }[];
+  reviews: {
+    name: string;
+    rating: number;
+    comment: string;
+    productImage: string;
+    userImage: string;
+    product: string;
+  }[];
   direction?: "left" | "right";
   speed?: "fast" | "normal" | "slow";
   pauseOnHover?: boolean;
@@ -50,48 +57,71 @@ export const InfiniteMovingCardsClient = ({
   };
 
   return (
-    <section id="infinite-moving-cards" className="py-16">
+    <section id="infinite-moving-cards" className="py-16 bg-secondary">
       <div
         ref={containerRef}
         className={cn(
-          "scroller relative z-20 max-w-7xl mx-auto overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]",
+          "relative z-20 max-w-7xl mx-auto overflow-hidden",
+          "mask-image: linear-gradient(to right, transparent, white 10%, white 90%, transparent)",
           className
         )}
       >
-        <h2 className="text-3xl text-gray-900 font-bold text-center mb-12">
+        <h2 className="text-3xl text-white font-bold text-center mb-12">
           Müşteri Yorumları
         </h2>
         <ul
           ref={scrollerRef}
           className={cn(
-            "flex min-w-full shrink-0 gap-4 py-4 w-max flex-nowrap",
+            "flex min-w-full shrink-0 gap-6 py-4 w-max flex-nowrap",
             start && "animate-scroll",
             pauseOnHover && "hover:[animation-play-state:paused]"
           )}
         >
-          {items.map((item) => (
+          {reviews.map((review) => (
             <li
-              key={item.name}
-              className="w-[350px] max-w-full relative rounded-2xl border border-b-0 flex-shrink-0 border-slate-700 px-8 py-6 md:w-[450px]"
-              style={{
-                background:
-                  "linear-gradient(180deg, var(--slate-800), var(--slate-900)",
-              }}
+              key={review.name}
+              className="w-[380px] max-w-full relative rounded-2xl shadow-lg bg-white px-6 py-6 flex flex-col items-center space-y-4"
             >
-              <blockquote>
-                <div
-                  aria-hidden="true"
-                  className="user-select-none -z-1 pointer-events-none absolute -left-0.5 -top-0.5 h-[calc(100%_+_4px)] w-[calc(100%_+_4px)]"
-                ></div>
-                <span className="relative z-20 text-sm leading-[1.6] text-gray-700 font-normal">
-                  {item.quote}
-                </span>
-                <div className="relative z-20 mt-6">
-                  <span className="text-sm leading-[1.6] text-gray-500 font-normal">
-                    {item.name}
-                  </span>
-                </div>
+              {/* User Image */}
+              <img
+                src={review.userImage}
+                alt={review.name}
+                className="w-14 h-14 rounded-full border-2 border-gray-300"
+              />
+              {/* User Name */}
+              <div className="mt-2 text-sm text-gray-500">{review.name}</div>
+
+              {/* Review Text */}
+              <blockquote className="text-center text-gray-700 text-sm min-h-[80px]">
+                {review.comment}
               </blockquote>
+
+              {/* Rating */}
+              <div className="flex space-x-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      "w-4 h-4",
+                      i < review.rating ? "text-primary" : "text-gray-300"
+                    )}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+
+              {/* Product Name */}
+              <span className="text-gray-900 font-semibold">
+                {review.product}
+              </span>
+
+              {/* Product Image */}
+              <img
+                src={review.productImage}
+                alt={review.product}
+                className="w-full h-28 object-cover rounded-lg"
+              />
             </li>
           ))}
         </ul>

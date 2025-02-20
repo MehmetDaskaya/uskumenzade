@@ -9,8 +9,9 @@ import { useRouter } from "next/navigation";
 import { clearAccessToken } from "../../../redux/slices/authSlice";
 import { RootState } from "@/redux/store";
 import { fetchCurrentUser } from "@/app/api/auth/authApi";
+import { LeafAnimation } from "../../components/LeafAnimation/LeafAnimation";
 
-import uskumenzadeLogo from "../../../public/images/uskumenzade-logo.png";
+import uskumenzadeLogo from "../../../public/images/uskumenzade-logo.svg";
 
 interface NavbarProps {
   viewable?: boolean;
@@ -20,6 +21,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenProfile, setIsOpenProfile] = useState(false);
   const [isSuperUser, setIsSuperUser] = useState(false);
+  const [showLeaves, setShowLeaves] = useState(false);
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -83,36 +85,39 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
       <nav className="container mx-auto flex items-center justify-between p-4">
         <Link href="/">
           <div className="flex items-center">
-            <Image src={uskumenzadeLogo} alt="Logo" width={120} height={50} />
+            <Image src={uskumenzadeLogo} alt="Logo" width={240} height={80} />
           </div>
         </Link>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-8 items-center">
-          <Link href="/urunler" className="text-gray-800 hover:text-yellow-600">
+          <Link href="/urunler" className="text-gray-800 hover:text-tertiary">
             Ürünler
           </Link>
-          <Link href="/blog" className="text-gray-800 hover:text-yellow-600">
+          <Link href="/blog" className="text-gray-800 hover:text-tertiary">
             Blog
           </Link>
           <Link
             href="/hakkimizda"
-            className="text-gray-800 hover:text-yellow-600"
+            className="text-gray-800 hover:text-tertiary"
           >
             Hakkımızda
           </Link>
-          <Link
-            href="/iletisim"
-            className="text-gray-800 hover:text-yellow-600"
-          >
+          <Link href="/iletisim" className="text-gray-800 hover:text-tertiary">
             İletişim
           </Link>
-          <Link
-            href="/sepet"
-            className="bg-yellow-500 text-white px-4 py-2 rounded"
-          >
-            Sepet
-          </Link>
+          <div className="relative">
+            <Link
+              href="/sepet"
+              className="bg-secondary hover:bg-tertiary text-xl text-white px-6 py-2 rounded-3xl relative overflow-hidden"
+              onMouseEnter={() => setShowLeaves(true)}
+              onMouseLeave={() => setShowLeaves(false)}
+            >
+              Sepet
+              {showLeaves && <LeafAnimation />}
+            </Link>
+          </div>
+
           {isSuperUser && (
             <Link
               href="/admin"
@@ -125,7 +130,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
           {/* Conditional Profile Dropdown */}
           <div className="relative">
             <button
-              className="text-gray-800 hover:text-yellow-600 focus:outline-none"
+              className="text-gray-800 hover:text-tertiary focus:outline-none"
               onClick={toggleProfile}
             >
               <svg
@@ -158,7 +163,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                       onClick={() => setIsOpenProfile(false)}
                     >
-                      Profil
+                      Hesap Bilgilerim
                     </Link>
                     <Link
                       href="/siparislerim"
@@ -167,13 +172,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                     >
                       Siparişlerim
                     </Link>
-                    <Link
-                      href="/ayarlar"
-                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                      onClick={() => setIsOpenProfile(false)}
-                    >
-                      Ayarlar
-                    </Link>
+
                     <button
                       onClick={() => {
                         handleLogout();
@@ -222,7 +221,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
           {/* Mobile Profile Dropdown */}
           <div className="relative">
             <button
-              className="text-gray-800 hover:text-yellow-600 focus:outline-none"
+              className="text-gray-800 hover:text-tertiary focus:outline-none"
               onClick={toggleProfile}
             >
               <svg
@@ -256,7 +255,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                       onClick={() => setIsOpenProfile(false)}
                     >
-                      Profil
+                      Hesap Bilgilerim
                     </Link>
                     <Link
                       href="/siparislerim"
@@ -265,13 +264,7 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                     >
                       Siparişlerim
                     </Link>
-                    <Link
-                      href="/ayarlar"
-                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                      onClick={() => setIsOpenProfile(false)}
-                    >
-                      Ayarlar
-                    </Link>
+
                     <button
                       onClick={() => {
                         handleLogout();
@@ -297,35 +290,35 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
           <div className="flex flex-col items-center space-y-4 p-4">
             <Link
               href="/urunler"
-              className="text-gray-800 hover:text-yellow-600"
+              className="text-gray-800 hover:text-tertiary"
               onClick={toggleMenu}
             >
               Ürünler
             </Link>
             <Link
               href="/blog"
-              className="text-gray-800 hover:text-yellow-600"
+              className="text-gray-800 hover:text-tertiary"
               onClick={toggleMenu}
             >
               Bloglar
             </Link>
             <Link
               href="/hakkimizda"
-              className="text-gray-800 hover:text-yellow-600"
+              className="text-gray-800 hover:text-tertiary"
               onClick={toggleMenu}
             >
               Hakkımızda
             </Link>
             <Link
               href="/iletisim"
-              className="text-gray-800 hover:text-yellow-600"
+              className="text-gray-800 hover:text-tertiary"
               onClick={toggleMenu}
             >
               İletişim
             </Link>
             <Link
               href="/sepet"
-              className="text-gray-800 hover:text-yellow-600"
+              className="text-gray-800 hover:text-tertiary"
               onClick={toggleMenu}
             >
               Sepet

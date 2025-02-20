@@ -13,16 +13,22 @@ export default function LoadingSpinner({
   return (
     <div className="flex items-center justify-center min-h-screen flex-col text-center">
       {logo && (
-        <Image
-          src={typeof logo === "string" ? logo : logo.src}
-          alt="Logo"
-          className="mb-4 max-w-[80%] max-h-64"
-        />
+        <div
+          className="relative mb-4"
+          style={{ width: "80%", maxWidth: "400px", height: "200px" }}
+        >
+          <Image
+            src={typeof logo === "string" ? logo : logo.src}
+            alt="Logo"
+            fill
+            style={{ objectFit: "contain" }}
+          />
+        </div>
       )}
       {aboveText && (
         <h2 className="mb-10 text-lg text-gray-700 px-4">{aboveText}</h2>
       )}
-      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-500"></div>
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-tertiary"></div>
     </div>
   );
 }

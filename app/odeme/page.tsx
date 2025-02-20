@@ -197,7 +197,7 @@ export default function PlaceOrder() {
   }, [checkoutFormContent]);
 
   return (
-    <div className="container mx-auto px-6 py-12 bg-yellow-500">
+    <div className="container mx-auto px-6 py-12 bg-secondary">
       <h1 className="text-4xl font-bold text-white mb-8 text-center">
         Sipariş Bilgileri
       </h1>
@@ -214,7 +214,7 @@ export default function PlaceOrder() {
           <select
             value={selectedShippingAddress || ""}
             onChange={(e) => setSelectedShippingAddress(e.target.value)}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-gray-200 text-black"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
             required
           >
             <option value="" disabled>
@@ -238,7 +238,7 @@ export default function PlaceOrder() {
               type="checkbox"
               checked={useSameAddress}
               onChange={() => setUseSameAddress(!useSameAddress)}
-              className="w-5 h-5 text-yellow-400 focus:ring-2 focus:ring-yellow-400 border-gray-300 rounded"
+              className="w-5 h-5 text-tertiary focus:ring-2 focus:ring-tertiary border-gray-300 rounded"
             />
             <label className="text-gray-600">Teslimat adresi ile aynı</label>
           </div>
@@ -246,7 +246,7 @@ export default function PlaceOrder() {
             <select
               value={selectedBillingAddress || ""}
               onChange={(e) => setSelectedBillingAddress(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-gray-200 text-black"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
               required
             >
               <option value="" disabled>

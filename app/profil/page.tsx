@@ -175,7 +175,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-12 bg-yellow-500">
+    <div className=" mx-auto px-6 py-12 bg-secondary">
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md space-y-12">
         {/* User Profile Section */}
         <div>
@@ -206,7 +206,7 @@ export default function Profile() {
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       placeholder="Ad"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                     />
                   </div>
 
@@ -225,7 +225,7 @@ export default function Profile() {
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       placeholder="Soyad"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                     />
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export default function Profile() {
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     placeholder="E-posta"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                   />
                 </div>
 
@@ -276,7 +276,7 @@ export default function Profile() {
                       pattern="^\+[0-9]{12}$"
                       maxLength={13}
                       placeholder="Telefon Numarası"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                     />
                   </div>
 
@@ -285,7 +285,7 @@ export default function Profile() {
                       htmlFor="national_id"
                       className="block text-gray-700 font-semibold mb-2"
                     >
-                      TC Kimlik Numarası
+                      TC Kimlik Numarası/Vergi Numarası
                     </label>
                     <input
                       id="national_id"
@@ -306,7 +306,7 @@ export default function Profile() {
                       pattern="^[0-9]{11}$"
                       maxLength={11}
                       placeholder="TC Kimlik Numarası"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black bg-gray-200"
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                     />
                   </div>
                 </div>
@@ -337,7 +337,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+                    className="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-tertiary"
                   >
                     Düzenle
                   </button>
@@ -375,7 +375,7 @@ export default function Profile() {
                     value={addressFormData.address_title || ""}
                     onChange={handleAddressInputChange}
                     placeholder="Adres Başlığı"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                     required
                   />
                 </div>
@@ -394,7 +394,7 @@ export default function Profile() {
                     value={addressFormData.contact_name || ""}
                     onChange={handleAddressInputChange}
                     placeholder="İletişim İsmi"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                     required
                   />
                 </div>
@@ -413,7 +413,7 @@ export default function Profile() {
                     value={addressFormData.address || ""}
                     onChange={handleAddressInputChange}
                     placeholder="Adres"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                     required
                   />
                 </div>
@@ -432,7 +432,7 @@ export default function Profile() {
                     value={addressFormData.city || ""}
                     onChange={handleAddressInputChange}
                     placeholder="Şehir"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                     required
                   />
                 </div>
@@ -451,7 +451,7 @@ export default function Profile() {
                     value={addressFormData.zip_code || ""}
                     onChange={handleAddressInputChange}
                     placeholder="Posta Kodu"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                     required
                   />
                 </div>
@@ -470,7 +470,7 @@ export default function Profile() {
                     value={addressFormData.country || ""}
                     onChange={handleAddressInputChange}
                     placeholder="Ülke"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 text-black"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                     required
                   />
                 </div>
@@ -516,56 +516,65 @@ export default function Profile() {
             <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
               Kayıtlı Adresler
             </h2>
-            {/* Saved Addresses Section */}
-            <ul className="space-y-6">
-              {addresses.map((addr) => (
-                <li
-                  key={addr.id}
-                  className="bg-gray-50 p-6 rounded-lg shadow-md flex justify-between items-start"
-                >
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {addr.address_title}
-                    </h3>
-                    <p className="text-gray-700">
-                      <span className="font-medium">Adres:</span> {addr.address}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-medium">Şehir:</span> {addr.city}
-                    </p>
+            {addresses.length === 0 ? (
+              <p className="text-gray-700 text-center">
+                Henüz bir adres eklenmedi. Yeni bir adres eklemek için formu
+                kullanabilirsiniz.
+              </p>
+            ) : (
+              <ul className="space-y-6">
+                {addresses.map((addr) => (
+                  <li
+                    key={addr.id}
+                    className="bg-gray-50 p-6 rounded-lg shadow-md flex justify-between items-start"
+                  >
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {addr.address_title}
+                      </h3>
+                      <p className="text-gray-700">
+                        <span className="font-medium">Adres:</span>{" "}
+                        {addr.address}
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">Şehir:</span> {addr.city}
+                      </p>
 
-                    <p className="text-gray-700">
-                      <span className="font-medium">Posta Kodu:</span>{" "}
-                      {addr.zip_code}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-medium">Ülke:</span> {addr.country}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-medium">İletişim:</span>{" "}
-                      {addr.contact_name || "Belirtilmedi"}
-                    </p>
-                  </div>
-                  <div className="space-x-4 flex-shrink-0">
-                    <button
-                      onClick={() => {
-                        setIsAddressEditing(true);
-                        setAddressFormData(addr);
-                      }}
-                      className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteAddress(addr.id!)}
-                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                      <p className="text-gray-700">
+                        <span className="font-medium">Posta Kodu:</span>{" "}
+                        {addr.zip_code}
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">Ülke:</span>{" "}
+                        {addr.country}
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">İletişim:</span>{" "}
+                        {addr.contact_name || "Belirtilmedi"}
+                      </p>
+                    </div>
+                    <div className="space-x-4 flex-shrink-0">
+                      <button
+                        onClick={() => {
+                          setIsAddressEditing(true);
+                          setAddressFormData(addr);
+                        }}
+                        className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-tertiary"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAddress(addr.id!)}
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {/* Saved Addresses Section */}
           </div>
         </div>
       </div>

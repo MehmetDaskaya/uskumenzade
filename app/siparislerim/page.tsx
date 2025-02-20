@@ -51,7 +51,7 @@ export default function OrderHistory() {
   }, [accessToken]);
 
   return (
-    <div className="mx-auto px-6 py-12 bg-yellow-500">
+    <div className="mx-auto px-6 py-12 bg-secondary min-h-screen">
       <h1 className="text-4xl font-bold text-white mb-8 text-center">
         Sipariş Geçmişim
       </h1>

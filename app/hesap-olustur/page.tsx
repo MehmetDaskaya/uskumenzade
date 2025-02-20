@@ -75,7 +75,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex h-screen items-start justify-center bg-gradient-to-br from-yellow-50 to-gray-100 pt-8">
+    <div className="flex h-screen items-start justify-center bg-background pt-8">
       {isLoading ? (
         <div className="-mt-20">
           <LoadingSpinner
@@ -126,7 +126,7 @@ export default function SignUpPage() {
                   required
                   value={fname}
                   onChange={(e) => setFname(e.target.value)}
-                  className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
                   placeholder="Adınızı girin..."
                 />
               </div>
@@ -143,7 +143,7 @@ export default function SignUpPage() {
                   required
                   value={lname}
                   onChange={(e) => setLname(e.target.value)}
-                  className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
                   placeholder="Soyadınızı girin..."
                 />
               </div>
@@ -162,7 +162,7 @@ export default function SignUpPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
                 placeholder="E-posta adresinizi girin..."
               />
             </div>
@@ -180,7 +180,7 @@ export default function SignUpPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
                   placeholder="Şifrenizi girin..."
                 />
                 <button
@@ -206,7 +206,7 @@ export default function SignUpPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  className="w-full p-3 text-black mt-1 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
                   placeholder="Şifrenizi tekrardan girin..."
                 />
                 <button
@@ -224,7 +224,7 @@ export default function SignUpPage() {
             </div>
             <button
               type="submit"
-              className="w-full py-3 px-4 text-white bg-yellow-500 rounded-lg font-medium hover:bg-yellow-600 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+              className="w-full py-3 px-4 text-white bg-secondary rounded-lg font-medium hover:bg-tertiary focus:outline-none focus:ring-4 focus:ring-tertiary"
             >
               Hesap Oluştur
             </button>
@@ -233,7 +233,7 @@ export default function SignUpPage() {
             Zaten bir hesabınız var mı?{" "}
             <Link
               href="/giris"
-              className="text-yellow-500 font-semibold hover:underline"
+              className="text-tertiary font-semibold hover:underline"
             >
               Giriş Yap
             </Link>

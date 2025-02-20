@@ -102,7 +102,7 @@ export default function HomeContent() {
   ));
 
   return (
-    <div className="bg-gray-50 text-gray-900 font-sans relative">
+    <div className="bg-background  text-gray-900 font-sans relative">
       {/* Hero Section */}
       <section
         className="relative bg-cover bg-center h-[40vh] sm:h-[80vh] flex items-center justify-center sm:justify-start px-4 sm:px-8"
@@ -120,7 +120,7 @@ export default function HomeContent() {
 
           <div className="mt-6 sm:mt-8">
             <Link href="/urunler">
-              <button className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110">
+              <button className="bg-secondary hover:bg-tertiary text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110">
                 Ürünleri Gör
               </button>
             </Link>
@@ -129,14 +129,51 @@ export default function HomeContent() {
       </section>
 
       <div className="w-full h-full py-20">
-        <h2 className="max-w-7xl pl-4 mx-auto text-xl md:text-5xl font-bold text-yellow-500 font-sans">
+        <h2 className="max-w-6xl pl-4 mx-auto text-xl md:text-4xl font-bold text-primary font-sans">
           Ürünlerimiz Hakkında Bilgi Edinin
         </h2>
         <Carousel items={cards} />
       </div>
-      <div className="md:w-full bg-yellow-500">
+      <div className="md:w-full bg-secondary">
         <ProductListings />
       </div>
+
+      {/* 🌿 Mission & Values Section */}
+      <section className="container mx-auto py-20 px-4">
+        <h2 className="text-4xl font-bold text-center text-primary mb-12">
+          🌿 Doğaya ve Size Bağlıyız
+        </h2>
+        <div className="grid md:grid-cols-2 gap-12">
+          <div className="flex flex-col justify-center">
+            <p className="text-lg text-gray-700 leading-relaxed">
+              Üskümenzade olarak, doğadan gelen en iyiyi sizlerle buluşturmayı
+              hedefliyoruz. %100 doğal içeriklerle hazırlanan ürünlerimizle,
+              sağlığınızı destekliyor ve yaşamınıza doğallık katıyoruz.
+            </p>
+            <ul className="mt-6 space-y-3 text-lg text-gray-600">
+              <li>✅ Organik & Doğal Hammaddeler</li>
+              <li>✅ Çevre Dostu & Sürdürülebilir Üretim</li>
+              <li>✅ Geleneksel & Modern Yöntemlerin Harmanı</li>
+            </ul>
+          </div>
+          <div className="relative w-full flex justify-center mt-4">
+            <Image
+              src="/images/uskumenzade-doga.webp"
+              alt="Üskümenzade Bitkisel Ürünler"
+              width={400}
+              height={400}
+              className="object-contain relative z-0 rounded-lg shadow-lg w-[80%] md:w-[400px] h-auto"
+            />
+            <Image
+              src="/images/uskumenzade-doga.webp"
+              alt="Doğal ürünler"
+              width={250}
+              height={250}
+              className="absolute bottom-[-20px] left-[0%] md:bottom-[-40px] md:left-[-40px] z-10 rounded-lg shadow-lg w-[40%] md:w-[250px] h-auto"
+            />
+          </div>
+        </div>
+      </section>
 
       <InfiniteMovingCards />
     </div>

@@ -56,9 +56,9 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
       : blogs;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-gray-100">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="bg-yellow-500 text-white py-16">
+      <div className="bg-secondary text-white py-16">
         <div className="container mx-auto text-center px-4">
           <h1 className="text-5xl font-bold mb-4">Üskümenzade Blog</h1>
           <p className="text-lg">
@@ -100,9 +100,9 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
               <li key={category}>
                 <a
                   href={`?kategori=${category}`}
-                  className={`w-full text-left text-lg text-gray-700 hover:text-yellow-500 transition-colors ${
+                  className={`w-full text-left text-lg text-gray-700 hover:text-tertiary transition-colors ${
                     searchParams.kategori === category
-                      ? "font-bold text-yellow-500"
+                      ? "font-bold text-tertiary"
                       : ""
                   }`}
                 >
@@ -115,7 +115,7 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
       </div>
 
       {/* Call-to-Action Section */}
-      <div className="bg-yellow-500 text-white py-16">
+      <div className="bg-secondary text-white py-16">
         <div className="container mx-auto text-center px-4">
           {blogs.length > 6 ? (
             <>
@@ -125,7 +125,7 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
               </p>
               <a
                 href="/blog/detaylar"
-                className="bg-white text-yellow-500 px-6 py-3 rounded-lg font-bold hover:bg-gray-100"
+                className="bg-white text-tertiary px-6 py-3 rounded-lg font-bold hover:bg-gray-100"
               >
                 Tüm Blogları Gör
               </a>
@@ -138,7 +138,7 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
               </p>
               <a
                 href="/urunler"
-                className="bg-white text-yellow-500 px-6 py-3 rounded-lg font-bold hover:bg-gray-100"
+                className="bg-white text-tertiary px-6 py-3 rounded-lg font-bold hover:bg-gray-100"
               >
                 Ürünlere Git
               </a>

@@ -160,7 +160,7 @@
 //     return <LoadingSpinner />; // Show spinner if still loading
 //   }
 //   return (
-//     <div className="container flex-col mx-auto px-4 md:px-16 py-8 flex bg-yellow-500 ">
+//     <div className="container flex-col mx-auto px-4 md:px-16 py-8 flex bg-secondary ">
 //       <div className="w-full mb-4 ">
 //         <h1 className="text-3xl bg-white text-gray-700  font-bold text-center py-8 rounded-t-xl">
 //           Ürün Kataloğumuz
@@ -197,7 +197,7 @@
 //                     <li key={category}>
 //                       <a
 //                         href="#"
-//                         className="block text-gray-700 hover:text-yellow-400 transition duration-200"
+//                         className="block text-gray-700 hover:text-tertiary transition duration-200"
 //                       >
 //                         {category}
 //                       </a>
@@ -224,7 +224,7 @@
 //                     <label className="flex items-center">
 //                       <input
 //                         type="checkbox"
-//                         className="form-checkbox h-4 w-4 text-yellow-400 transition duration-150 ease-in-out mr-2"
+//                         className="form-checkbox h-4 w-4 text-tertiary transition duration-150 ease-in-out mr-2"
 //                         onChange={() => toggleFilter("price", price)}
 //                       />
 //                       <span className="text-gray-700">{price}</span>
@@ -245,7 +245,7 @@
 //                     <label className="flex items-center">
 //                       <input
 //                         type="checkbox"
-//                         className="form-checkbox h-4 w-4 text-yellow-400 transition duration-150 ease-in-out mr-2"
+//                         className="form-checkbox h-4 w-4 text-tertiary transition duration-150 ease-in-out mr-2"
 //                         onChange={() => toggleFilter("discount", discount)}
 //                       />
 //                       <span className="text-gray-700">{discount}</span>
@@ -264,7 +264,7 @@
 //                     <label className="flex items-center">
 //                       <input
 //                         type="checkbox"
-//                         className="form-checkbox h-4 w-4 text-yellow-400 transition duration-150 ease-in-out mr-2"
+//                         className="form-checkbox h-4 w-4 text-tertiary transition duration-150 ease-in-out mr-2"
 //                         onChange={() => toggleFilter("stock", stockStatus)}
 //                       />
 //                       <span className="text-gray-700">{stockStatus}</span>
@@ -275,7 +275,7 @@
 //             </div>
 
 //             <button
-//               className="w-full bg-yellow-400 text-white py-3 rounded-lg hover:bg-yellow-600 transition duration-200"
+//               className="w-full bg-tertiary text-white py-3 rounded-lg hover:bg-tertiary transition duration-200"
 //               onClick={applyFilters}
 //             >
 //               Filtreleri Uygula
@@ -285,7 +285,7 @@
 
 //         {/* Left Filtering Section */}
 //         {isProductsPage && (
-//           <aside className="hidden md:block md:w-1/4 pr-8 mr-8 border-r border-yellow-400 h-auto">
+//           <aside className="hidden md:block md:w-1/4 pr-8 mr-8 border-r border-tertiary h-auto">
 //             {/* Categories */}
 //             <div className="mb-8 p-4 bg-gray-100 rounded-lg shadow">
 //               <h4 className="font-semibold text-lg mb-3 text-gray-800">
@@ -297,7 +297,7 @@
 //                     <li key={index}>
 //                       <a
 //                         href="#"
-//                         className="block text-gray-700 hover:text-yellow-400 transition duration-200"
+//                         className="block text-gray-700 hover:text-tertiary transition duration-200"
 //                       >
 //                         {category}
 //                       </a>
@@ -324,7 +324,7 @@
 //                     <label className="flex items-center">
 //                       <input
 //                         type="checkbox"
-//                         className="form-checkbox h-4 w-4 text-yellow-400 transition duration-150 ease-in-out mr-2"
+//                         className="form-checkbox h-4 w-4 text-tertiary transition duration-150 ease-in-out mr-2"
 //                         onChange={() => toggleFilter("price", price)}
 //                       />
 //                       <span className="text-gray-700">{price}</span>
@@ -345,7 +345,7 @@
 //                     <label className="flex items-center">
 //                       <input
 //                         type="checkbox"
-//                         className="form-checkbox h-4 w-4 text-yellow-400 transition duration-150 ease-in-out mr-2"
+//                         className="form-checkbox h-4 w-4 text-tertiary transition duration-150 ease-in-out mr-2"
 //                         onChange={() => toggleFilter("discount", discount)}
 //                       />
 //                       <span className="text-gray-700">{discount}</span>
@@ -364,7 +364,7 @@
 //                     <label className="flex items-center">
 //                       <input
 //                         type="checkbox"
-//                         className="form-checkbox h-4 w-4 text-yellow-400 transition duration-150 ease-in-out mr-2"
+//                         className="form-checkbox h-4 w-4 text-tertiary transition duration-150 ease-in-out mr-2"
 //                         onChange={() => toggleFilter("stock", stockStatus)}
 //                       />
 //                       <span className="text-gray-700">{stockStatus}</span>
@@ -397,7 +397,7 @@
 //               {/* Filter button for mobile view, aligned horizontally */}
 //               {isProductsPage && (
 //                 <button
-//                   className="bg-yellow-400 text-white py-2 px-4 rounded-full md:hidden"
+//                   className="bg-tertiary text-white py-2 px-4 rounded-full md:hidden"
 //                   onClick={() => setIsFilterDrawerOpen(true)}
 //                 >
 //                   Filtre
@@ -442,7 +442,7 @@
 
 //                   {/* Add this block for discount badge */}
 //                   {product.oldPrice && (
-//                     <div className="absolute top-2 right-2 bg-yellow-500 text-white rounded-full p-2 flex flex-col items-center justify-center w-10 h-10">
+//                     <div className="absolute top-2 right-2 bg-secondary text-white rounded-full p-2 flex flex-col items-center justify-center w-10 h-10">
 //                       <FaTag />
 //                       <span className="text-[9px]">İndirim</span>
 //                     </div>
@@ -462,7 +462,7 @@
 //                 {/* Action icons */}
 //                 {isProductsPage && (
 //                   <div className="hidden md:flex absolute inset-0 flex-row justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-24 space-x-8 z-20">
-//                     <button className="bg-yellow-600 text-white py-2 px-2 rounded-full mb-2">
+//                     <button className="bg-tertiary text-white py-2 px-2 rounded-full mb-2">
 //                       <FaCartPlus className="text-white" /> {/* Cart Icon */}
 //                     </button>
 //                     <button className="bg-red-500 text-white py-2 px-2 rounded-full mb-2">
@@ -479,7 +479,7 @@
 //             <div className="flex justify-center mt-6">
 //               <button
 //                 onClick={loadMoreProducts}
-//                 className="bg-yellow-400 text-white py-3 px-6 rounded-lg hover:bg-yellow-600 transition duration-200"
+//                 className="bg-tertiary text-white py-3 px-6 rounded-lg hover:bg-tertiary transition duration-200"
 //               >
 //                 Daha Fazla Gör
 //               </button>
@@ -600,7 +600,7 @@ export const ProductListings = ({
   }
 
   return (
-    <div className="flex-col mx-auto px-4 md:px-16 py-8 flex bg-yellow-500 ">
+    <div className="flex-col mx-auto px-4 md:px-16 py-8 flex bg-secondary ">
       <div className="w-full mb-4 ">
         <h1 className="text-3xl bg-white text-gray-700 font-bold text-center py-8 rounded-t-xl">
           Ürün Kataloğumuz
@@ -608,7 +608,7 @@ export const ProductListings = ({
       </div>
       <div className="flex flex-row">
         {isProductsPage && (
-          <aside className="hidden md:block md:w-1/4 pr-8 mr-8 border-r border-yellow-400 h-auto">
+          <aside className="hidden md:block md:w-1/4 pr-8 mr-8 border-r border-tertiary h-auto">
             {/* Kategoriler */}
             <div className="mb-8 p-4 bg-gray-100 rounded-lg shadow">
               <h4 className="font-semibold text-lg mb-3 text-gray-800">
@@ -625,7 +625,7 @@ export const ProductListings = ({
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        className="form-checkbox h-4 w-4 text-yellow-400 mr-2"
+                        className="form-checkbox h-4 w-4 text-tertiary mr-2"
                         onChange={() => toggleFilter("category", cat)}
                       />
                       <span className="text-gray-700">{cat}</span>
@@ -634,7 +634,6 @@ export const ProductListings = ({
                 ))}
               </ul>
             </div>
-
             {/* Fiyat Aralığı */}
             <div className="mb-8 p-4 bg-gray-100 rounded-lg shadow">
               <h4 className="font-semibold text-lg mb-3 text-gray-800">
@@ -651,7 +650,7 @@ export const ProductListings = ({
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        className="form-checkbox h-4 w-4 text-yellow-400 mr-2"
+                        className="form-checkbox h-4 w-4 text-tertiary mr-2"
                         onChange={() => toggleFilter("price", range)}
                       />
                       <span className="text-gray-700">{range}</span>
@@ -660,7 +659,6 @@ export const ProductListings = ({
                 ))}
               </ul>
             </div>
-
             {/* Stok Durumu */}
             <div className="mb-8 p-4 bg-gray-100 rounded-lg shadow">
               <h4 className="font-semibold text-lg mb-3 text-gray-800">
@@ -672,7 +670,7 @@ export const ProductListings = ({
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        className="form-checkbox h-4 w-4 text-yellow-400 mr-2"
+                        className="form-checkbox h-4 w-4 text-tertiary mr-2"
                         onChange={() => toggleFilter("stock", status)}
                       />
                       <span className="text-gray-700">{status}</span>
@@ -684,16 +682,16 @@ export const ProductListings = ({
 
             {/* Filtre İşlemleri */}
             <button
-              className="bg-gray-200 py-2 mb-2 px-4 w-full text-gray-600 font-semibold"
-              onClick={resetFilters}
-            >
-              Filtreleri Temizle
-            </button>
-            <button
-              className="bg-gray-200 py-2 px-4 w-full text-gray-600 font-semibold"
+              className="bg-gray-200 py-2 px-4 w-full text-gray-600 font-semibold rounded-md"
               onClick={applyFilters}
             >
               Filtreleri Uygula
+            </button>
+            <button
+              className="bg-gray-200 py-2 mt-2 px-4 w-full text-gray-600 font-semibold rounded-md"
+              onClick={resetFilters}
+            >
+              Filtreleri Temizle
             </button>
           </aside>
         )}
@@ -720,7 +718,7 @@ export const ProductListings = ({
 
                   {/* Discount Badge */}
                   {product.discounted_price < product.price && (
-                    <div className="absolute top-2 right-2 bg-yellow-500 text-white rounded-full p-2 w-12 h-12 flex flex-col items-center justify-center">
+                    <div className="absolute top-2 right-2 bg-secondary text-white rounded-full p-2 w-12 h-12 flex flex-col items-center justify-center">
                       <FaTag className="text-lg" />
                       <span className="text-[10px]">İndirim</span>
                     </div>
@@ -744,7 +742,7 @@ export const ProductListings = ({
                           {product.price.toFixed(0)} ₺
                         </p>
                       )}
-                      <p className="text-yellow-600 font-bold text-xl">
+                      <p className="text-tertiary font-bold text-xl">
                         {product.discounted_price.toFixed(0)} ₺
                       </p>
                     </div>
@@ -759,7 +757,7 @@ export const ProductListings = ({
             <div className="flex justify-center mt-6">
               <button
                 onClick={loadMoreProducts}
-                className="bg-yellow-500 text-white py-3 px-6 rounded-lg hover:bg-yellow-600 transition duration-300"
+                className="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-tertiary transition duration-300"
               >
                 Daha Fazla Gör
               </button>

@@ -21,7 +21,7 @@ export default function LoginModalContent() {
             id="email"
             type="email"
             required
-            className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-yellow-500"
+            className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-tertiary"
             placeholder="Enter your email"
           />
         </div>
@@ -33,21 +33,21 @@ export default function LoginModalContent() {
             id="password"
             type="password"
             required
-            className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-yellow-500"
+            className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-tertiary"
             placeholder="Enter your password"
           />
         </div>
         <div className="text-right">
           <Link
             href="/sifremi-unuttum"
-            className="text-sm text-yellow-500 hover:underline"
+            className="text-sm text-tertiary hover:underline"
           >
             Forgot Password?
           </Link>
         </div>
         <button
           type="submit"
-          className="w-full p-3 text-white bg-yellow-500 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          className="w-full p-3 text-white bg-secondary rounded-md hover:bg-tertiary focus:outline-none focus:ring-2 focus:ring-tertiary"
         >
           Sign In
         </button>

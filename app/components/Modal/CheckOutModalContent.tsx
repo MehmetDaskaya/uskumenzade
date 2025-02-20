@@ -19,7 +19,7 @@ export default function CheckoutModalContent() {
           <input
             id="discount"
             type="text"
-            className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-yellow-500"
+            className="w-full p-3 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-tertiary"
             placeholder="İndirim Kodu Girin"
           />
         </div>
@@ -48,7 +48,7 @@ export default function CheckoutModalContent() {
 
       {/* Link to Cart */}
       <div className="text-center mt-6">
-        <a href="/sepet" className="text-yellow-500 hover:underline">
+        <a href="/sepet" className="text-tertiary hover:underline">
           Sepete git
         </a>
       </div>
