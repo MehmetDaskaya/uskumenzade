@@ -9,6 +9,21 @@ module.exports = {
   ],
   theme: {
     extend: {
+      animation: {
+        fadeIn: "fadeIn 0.3s ease-out",
+        popupSlideIn: "popupSlideIn 0.3s ease-out",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
+        },
+        popupSlideIn: {
+          "0%": { opacity: 0, transform: "translateY(-20px) scale(0.95)" },
+          "100%": { opacity: 1, transform: "translateY(0) scale(1)" },
+        },
+      },
+
       colors: {
         primary: "#d09c24", // Primary color (Golden Yellow)
         secondary: "#98a45c", // Secondary background (Muted Green)
@@ -74,5 +89,4 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwind-scrollbar")],
 };

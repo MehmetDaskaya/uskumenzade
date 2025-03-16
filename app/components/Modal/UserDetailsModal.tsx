@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { User } from "@/app/api/user/userApi";
+import { Address } from "@/app/api/address/addressApi";
 
 interface UserDetailsModalProps {
   user: User | null;
+  userAddress: Address | null; // Fetch full address instead of just national_id
   onClose: () => void;
   onUpdateRole: (userId: string, newRole: string, password: string) => void;
 }
 
 const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   user,
+  userAddress,
   onClose,
   onUpdateRole,
 }) => {
@@ -64,7 +67,9 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               <p className="text-gray-600">Email: {user.email}</p>
               <p className="text-gray-600">Telefon: {user.gsm_number}</p>
               <p className="text-gray-600">Rol: {user.role}</p>
-              <p className="text-gray-600">Kimlik No: {user.national_id}</p>
+              <p className="text-gray-600">
+                Kimlik No: {user.addresses?.[0]?.national_id || "Belirtilmemiş"}
+              </p>
             </div>
 
             {/* Orders Summary */}
@@ -77,7 +82,14 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               </p>
               <p className="text-gray-600">
                 Harcanan Tutar:{" "}
-                {user.orders.reduce((sum, order) => sum + order.amount, 0)} ₺
+                {user.orders
+                  .reduce(
+                    (sum, order) =>
+                      sum + (order.amount ? Number(order.amount) : 0),
+                    0
+                  )
+                  .toFixed(2)}{" "}
+                ₺
               </p>
             </div>
           </div>
@@ -104,7 +116,12 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       <td className="p-4">
                         {new Date(order.created_at).toLocaleDateString()}
                       </td>
-                      <td className="p-4">{order.amount.toFixed(2)} ₺</td>
+                      <td className="p-4">
+                        {order.amount
+                          ? order.amount.toFixed(2) + " ₺"
+                          : "Belirtilmemiş"}
+                      </td>
+
                       <td className="p-4">
                         {{
                           pending: "Beklemede",

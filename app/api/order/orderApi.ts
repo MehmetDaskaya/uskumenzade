@@ -24,6 +24,8 @@ interface Address {
   country: string;
   address_title: string;
   contact_name: string;
+  national_id: string; // ✅ Added field
+  contact_number: string; // ✅ Added field
   created_at: string;
   updated_at: string;
   user_id: string;
@@ -40,6 +42,9 @@ interface BasketItem {
     how_to_use: string;
     created_at: string;
     updated_at: string;
+    width: number; // ✅ Add this
+    length: number; // ✅ Add this
+    height: number; // ✅ Add this
     images: {
       id: string;
       alt_text: string;
@@ -66,36 +71,94 @@ export interface Order {
   created_at: string;
   updated_at: string;
   amount: number;
+  total_amount?: number; // ✅ Ensure this exists
+  shipping_total?: number; // ✅ Add this
+  items_total?: number; // ✅ Add this for clarity
   user: User;
   shipping_address: Address;
   billing_address: Address;
   shipping_address_id: string;
   billing_address_id: string;
   basket: BasketItem[];
+  discount_code?: string;
+  shipment_code?: string;
 }
 
-// Fetch all orders
+// Fetch orders
 export const fetchOrders = async (token: string): Promise<Order[]> => {
   const response = await fetch(`${API_BASE_URL}/uskumenzade/api/orders`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
   });
+
   if (!response.ok) {
     throw new Error("Failed to fetch orders");
   }
   return response.json();
 };
 
-// Fetch an order by ID
-export const fetchOrderById = async (orderId: string): Promise<Order> => {
+// Fetch order by ID
+export const fetchOrderById = async (
+  orderId: string,
+  token: string
+): Promise<Order> => {
   const response = await fetch(
-    `${API_BASE_URL}/uskumenzade/api/orders/${orderId}`
+    `${API_BASE_URL}/uskumenzade/api/orders/${orderId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
   );
+
   if (!response.ok) {
     throw new Error("Failed to fetch order");
   }
-  return response.json();
+
+  const orderData = await response.json();
+
+  // ✅ Ensure amount matches total_amount
+  orderData.amount = orderData.total_amount;
+
+  // ✅ Add shipping cost to basket if missing
+  if (
+    !orderData.basket.find(
+      (item: BasketItem) => item.item_id === "SHIPPING_COST"
+    )
+  ) {
+    orderData.basket.push({
+      item_id: "SHIPPING_COST",
+      quantity: 1,
+      unit_price: orderData.shipping_total,
+      total_price: orderData.shipping_total,
+      item: {
+        id: "SHIPPING_COST",
+        name: "Kargo Ücreti",
+        description: "Shipping Fee",
+        price: orderData.shipping_total,
+        discounted_price: orderData.shipping_total,
+        stock: 1,
+        how_to_use: "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        width: 0,
+        length: 0,
+        height: 0,
+        images: [],
+        category: {
+          id: "SHIPPING",
+          name: "Shipping",
+          created_at: "",
+          updated_at: "",
+        },
+      },
+    } as BasketItem);
+  }
+
+  console.log(
+    "🚀 Updated Order Before Payment (With Shipping Item):",
+    orderData
+  );
+  return orderData;
 };
 
 // Create a new order
@@ -103,6 +166,7 @@ export interface CreateOrderRequest {
   shipping_address_id: string; // Use address ID for shipping
   billing_address_id: string; // Use address ID for billing
   basket: BasketItem[];
+  discount_code?: string;
 }
 
 // Update the createOrder function to use CreateOrderRequest
@@ -110,18 +174,33 @@ export const createOrder = async (
   orderData: CreateOrderRequest,
   token: string
 ): Promise<Order> => {
-  const response = await fetch(`${API_BASE_URL}/uskumenzade/api/orders`, {
-    method: "POST",
-    body: JSON.stringify(orderData),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error("Failed to create order");
+  try {
+    const response = await fetch(`${API_BASE_URL}/uskumenzade/api/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        ...orderData,
+        discount_code: orderData.discount_code || null, // Send discount code if applied
+      }),
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to create order");
+    }
+
+    const newOrder = await response.json();
+
+    console.log("✅ Order Created Response:", newOrder);
+
+    return newOrder;
+  } catch (error) {
+    console.error("🚨 Error creating order:", error);
+    throw error;
   }
-  return response.json();
 };
 
 // Update an order
@@ -141,6 +220,7 @@ export const updateOrder = async (
       },
     }
   );
+
   if (!response.ok) {
     throw new Error("Failed to update order");
   }

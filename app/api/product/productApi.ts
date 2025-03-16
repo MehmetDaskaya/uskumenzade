@@ -26,7 +26,9 @@ export const getProductById = async (id: string) => {
   try {
     const response = await axios.get(
       `${API_BASE_URL}/uskumenzade/api/items/${id}`,
-      { headers: getAuthHeaders() }
+      {
+        headers: getAuthHeaders(),
+      }
     );
     return response.data;
   } catch (error) {
@@ -42,6 +44,9 @@ export const createProduct = async (productData: {
   discounted_price: number;
   stock: number;
   how_to_use: string;
+  width: number;
+  length: number;
+  height: number;
   category_id: string;
   image_ids: string[];
 }) => {
@@ -49,7 +54,7 @@ export const createProduct = async (productData: {
     const response = await axios.post(
       `${API_BASE_URL}/uskumenzade/api/items/`,
       productData,
-      { headers: getAuthHeaders() }
+      { headers: { ...getAuthHeaders(), "Content-Type": "application/json" } }
     );
     return response.data;
   } catch (error) {
@@ -67,15 +72,18 @@ export const updateProduct = async (
     discounted_price: number;
     stock: number;
     how_to_use: string;
+    width: number;
+    length: number;
+    height: number;
     category_id: string;
-    image_ids: string[]; // Ensure this array allows up to 4 IDs
+    image_ids: string[];
   }
 ) => {
   try {
     const response = await axios.patch(
       `${API_BASE_URL}/uskumenzade/api/items/${id}`,
       productData,
-      { headers: getAuthHeaders() }
+      { headers: { ...getAuthHeaders(), "Content-Type": "application/json" } }
     );
     return response.data;
   } catch (error) {

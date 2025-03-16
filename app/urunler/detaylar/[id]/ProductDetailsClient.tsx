@@ -23,6 +23,9 @@ interface Product {
   description: string;
   images: { id: string; url: string }[];
   stock: number;
+  length: number;
+  width: number;
+  height: number;
   health_benefits: string[];
   how_to_use: string;
   category: {
@@ -131,6 +134,9 @@ export default function ProductDetailsClient({
               imageUrl: product.images?.[0]?.url || "/placeholder.png",
               stock: product.stock,
               quantity,
+              length: product.length,
+              width: product.width,
+              height: product.height,
             },
           })
         );
@@ -172,7 +178,10 @@ export default function ProductDetailsClient({
               {product.name}
             </h1>
             <div className="flex items-center space-x-4 mb-6">
-              {product.price !== product.discounted_price ? (
+              {product.discounted_price !== null &&
+              product.discounted_price !== undefined &&
+              product.discounted_price > 0 &&
+              product.discounted_price < product.price ? (
                 <>
                   <p className="text-3xl font-semibold text-green-600">
                     {product.discounted_price.toFixed(0)} ₺
@@ -267,26 +276,25 @@ export default function ProductDetailsClient({
           </p>
 
           {/* Health Benefits */}
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">
-            Sağlığa Yararları
-          </h3>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {healthBenefits.length > 0 ? (
-              healthBenefits.map((benefit, index) => (
-                <li
-                  key={index}
-                  className="flex items-center bg-green-50 rounded-lg p-4"
-                >
-                  <FaLeaf className="text-green-600 mr-3" />
-                  <span className="text-gray-700">{benefit}</span>
-                </li>
-              ))
-            ) : (
-              <p className="text-gray-600">
-                Bu ürün için sağlık yararları mevcut değil.
-              </p>
-            )}
-          </ul>
+
+          {healthBenefits.length > 0 && (
+            <>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                Sağlığa Yararları
+              </h3>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {healthBenefits.map((benefit, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center bg-green-50 rounded-lg p-4"
+                  >
+                    <FaLeaf className="text-green-600 mr-3" />
+                    <span className="text-gray-700">{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
 
           {/* How to Use */}
           <h3 className="text-2xl font-bold text-gray-900 mb-6">
@@ -323,8 +331,14 @@ export default function ProductDetailsClient({
                   {relatedProduct.name}
                 </h3>
                 <p className="text-green-600 font-semibold mb-4">
-                  {relatedProduct.discounted_price.toFixed(0)} ₺
+                  {relatedProduct.discounted_price !== null &&
+                  relatedProduct.discounted_price !== undefined &&
+                  relatedProduct.discounted_price > 0 &&
+                  relatedProduct.discounted_price < relatedProduct.price
+                    ? `${relatedProduct.discounted_price.toFixed(0)} ₺`
+                    : `${relatedProduct.price.toFixed(0)} ₺`}
                 </p>
+
                 <Link href={`/urunler/detaylar/${relatedProduct.id}`}>
                   <div className="w-full bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-300 text-center">
                     Ürünü Görüntüle
@@ -337,12 +351,28 @@ export default function ProductDetailsClient({
       </div>
 
       {/* Login Modal */}
+
       {isModalOpen && (
-        <Modal onClose={closeModal}>
-          <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-6">
-            {isLoggedIn && <SignInPage />}
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-background w-full max-w-md p-6 rounded-lg shadow-xl relative">
+            {/* Close Button */}
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={closeModal}
+            >
+              ✕
+            </button>
+
+            {/* Login Form (Extracted Only the Form) */}
+            <h2 className="text-xl font-bold text-center text-secondary -mb-6">
+              Sipariş vermek için giriş yapmalısınız.
+            </h2>
+
+            {/* Embed only the form, not the full page */}
+
+            <SignInPage isEmbedded />
           </div>
-        </Modal>
+        </div>
       )}
     </div>
   );

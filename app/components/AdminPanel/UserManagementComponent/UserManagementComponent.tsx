@@ -9,6 +9,7 @@ import {
   User,
   updateUser,
 } from "@/app/api/user/userApi";
+import { fetchAddresses, Address } from "@/app/api/address/addressApi";
 import UserDetailsModal from "../../Modal/UserDetailsModal";
 import { Snackbar } from "../../index";
 import { useSelector } from "react-redux";
@@ -17,6 +18,9 @@ import { RootState } from "@/redux/store";
 export const UserManagementComponent = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserAddress, setSelectedUserAddress] =
+    useState<Address | null>(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -95,8 +99,16 @@ export const UserManagementComponent = () => {
   const handleEdit = async (id: string) => {
     try {
       if (!accessToken) return;
+
       const user = await fetchUserById(id, accessToken);
+
+      // Fetch the user's address
+      const addresses = await fetchAddresses(accessToken);
+      const userAddress =
+        addresses.find((addr) => addr.user_id === user.id) || null;
+
       setSelectedUser(user);
+      setSelectedUserAddress(userAddress);
     } catch (err) {
       console.error("Failed to fetch user details:", err);
       alert("Failed to load user details. Please try again.");
@@ -233,20 +245,23 @@ export const UserManagementComponent = () => {
       {selectedUser && (
         <UserDetailsModal
           user={selectedUser}
-          onClose={() => setSelectedUser(null)}
+          userAddress={selectedUserAddress} // ✅ Now correctly fetched
+          onClose={() => {
+            setSelectedUser(null);
+            setSelectedUserAddress(null); // Reset address when closing modal
+          }}
           onUpdateRole={async (userId, newRole, password) => {
             try {
               if (!accessToken) {
                 throw new Error("Authentication token is missing.");
               }
 
-              // Make the API call to update the user's role
+              // Update user role
               const updatedUser = await updateUser(
                 { role: newRole, password },
                 accessToken
               );
 
-              // Update the state with the updated user details
               setUsers((prevUsers) =>
                 prevUsers.map((user) =>
                   user.id === userId

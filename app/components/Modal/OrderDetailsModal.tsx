@@ -66,7 +66,11 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             </p>
 
             <p className="text-sm text-gray-600">
-              Toplam: {order.amount.toFixed(2)} ₺
+              Toplam:{" "}
+              {order.total_amount
+                ? order.total_amount.toFixed(2)
+                : "Hesaplanıyor"}
+              - ₺
             </p>
           </div>
 

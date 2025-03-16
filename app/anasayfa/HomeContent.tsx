@@ -1,19 +1,28 @@
 // src/components/HomeContent.tsx
 "use client";
 
-import { FlipWords, ProductListings } from "../../app/components";
-import LoadingSpinner from "../../app/components/LoadingSpinner/LoadingSpinner";
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { fetchDiscounts, Discount } from "@/app/api/discount/discountApi";
+import { FlipWords, ProductListings } from "../../app/components";
+import { Snackbar } from "../../app/components/Snackbar/Snackbar"; // Import Snackbar component
+
+import LoadingSpinner from "../../app/components/LoadingSpinner/LoadingSpinner";
+
 import {
   Carousel,
   Card,
 } from "@/app/components/ui/AppleCardsCarousel/AppleCardsCarousel";
-import Image from "next/image";
-import Link from "next/link";
+
+import { InfiniteMovingCards } from "../components/MovingCards/MovingCards";
 import herbalTea from "@/public/images/herbal-tea.webp";
 import herbalOil from "@/public/images/herbal-oil.webp";
 import herbalCream from "@/public/images/herbal-cream.webp";
-import { InfiniteMovingCards } from "../components/MovingCards/MovingCards";
+import { IoClose } from "react-icons/io5";
 
 const words = ["Çaylar", "Kremler", "Yağlar"];
 
@@ -78,12 +87,68 @@ const data = [
 
 export default function HomeContent() {
   const [loading, setLoading] = useState(true);
+  const [discount, setDiscount] = useState<Discount | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+
+  const [snackbar, setSnackbar] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   useEffect(() => {
     // Simulate loading delay, or remove if actual loading required
     const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const loadDiscounts = async () => {
+      if (!accessToken) {
+        setIsGuest(true);
+        setShowPopup(true);
+        localStorage.setItem("lastPopupTime", Date.now().toString()); // Store the first appearance
+        return;
+      }
+
+      try {
+        const discounts = await fetchDiscounts(accessToken);
+        const validDiscount = discounts.find(
+          (discount) =>
+            discount.is_active &&
+            (discount.all_users ||
+              (discount.eligible_users &&
+                discount.eligible_users.includes(accessToken)))
+        );
+
+        if (validDiscount) {
+          setDiscount(validDiscount);
+
+          const lastPopupTime = localStorage.getItem("lastPopupTime");
+          const currentTime = Date.now();
+
+          if (
+            !lastPopupTime ||
+            currentTime - parseInt(lastPopupTime) >= 60000
+          ) {
+            setShowPopup(true);
+            localStorage.setItem("lastPopupTime", currentTime.toString());
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch discounts:", error);
+      }
+    };
+
+    const lastPopupTime = localStorage.getItem("lastPopupTime");
+    const currentTime = Date.now();
+    const initialDelay = !lastPopupTime ? 10000 : 60000; // First time: 10s, otherwise: 1 min
+
+    setTimeout(() => {
+      loadDiscounts();
+    }, initialDelay);
+  }, [accessToken]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -101,8 +166,67 @@ export default function HomeContent() {
     />
   ));
 
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setSnackbar({ message: "Kod kopyalandı!", type: "success" });
+    setTimeout(() => setSnackbar(null), 3000); // Hide snackbar after 3 seconds
+  };
+
   return (
     <div className="bg-background  text-gray-900 font-sans relative">
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[9999] animate-fadeIn">
+          <div className="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full transform transition-all duration-300 scale-100 animate-popupSlideIn">
+            {isGuest ? (
+              <>
+                <h3 className="text-xl font-bold text-primary">
+                  İndirimleri Kaçırmayın!
+                </h3>
+                <p className="text-gray-700 my-2">
+                  Aktif indirimlerimizden faydalanmak için giriş yapmalısınız.
+                </p>
+                <Link href="/giris">
+                  <button className="mt-4 bg-secondary text-white px-4 py-2 rounded hover:bg-tertiary transition-transform transform hover:scale-105">
+                    Giriş Yap
+                  </button>
+                </Link>
+              </>
+            ) : discount ? (
+              <>
+                <h3 className="text-xl font-bold text-primary">
+                  Özel İndirim!
+                </h3>
+                <p className="text-gray-700 my-2">
+                  Site içi satın alımlarınıza özel{" "}
+                  <strong>%{discount.percentage_discount} indirim</strong>{" "}
+                  kazandınız!
+                </p>
+                <p className="text-gray-900 font-bold bg-gray-200 p-2 rounded text-lg tracking-wider flex justify-between items-center">
+                  {discount.code}
+                  <button
+                    onClick={() => handleCopyCode(discount.code)}
+                    className="ml-3 px-3 py-1 bg-secondary text-white text-sm font-medium rounded hover:bg-tertiary transition-transform transform hover:scale-105"
+                  >
+                    Kodu Kopyala
+                  </button>
+                </p>
+              </>
+            ) : (
+              <p className="text-gray-700">
+                Şu an aktif bir indirim bulunmamaktadır.
+              </p>
+            )}
+
+            <button
+              onClick={() => setShowPopup(false)}
+              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 transition-transform transform hover:scale-110"
+            >
+              <IoClose size={24} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section
         className="relative bg-cover bg-center h-[40vh] sm:h-[80vh] flex items-center justify-center sm:justify-start px-4 sm:px-8"
@@ -176,6 +300,14 @@ export default function HomeContent() {
       </section>
 
       <InfiniteMovingCards />
+
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          onClose={() => setSnackbar(null)}
+        />
+      )}
     </div>
   );
 }

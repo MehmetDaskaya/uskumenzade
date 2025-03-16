@@ -6,10 +6,13 @@ export interface Address {
   id?: string;
   address: string;
   zip_code: string;
+  state: string;
   city: string;
   country: string;
   address_title: string;
   contact_name: string;
+  national_id: string; // ✅ Added field
+  contact_number: string; // ✅ Added field
   created_at?: string;
   updated_at?: string;
   user_id?: string;
@@ -62,10 +65,7 @@ export const createAddress = async (
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({
-      ...addressData,
-      contact_name: addressData.contact_name || "",
-    }),
+    body: JSON.stringify(addressData), // ✅ No need to manually add contact_name
   });
 
   if (!response.ok) {
@@ -89,10 +89,7 @@ export const updateAddress = async (
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        ...addressData,
-        contact_name: addressData.contact_name || "",
-      }),
+      body: JSON.stringify(addressData),
     }
   );
 

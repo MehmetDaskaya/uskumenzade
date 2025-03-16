@@ -9,6 +9,10 @@ import {
   loadCartForUser,
 } from "@/redux/slices/cartSlice";
 import { fetchCurrentUser } from "../api/auth/authApi";
+import { fetchDiscounts } from "../api/discount/discountApi";
+import { fetchShipmentCost } from "../api/setting/settingApi"; // Import the shipment cost function
+import { Snackbar } from "../components/index"; // Adjust path if needed
+
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -17,13 +21,22 @@ import { AiOutlineShoppingCart } from "react-icons/ai";
 
 export default function Cart() {
   const dispatch = useDispatch<AppDispatch>();
-  const { items, totalQuantity, totalPrice } = useSelector(
+  const { items, totalQuantity } = useSelector(
     (state: RootState) => state.cart
   );
 
   const [discountCode, setDiscountCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
-  const [isClient, setIsClient] = useState(false); // Ensure hydration consistency
+  const [isClient, setIsClient] = useState(false);
+
+  const [shipmentCost, setShipmentCost] = useState(0);
+  const [transportationFee, setTransportationFee] = useState(0);
+
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
+    "success"
+  );
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   // Ensure the component is client-side
 
@@ -76,17 +89,92 @@ export default function Cart() {
     fetchUserAndHandleCart();
   }, [dispatch]);
 
-  const handleDiscountApply = () => {
-    if (discountCode === "DISCOUNT10") {
-      setAppliedDiscount(0.1);
-    } else {
-      setAppliedDiscount(null);
-      alert("Invalid discount code");
+  const handleDiscountApply = async () => {
+    try {
+      const accessToken = localStorage.getItem("authToken");
+      if (!accessToken) {
+        setSnackbarMessage("Lütfen giriş yapın.");
+        setSnackbarType("error");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      // Fetch all available discounts
+      const discounts = await fetchDiscounts(accessToken);
+
+      console.log("Fetched Discounts from API:", discounts); // Debugging Log
+
+      // Trim input, convert to lowercase, and compare properly
+      const normalizedInputCode = discountCode.trim().toLowerCase();
+      const foundDiscount = discounts.find(
+        (discount) =>
+          discount.code.trim().toLowerCase() === normalizedInputCode &&
+          discount.is_active
+      );
+
+      if (!foundDiscount) {
+        setSnackbarMessage("Geçersiz indirim kodu!");
+        setSnackbarType("error");
+        setSnackbarOpen(true);
+        setAppliedDiscount(null);
+        return;
+      }
+
+      // Apply the discount percentage
+      setAppliedDiscount(foundDiscount.percentage_discount / 100);
+      setSnackbarMessage(
+        `İndirim kodu başarıyla uygulandı: %${foundDiscount.percentage_discount}`
+      );
+      setSnackbarType("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("İndirim kodu uygulanırken hata oluştu:", error);
+      setSnackbarMessage("İndirim kodu uygulanamadı.");
+      setSnackbarType("error");
+      setSnackbarOpen(true);
     }
   };
 
-  const discountAmount = appliedDiscount ? totalPrice * appliedDiscount : 0;
-  const finalTotal = totalPrice - discountAmount;
+  useEffect(() => {
+    const calculateTransportationFee = async () => {
+      try {
+        const cost = await fetchShipmentCost();
+        setShipmentCost(cost);
+
+        const totalShipmentFee = items.reduce((sum, item) => {
+          const itemLength = item.length || 1;
+          const itemWidth = item.width || 1;
+          const itemHeight = item.height || 1;
+
+          const itemShipmentFee =
+            (itemLength * itemWidth * itemHeight * item.quantity * cost) / 3000;
+
+          return sum + itemShipmentFee;
+        }, 0);
+
+        setTransportationFee(totalShipmentFee);
+      } catch (error) {
+        console.error("Failed to fetch shipment cost:", error);
+      }
+    };
+
+    calculateTransportationFee();
+  }, [items]);
+
+  const calculatedTotalPrice = items.reduce(
+    (sum, item) =>
+      sum +
+      (item.discounted_price !== null && item.discounted_price > 0
+        ? item.discounted_price
+        : item.price) *
+        item.quantity,
+    0
+  );
+
+  const discountAmount = appliedDiscount
+    ? calculatedTotalPrice * appliedDiscount
+    : 0;
+  const finalTotal = calculatedTotalPrice - discountAmount;
 
   if (!isClient) return null;
 
@@ -98,7 +186,7 @@ export default function Cart() {
           <h2 className="text-2xl font-semibold text-gray-800">
             Sepetiniz Boş!
           </h2>
-          <p className="text-gray-600 text-center max-w-md">
+          <p className="text-white text-center max-w-md">
             Görünüşe göre sepetinize daha ürün eklememişsiniz. Ürünlerimize göz
             atın ve alışverişe başlayın!
           </p>
@@ -132,7 +220,11 @@ export default function Cart() {
                         {item.name}
                       </h2>
                       <p className="text-gray-600">
-                        {item.discounted_price.toFixed(2)} ₺ (ürün başına)
+                        {item.discounted_price && item.discounted_price > 0
+                          ? `${item.discounted_price.toFixed(
+                              2
+                            )} ₺ (ürün başına)`
+                          : `${item.price.toFixed(2)} ₺ (ürün başına)`}
                       </p>
                     </div>
                   </div>
@@ -196,8 +288,15 @@ export default function Cart() {
                       </button>
                     </div>
                     <p className="text-lg font-semibold text-gray-800">
-                      {(item.discounted_price * item.quantity).toFixed(2)} ₺
+                      {(
+                        (item.discounted_price !== null &&
+                        item.discounted_price > 0
+                          ? item.discounted_price
+                          : item.price) * item.quantity
+                      ).toFixed(2)}{" "}
+                      ₺
                     </p>
+
                     <button
                       onClick={async () => {
                         const accessToken = localStorage.getItem("authToken");
@@ -235,18 +334,21 @@ export default function Cart() {
                 <span>Sepetteki Ürünler</span>
                 <span>{totalQuantity}</span>
               </div>
+
               <div className="flex justify-between text-gray-600">
-                <span>Toplam</span>
-                <span>{totalPrice.toFixed(2)} ₺</span>
-              </div>
-              <div className="flex justify-between text-gray-600">
-                <span>İndirim</span>
-                <span>-{discountAmount.toFixed(2)} ₺</span>
+                <span>Kargo Ücreti</span>
+                <span>{transportationFee.toFixed(2)} ₺</span>
               </div>
               <div className="flex justify-between text-xl font-semibold text-gray-800">
                 <span>Toplam</span>
-                <span>{finalTotal.toFixed(2)} ₺</span>
+                <span>{(finalTotal + transportationFee).toFixed(2)} ₺</span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-gray-600">
+                  <span>İndirim</span>
+                  <span>-{discountAmount.toFixed(2)} ₺</span>
+                </div>
+              )}
 
               {/* Discount Code Field */}
               <div className="flex items-center space-x-2">
@@ -264,14 +366,12 @@ export default function Cart() {
                   Uygula
                 </button>
               </div>
-
               {/* Checkout Button */}
               <Link href="odeme">
                 <button className="w-full mt-4 bg-green-600 text-white py-3 rounded-md font-semibold hover:bg-green-700 transition duration-300">
                   Ödeme Adımına Geç
                 </button>
               </Link>
-
               {/* Link to Products Page */}
               <div className="text-center mt-4">
                 <Link href="/urunler">
@@ -283,6 +383,13 @@ export default function Cart() {
             </div>
           </div>
         </>
+      )}
+      {snackbarOpen && (
+        <Snackbar
+          message={snackbarMessage}
+          type={snackbarType}
+          onClose={() => setSnackbarOpen(false)}
+        />
       )}
     </div>
   );

@@ -30,6 +30,7 @@ const saveToLocalStorage = (state: CartState, userId: string | null) => {
 };
 
 // Define the shape of a cart item
+
 export interface CartItem {
   id: string;
   name: string;
@@ -38,6 +39,9 @@ export interface CartItem {
   imageUrl: string;
   stock: number;
   quantity: number;
+  length: number; // ✅ Add this
+  width: number; // ✅ Add this
+  height: number; // ✅ Add this
 }
 
 // Define the CartState type
@@ -96,14 +100,19 @@ const cartSlice = createSlice({
       if (existingItem) {
         existingItem.quantity += item.quantity;
       } else {
-        state.items.push(item);
+        state.items.push({
+          ...item,
+          length: item.length || 1, // ✅ Default to 1 if missing
+          width: item.width || 1, // ✅ Default to 1 if missing
+          height: item.height || 1, // ✅ Default to 1 if missing
+        });
       }
 
       const totals = calculateTotals(state.items);
       state.totalQuantity = totals.totalQuantity;
       state.totalPrice = totals.totalPrice;
 
-      saveToLocalStorage(state, userId); // Save to localStorage
+      saveToLocalStorage(state, userId);
     },
 
     updateItemQuantity: (

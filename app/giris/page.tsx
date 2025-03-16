@@ -9,7 +9,7 @@ import { setUser } from "../../redux/slices/userSlice";
 import { signin, fetchCurrentUser } from "../api/auth/authApi";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
-export default function SignInPage() {
+export default function SignInPage({ isEmbedded = false }) {
   const router = useRouter();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
@@ -68,7 +68,11 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex h-screen items-start justify-center bg-background pt-12">
+    <div
+      className={`flex ${
+        isEmbedded ? "h-auto" : "h-screen"
+      } items-start justify-center bg-background pt-12`}
+    >
       <div className="w-full max-w-md p-8 bg-white shadow-2xl rounded-2xl">
         <h2 className="text-3xl font-bold text-center text-gray-800">
           Hoşgeldiniz
@@ -87,19 +91,6 @@ export default function SignInPage() {
         )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          {/* Honeypot field */}
-          <div className="hidden">
-            <label htmlFor="honeypot">Honeypot</label>
-            <input
-              id="honeypot"
-              type="text"
-              value={honeypot}
-              onChange={(e) => setHoneypot(e.target.value)}
-              tabIndex={-1} // Prevents tabbing to the field
-              autoComplete="off"
-            />
-          </div>
-
           <div>
             <label
               htmlFor="email"

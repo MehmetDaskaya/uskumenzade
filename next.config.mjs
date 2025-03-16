@@ -8,6 +8,7 @@ const nextConfig = {
       "teami-store-demo.myshopify.com",
       "picsum.photos",
       "localhost",
+      "placehold.co",
     ],
   },
 };

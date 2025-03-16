@@ -102,14 +102,12 @@ export default function Profile() {
   const handleAddressSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { address, zip_code, city, country, address_title } = addressFormData;
+    const { address, zip_code, city, address_title } = addressFormData;
 
-    // Update validation logic to reflect only the inputs present in the form
-    if (!address || !zip_code || !city || !country || !address_title) {
+    if (!address || !zip_code || !city || !address_title) {
       alert("Lütfen tüm adres bilgilerini doldurun.");
       return;
     }
-
     try {
       if (isAddressEditing && addressFormData.id) {
         const updatedAddress = await updateAddress(
@@ -118,12 +116,16 @@ export default function Profile() {
             address,
             zip_code,
             city,
-            country,
+            country: "Türkiye", // ✅ Set default country
+            state: addressFormData.state || "",
             address_title,
             contact_name: addressFormData.contact_name || "",
+            national_id: addressFormData.national_id || "",
+            contact_number: addressFormData.contact_number || "",
           },
           accessToken || ""
         );
+
         setAddresses((prev) =>
           prev.map((addr) =>
             addr.id === updatedAddress.id ? updatedAddress : addr
@@ -136,12 +138,16 @@ export default function Profile() {
             address,
             zip_code,
             city,
-            country,
+            country: "Türkiye", // ✅ Set default country
+            state: addressFormData.state || "",
             address_title,
             contact_name: addressFormData.contact_name || "",
+            national_id: addressFormData.national_id || "",
+            contact_number: addressFormData.contact_number || "",
           },
           accessToken || ""
         );
+
         setAddresses((prev) => [...prev, newAddress]);
         setSuccessMessage("Adres başarıyla eklendi.");
       }
@@ -279,36 +285,6 @@ export default function Profile() {
                       className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                     />
                   </div>
-
-                  <div>
-                    <label
-                      htmlFor="national_id"
-                      className="block text-gray-700 font-semibold mb-2"
-                    >
-                      TC Kimlik Numarası/Vergi Numarası
-                    </label>
-                    <input
-                      id="national_id"
-                      type="text"
-                      name="national_id"
-                      value={formData.national_id || ""}
-                      onChange={(e) => {
-                        e.currentTarget.setCustomValidity("");
-                        handleInputChange(e);
-                      }}
-                      onInvalid={(e) => {
-                        e.currentTarget.setCustomValidity(
-                          "TC Kimlik numarası 11 karakter olmalı ve yalnızca rakamlardan oluşmalıdır."
-                        );
-                      }}
-                      disabled={!isEditing}
-                      required
-                      pattern="^[0-9]{11}$"
-                      maxLength={11}
-                      placeholder="TC Kimlik Numarası"
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -420,6 +396,32 @@ export default function Profile() {
 
                 <div>
                   <label
+                    htmlFor="contact_number"
+                    className="block text-gray-700 font-semibold mb-2"
+                  >
+                    Telefon Numarası
+                  </label>
+                  <input
+                    id="contact_number"
+                    type="tel"
+                    name="contact_number"
+                    value={addressFormData.contact_number || ""}
+                    onChange={handleAddressInputChange}
+                    onInvalid={(e) => {
+                      e.currentTarget.setCustomValidity(
+                        "Telefon numarası +905557778899 formatında olmalı (13 karakter ve yalnızca rakam)."
+                      );
+                    }}
+                    required
+                    pattern="^\+[0-9]{12}$"
+                    maxLength={13}
+                    placeholder="Telefon Numarası"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
+                  />
+                </div>
+
+                <div>
+                  <label
                     htmlFor="city"
                     className="block text-gray-700 font-semibold mb-2"
                   >
@@ -458,20 +460,22 @@ export default function Profile() {
 
                 <div>
                   <label
-                    htmlFor="country"
+                    htmlFor="national_id"
                     className="block text-gray-700 font-semibold mb-2"
                   >
-                    Ülke
+                    TC Kimlik/Vergi Numarası
                   </label>
                   <input
-                    id="country"
+                    id="national_id"
                     type="text"
-                    name="country"
-                    value={addressFormData.country || ""}
+                    name="national_id"
+                    value={addressFormData.national_id || ""}
                     onChange={handleAddressInputChange}
-                    placeholder="Ülke"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                     required
+                    pattern="^[0-9]{11}$"
+                    maxLength={11}
+                    placeholder="TC Kimlik Numarası"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                   />
                 </div>
               </div>
@@ -551,6 +555,10 @@ export default function Profile() {
                       <p className="text-gray-700">
                         <span className="font-medium">İletişim:</span>{" "}
                         {addr.contact_name || "Belirtilmedi"}
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">İletişim Numarası:</span>{" "}
+                        {addr.contact_number || "Belirtilmedi"}
                       </p>
                     </div>
                     <div className="space-x-4 flex-shrink-0">

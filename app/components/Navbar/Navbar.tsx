@@ -19,7 +19,10 @@ interface NavbarProps {
 
 export const Navbar = ({ viewable = false }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
+
   const [isOpenProfile, setIsOpenProfile] = useState(false);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
+
   const [isSuperUser, setIsSuperUser] = useState(false);
   const [showLeaves, setShowLeaves] = useState(false);
 
@@ -129,9 +132,16 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
 
           {/* Conditional Profile Dropdown */}
           <div className="relative">
-            <button
-              className="text-gray-800 hover:text-tertiary focus:outline-none"
-              onClick={toggleProfile}
+            <div
+              onMouseEnter={() => {
+                setIsOpenProfile(true);
+                if (hoverTimeout) clearTimeout(hoverTimeout);
+              }}
+              onMouseLeave={() => {
+                const timeout = setTimeout(() => setIsOpenProfile(false), 3000);
+                setHoverTimeout(timeout);
+              }}
+              className=" relative text-gray-800 hover:text-tertiary focus:outline-none"
             >
               <svg
                 className="w-8 h-8"
@@ -153,9 +163,24 @@ export const Navbar = ({ viewable = false }: NavbarProps) => {
                   d="M4 20h16a8 8 0 10-16 0z"
                 />
               </svg>
-            </button>
+            </div>
             {isOpenProfile && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
+              <div
+                className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 transition-opacity duration-500 ${
+                  isOpenProfile ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
+                onMouseEnter={() => {
+                  if (hoverTimeout) clearTimeout(hoverTimeout);
+                  setIsOpenProfile(true);
+                }}
+                onMouseLeave={() => {
+                  const timeout = setTimeout(
+                    () => setIsOpenProfile(false),
+                    3000
+                  );
+                  setHoverTimeout(timeout);
+                }}
+              >
                 {isTokenValid ? (
                   <>
                     <Link

@@ -1,5 +1,5 @@
 import React from "react";
-import { fetchBlogsWithSSR } from "../api/blog/blogSSR"; // Adjust the path if necessary
+import { fetchBlogsWithSSR } from "../api/blog/blogSSR";
 import { BlogsEffect } from "../components/BlogsEffect/BlogsEffect";
 
 // Define the Blog type
@@ -9,7 +9,7 @@ interface Blog {
   category: string;
   author: string;
   created_at: string;
-  images: { url: string }[]; // Assuming multiple images
+  images: { url: string }[];
   content: string;
   tags?: { name: string }[];
 }
@@ -18,17 +18,14 @@ async function getData() {
   try {
     const blogs: Blog[] = await fetchBlogsWithSSR();
 
-    // Extract categories from blogs and include the first tag as a category
+    // Extract unique first tags from blogs as categories
     const categories = [
       "Tümü",
       ...Array.from(
         new Set(
-          blogs.flatMap((blog) => [
-            blog.category,
-            blog.tags?.[0]?.name, // Include the first tag's name if available
-          ])
+          blogs.map((blog) => blog.tags?.[0]?.name).filter(Boolean) // Get only the first tag
         )
-      ).filter(Boolean), // Remove undefined or null values
+      ),
     ];
 
     return { blogs, categories };
@@ -48,11 +45,7 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
   // Filter blogs based on the selected category
   const filteredBlogs =
     searchParams.kategori && searchParams.kategori !== "Tümü"
-      ? blogs.filter(
-          (blog) =>
-            blog.category === searchParams.kategori ||
-            blog.tags?.[0]?.name === searchParams.kategori
-        )
+      ? blogs.filter((blog) => blog.tags?.[0]?.name === searchParams.kategori)
       : blogs;
 
   return (

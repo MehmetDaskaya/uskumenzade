@@ -117,7 +117,12 @@ export const DashboardComponent = () => {
         const users = await fetchAllUsers(accessToken);
 
         // Fetch all orders
+        // Fetch all orders and filter out those with undefined or zero total_amount
         const fetchedOrders = await fetchOrders(accessToken);
+        const validOrders = fetchedOrders.filter(
+          (order) => (order.total_amount ?? 0) > 0
+        );
+        setOrders(validOrders);
 
         // Fetch all products
         const fetchedProducts = await getProducts();
@@ -307,8 +312,10 @@ export const DashboardComponent = () => {
             .map((order) => (
               <li key={order.id} className="py-2 border-b border-gray-200">
                 {order.user.fname} {order.user.lname} - ₺
-                {order.amount.toFixed(2)} -{" "}
-                {new Date(order.created_at).toLocaleDateString()}
+                {order.total_amount
+                  ? `${order.total_amount.toFixed(2)} ₺ (Kargo Dahil)`
+                  : "Hesaplanıyor"}{" "}
+                - {new Date(order.created_at).toLocaleDateString()}
               </li>
             ))}
         </ul>
@@ -371,8 +378,10 @@ export const DashboardComponent = () => {
                 <span>
                   {order.user.fname} {order.user.lname}
                 </span>
-                <span>{order.amount.toFixed(2)} ₺</span>
-                <span>{new Date(order.created_at).toLocaleDateString()}</span>
+                {order.total_amount
+                  ? `${order.total_amount.toFixed(2)} ₺ (Kargo Dahil)`
+                  : "Hesaplanıyor"}{" "}
+                - <span>{new Date(order.created_at).toLocaleDateString()}</span>
               </li>
             ))}
           </ul>

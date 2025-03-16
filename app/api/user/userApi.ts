@@ -9,6 +9,8 @@ export interface Address {
   country: string;
   address_title: string;
   contact_name: string;
+  national_id: string; // ✅ Added field
+  contact_number: string; // ✅ Added field
   created_at: string;
   updated_at: string;
   user_id: string;
@@ -33,7 +35,7 @@ export interface Order {
     fname: string;
     lname: string;
     email: string;
-  };
+  }; // ✅ Only keep required fields (match API response)
 }
 
 export interface User {
@@ -45,12 +47,11 @@ export interface User {
   is_superuser: boolean;
   is_verified: boolean;
   role: string;
-  national_id: string;
-  gsm_number: string;
+  gsm_number: string; // ✅ Removed national_id from here
   created_at: string;
   updated_at: string;
-  addresses: Address[]; // Correct type for addresses
-  orders: Order[]; // Correct type for orders
+  addresses: Address[];
+  orders: Order[];
 }
 
 interface UpdateUserPayload {
@@ -58,8 +59,7 @@ interface UpdateUserPayload {
   lname?: string;
   email?: string;
   password?: string;
-  national_id?: string;
-  gsm_number?: string;
+  gsm_number?: string; // ✅ Removed national_id
   is_active?: boolean;
   is_superuser?: boolean;
   is_verified?: boolean;

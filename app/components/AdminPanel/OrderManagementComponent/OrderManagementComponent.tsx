@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { RootState } from "@/redux/store";
+import { useSelector } from "react-redux";
 import { FaSearch, FaEye, FaTrashAlt } from "react-icons/fa";
 import {
   fetchOrders,
@@ -7,8 +9,8 @@ import {
   Order,
   updateOrder,
 } from "@/app/api/order/orderApi";
-import { RootState } from "@/redux/store";
-import { useSelector } from "react-redux";
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner"; // Ensure correct import
+
 import { Snackbar } from "../../index";
 import OrderDetailsModal from "../../Modal/OrderDetailsModal";
 
@@ -142,7 +144,12 @@ export const OrderManagementComponent = () => {
   }, [deleteTimer]);
 
   if (loading) {
-    return <p>Siparişler Yükleniyor...</p>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px]">
+        <LoadingSpinner />
+        <p className="mt-4 text-gray-600">Siparişleriniz yükleniyor...</p>
+      </div>
+    );
   }
 
   if (error) {
@@ -208,7 +215,10 @@ export const OrderManagementComponent = () => {
                 </td>
 
                 <td className="p-4 text-gray-600">
-                  {order.amount.toFixed(2)} ₺
+                  {order.total_amount
+                    ? order.total_amount.toFixed(2)
+                    : "Hesaplanıyor"}
+                  - ₺
                 </td>
                 <td className="p-4 text-center">
                   <div className="flex justify-center space-x-2">

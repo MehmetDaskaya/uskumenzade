@@ -2,23 +2,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
+import { FaCheckCircle } from "react-icons/fa";
 import { requestPasswordReset } from "../api/auth/authApi";
+import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
+    setLoading(true); // Start loading
 
     try {
-      // Request password reset
       await requestPasswordReset(email);
-
       setSuccessMessage(
         "Şifre sıfırlama bağlantısı belirttiğiniz e-posta adresinize gönderildi. E-postalarınızı kontrol ediniz."
       );
@@ -29,6 +30,8 @@ export default function ForgotPasswordPage() {
       } else {
         setErrorMessage("Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.");
       }
+    } finally {
+      setLoading(false); // Stop loading after response
     }
   };
 
@@ -38,46 +41,53 @@ export default function ForgotPasswordPage() {
         <h2 className="text-3xl font-bold text-center text-gray-800">
           Şifre Sıfırla
         </h2>
-        <p className="text-sm text-center text-gray-600 mt-2">
-          Şifrenizi sıfırlamak için e-postanızı girin.
-        </p>
+        {successMessage ? (
+          <FaCheckCircle className="text-green-500 text-6xl mx-auto my-4" />
+        ) : (
+          <p className="text-sm text-center text-gray-600 mt-2">
+            Şifrenizi sıfırlamak için e-postanızı girin.
+          </p>
+        )}
 
-        {errorMessage && (
+        {loading ? (
+          <LoadingSpinner aboveText="Şifre sıfırlama bağlantısı gönderiliyor..." />
+        ) : errorMessage ? (
           <p className="text-red-500 text-center mt-4 font-medium">
             {errorMessage}
           </p>
-        )}
-        {successMessage && (
+        ) : successMessage ? (
           <p className="text-green-500 text-center mt-4 font-medium">
             {successMessage}
           </p>
-        )}
+        ) : null}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+        {!loading && !successMessage && (
+          <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
+                E-posta Adresi
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 mt-1 text-black bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
+                placeholder="E-posta adresinizi girin..."
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full py-3 px-4 text-white bg-secondary rounded-lg font-medium hover:bg-tertiary focus:outline-none focus:ring-4 focus:ring-tertiary"
             >
-              E-posta Adresi
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 mt-1 text-black bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-secondary"
-              placeholder="E-posta adresinizi girin..."
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full py-3 px-4 text-white bg-secondary rounded-lg font-medium hover:bg-tertiary focus:outline-none focus:ring-4 focus:ring-tertiary"
-          >
-            Sıfırlama Linki Gönder
-          </button>
-        </form>
+              Sıfırlama Linki Gönder
+            </button>
+          </form>
+        )}
 
         <div className="mt-8 text-center">
           <Link

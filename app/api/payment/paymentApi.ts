@@ -3,6 +3,7 @@ import API_BASE_URL from "../../../util/config";
 export const initializePayment = async (orderId: string, token: string) => {
   const callbackUrl = `${window.location.origin}/payment-result`;
 
+  // ✅ Send the updated request with `basket`
   const response = await fetch(
     `${API_BASE_URL}/uskumenzade/api/payments/initialize-checkout?order_id=${orderId}`,
     {
@@ -12,7 +13,7 @@ export const initializePayment = async (orderId: string, token: string) => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        callbackUrl, // Updated to the frontend URL
+        callbackUrl,
       }),
     }
   );

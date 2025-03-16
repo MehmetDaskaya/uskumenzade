@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Order } from "@/app/api/order/orderApi";
+import { Order, fetchOrderById } from "@/app/api/order/orderApi";
 import { fetchCurrentUser } from "@/app/api/user/userApi";
 
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
 import Image from "next/image";
+import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner";
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -24,20 +25,40 @@ export default function OrderHistory() {
           setLoading(false);
           return;
         }
-        const userData = await fetchCurrentUser(accessToken); // Fetch user data
-        const ordersWithUser = userData.orders
-          .map((order) => ({
-            ...order,
-            user: userData, // Add the user data manually
-            shipping_address_id: order.shipping_address.id, // Include shipping_address_id
-            billing_address_id: order.billing_address.id, // Include billing_address_id
-          }))
-          .sort(
+
+        const userData = await fetchCurrentUser(accessToken);
+
+        // Fetch full order details for each order
+        const fullOrders = await Promise.all(
+          userData.orders.map(async (order) => {
+            try {
+              const fullOrder = await fetchOrderById(order.id, accessToken);
+              return {
+                ...fullOrder,
+                user: {
+                  fname: userData.fname,
+                  lname: userData.lname,
+                  email: userData.email,
+                }, // ✅ Ensure only expected fields are included
+              };
+            } catch (error) {
+              console.error("Failed to fetch full order:", order.id, error);
+              return null;
+            }
+          })
+        );
+
+        // Remove null (failed) orders
+        const filteredOrders = fullOrders.filter((order) => order !== null);
+
+        setOrders(
+          (filteredOrders as Order[]).sort(
             (a, b) =>
               new Date(b.created_at).getTime() -
               new Date(a.created_at).getTime()
-          ); // Sort orders last to first
-        setOrders(ordersWithUser || []);
+          )
+        );
+
         setError(null);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -57,7 +78,9 @@ export default function OrderHistory() {
       </h1>
 
       {loading ? (
-        <p className="text-center text-gray-600">Siparişler yükleniyor...</p>
+        <div className="flex flex-col items-center space-y-4">
+          <LoadingSpinner aboveText="Siparişler yükleniyor..." />
+        </div>
       ) : error ? (
         <p className="text-center text-red-600">{error}</p>
       ) : orders.length === 0 ? (
@@ -113,7 +136,10 @@ export default function OrderHistory() {
                 <div className="flex items-center space-x-3">
                   <p className="text-sm text-gray-500">Toplam Tutar:</p>
                   <p className="text-lg font-bold text-gray-800">
-                    {order.amount.toFixed(2)} ₺
+                    {order.total_amount
+                      ? order.total_amount.toFixed(2)
+                      : "Hesaplanıyor"}{" "}
+                    ₺
                   </p>
                 </div>
               </div>
@@ -159,7 +185,7 @@ export default function OrderHistory() {
                       <Image
                         src={
                           item.item?.images[0]?.url ||
-                          "https://via.placeholder.com/100"
+                          "https://placehold.co/400"
                         }
                         alt={item.item?.images[0]?.alt_text || "Ürün resmi"}
                         width={80} // Specify width

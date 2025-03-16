@@ -51,7 +51,14 @@ export const getOrderById = createAsyncThunk(
   "orders/fetchById",
   async (orderId: string, thunkAPI) => {
     try {
-      return await fetchOrderById(orderId);
+      const state = thunkAPI.getState() as RootState;
+      const token = state.auth.accessToken;
+
+      if (!token) {
+        return thunkAPI.rejectWithValue("Authentication token is missing.");
+      }
+
+      return await fetchOrderById(orderId, token);
     } catch (error) {
       return thunkAPI.rejectWithValue(extractErrorMessage(error));
     }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+
 import Link from "next/link";
 
 import { CreateOrderRequest, createOrder } from "@/app/api/order/orderApi";
@@ -13,20 +13,8 @@ import { fetchCurrentUser } from "@/app/api/user/userApi";
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner";
 import UserInformationModal from "../components/Modal/UserInformationModal";
 
-export default function PlaceOrder() {
-  const [showModal, setShowModal] = useState(true); // Modal visibility state
-
-  const handleModalClose = () => {
-    setShowModal(false);
-  };
-
-  const handleAddressUpdate = (updatedAddresses: Address[]) => {
-    setAddresses(updatedAddresses); // Update addresses when the modal updates
-  };
-
-  const router = useRouter();
-  const [paymentData, setPaymentData] = useState(null);
-  const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
+export default function PlaceOrderPopup() {
+  const [showModal, setShowModal] = useState(true);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedShippingAddress, setSelectedShippingAddress] = useState<
     string | null
@@ -36,14 +24,13 @@ export default function PlaceOrder() {
   >(null);
   const [useSameAddress, setUseSameAddress] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [checkoutFormContent, setCheckoutFormContent] = useState<string | null>(
     null
   );
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const cartItems = useSelector((state: RootState) => state.cart.items);
-
   const [discountCode, setDiscountCode] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("discountCode") || null;
@@ -51,9 +38,9 @@ export default function PlaceOrder() {
     return null;
   });
 
+  // If no addresses exist, show the modal to update user information.
   useEffect(() => {
     if (!addresses.length && accessToken) {
-      // If no addresses exist, show the modal
       setShowModal(true);
     }
   }, [addresses, accessToken]);
@@ -61,12 +48,10 @@ export default function PlaceOrder() {
   useEffect(() => {
     const fetchUserAddresses = async () => {
       if (!accessToken) return;
-
       try {
         const userData = await fetchCurrentUser(accessToken);
         const userAddresses = userData.addresses || [];
         setAddresses(userAddresses);
-
         if (userAddresses.length > 0) {
           setSelectedShippingAddress(userAddresses[0]?.id || null);
           setSelectedBillingAddress(userAddresses[0]?.id || null);
@@ -75,21 +60,18 @@ export default function PlaceOrder() {
         console.error("Failed to fetch user addresses:", error);
       }
     };
-
     fetchUserAddresses();
   }, [accessToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       if (!accessToken) {
         alert("Authentication token is missing.");
         setIsSubmitting(false);
         return;
       }
-
       if (
         !selectedShippingAddress ||
         (!useSameAddress && !selectedBillingAddress)
@@ -111,26 +93,22 @@ export default function PlaceOrder() {
             ? item.discounted_price
             : item.price) * item.quantity,
       }));
-
       if (basket.length === 0) {
         alert("Sepetiniz boş. Lütfen ürün ekleyin.");
         setIsSubmitting(false);
         return;
       }
-
       setDiscountCode(localStorage.getItem("discountCode") || null);
-
-      // Create Order Request
       const orderData: CreateOrderRequest = {
         shipping_address_id: selectedShippingAddress!,
         billing_address_id: useSameAddress
           ? selectedShippingAddress!
           : selectedBillingAddress!,
         basket,
-        discount_code: discountCode || undefined, // Ensure it's passed only if available
+        discount_code: discountCode || undefined,
       };
 
-      // ✅ Send request to create order
+      // Create the order
       const newOrder = await createOrder(orderData, accessToken);
       console.log("✅ Order created successfully:", newOrder);
 
@@ -140,10 +118,23 @@ export default function PlaceOrder() {
         return;
       }
 
-      // ✅ Initialize payment
+      // Initialize payment
       const paymentResponse = await initializePayment(newOrder.id, accessToken);
-      setCheckoutFormContent(paymentResponse.checkoutFormContent);
-      setShowPaymentModal(true);
+
+      if (paymentResponse.checkoutFormContent) {
+        // Build the correct callback URL based on the current frontend origin.
+        const correctCallbackUrl = `${window.location.origin}/payment-result?status=success&order_id=${newOrder.id}`;
+
+        // Replace the incorrect callback URL in the returned HTML.
+        const fixedContent = paymentResponse.checkoutFormContent.replace(
+          "http://localhost:8000/uskumenzade/api/payments/None/payment-result",
+          correctCallbackUrl
+        );
+
+        // Save the fixed content in state and show the payment modal.
+        setCheckoutFormContent(fixedContent);
+        setShowPaymentModal(true);
+      }
     } catch (error) {
       console.error("🚨 Failed to create order or initialize payment:", error);
       alert("Siparişe devam edilemiyor. Lütfen tekrar deneyiniz.");
@@ -152,83 +143,29 @@ export default function PlaceOrder() {
     }
   };
 
-  const handlePaymentMessage = (event: MessageEvent) => {
-    console.log("Received message:", event.data);
-
-    // Accept messages only from expected origins
-    if (event.origin.includes("iyzipay.com")) {
-      try {
-        // Parse JSON response
-        const paymentResponse =
-          typeof event.data === "string"
-            ? JSON.parse(event.data) // Parse if it's a string
-            : event.data;
-
-        console.log("Payment response parsed:", paymentResponse);
-
-        // Save payment response data in state for display
-        setPaymentData(paymentResponse);
-
-        // Check the payment status
-        if (paymentResponse?.paymentStatus === "SUCCESS") {
-          setPaymentMessage(
-            `Payment successful! Payment ID: ${paymentResponse.paymentId}`
-          );
-
-          // Close the payment modal
-          setShowPaymentModal(false);
-        } else {
-          setPaymentMessage("Payment failed. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error processing payment response:", error);
-        setPaymentMessage("An error occurred while processing the payment.");
+  // Once checkoutFormContent is available and the payment modal is open, insert the content.
+  useEffect(() => {
+    if (checkoutFormContent && showPaymentModal) {
+      const container = document.getElementById("iyzipay-checkout-form");
+      if (container) {
+        container.innerHTML = checkoutFormContent;
       }
-    } else {
-      console.warn("Ignored message from unexpected origin:", event.origin);
     }
+  }, [checkoutFormContent, showPaymentModal]);
+
+  const handleModalClose = () => {
+    setShowModal(false);
   };
 
-  useEffect(() => {
-    if (checkoutFormContent) {
-      const container = document.getElementById("payment-form-container");
-      if (container) {
-        container.innerHTML = ""; // Clear existing content
-
-        const iframe = document.createElement("iframe");
-        iframe.width = "100%";
-        iframe.height = "600px";
-        iframe.style.border = "none";
-        container.appendChild(iframe);
-
-        const iframeDoc = iframe.contentWindow?.document;
-        if (iframeDoc) {
-          iframeDoc.open();
-          iframeDoc.write(`
-        
-              ${checkoutFormContent}
-             
-        `);
-          iframeDoc.close();
-        }
-      }
-
-      // Add event listener for messages
-      window.addEventListener("message", handlePaymentMessage);
-
-      // Cleanup to avoid duplicate listeners
-      return () => {
-        window.removeEventListener("message", handlePaymentMessage);
-      };
-    }
-  }, [checkoutFormContent]);
+  const handleAddressUpdate = (updatedAddresses: Address[]) => {
+    setAddresses(updatedAddresses);
+  };
 
   return (
     <div className="mx-auto px-6 py-12 bg-secondary">
       <h1 className="text-4xl font-bold text-white mb-8 text-center">
         Sipariş Bilgileri
       </h1>
-
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-lg space-y-10"
@@ -254,7 +191,6 @@ export default function PlaceOrder() {
             ))}
           </select>
         </div>
-
         {/* Billing Address Section */}
         <div className="space-y-6">
           <h2 className="text-2xl font-semibold text-gray-700">
@@ -288,7 +224,6 @@ export default function PlaceOrder() {
             </select>
           )}
         </div>
-
         {/* Submit Button */}
         <div className="flex justify-end space-x-4">
           <Link href="/sepet">
@@ -309,59 +244,23 @@ export default function PlaceOrder() {
           </button>
         </div>
       </form>
-
-      <div className="container mx-auto px-6 py-12 ">
-        {/* Display payment message */}
-        {paymentMessage && (
-          <div
-            className={`p-4 rounded mb-4 ${
-              paymentMessage.includes("successful")
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {paymentMessage}
-          </div>
-        )}
-
-        {paymentData && (
-          <div className="p-4 rounded mb-4 bg-blue-100 text-blue-700">
-            <h3>Payment Details:</h3>
-            <pre>{JSON.stringify(paymentData, null, 2)}</pre>
-          </div>
-        )}
-
-        {/* Payment Modal */}
-        {showPaymentModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-3xl h-[700px] relative">
-              <button
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  setIsSubmitting(true); // Set loading state
-                  router.push("/siparislerim");
-                }}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-xl"
-              >
-                ×
-              </button>
-              {checkoutFormContent ? (
-                <div
-                  id="payment-form-container"
-                  className="w-full h-full"
-                ></div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <p>Ödeme formu yükleniyor...</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
       {isSubmitting && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <LoadingSpinner />
+        </div>
+      )}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl relative">
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              ×
+            </button>
+            {/* Container for the Iyzico checkout form popup */}
+            <div id="iyzipay-checkout-form" className="popup"></div>
+          </div>
         </div>
       )}
       {showModal && (

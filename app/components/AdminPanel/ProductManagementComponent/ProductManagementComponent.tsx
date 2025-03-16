@@ -27,6 +27,9 @@ interface Product {
   image_ids: string[];
   images?: { id: string; url: string }[]; // Define the images property
   health_benefits?: (string | { name: string })[]; // Support both strings and objects
+  width: number;
+  length: number;
+  height: number;
 }
 
 export const ProductManagementComponent = () => {
@@ -50,6 +53,9 @@ export const ProductManagementComponent = () => {
     how_to_use: "",
     category: { id: "", name: "" },
     image_ids: [],
+    width: 0,
+    length: 0,
+    height: 0,
   });
 
   const [showImageModal, setShowImageModal] = useState(false);
@@ -289,8 +295,11 @@ export const ProductManagementComponent = () => {
       discounted_price: 0,
       stock: 0,
       how_to_use: "",
-      category: { id: "", name: "" }, // Provide the correct structure
+      category: { id: "", name: "" },
       image_ids: [],
+      width: 0,
+      length: 0,
+      height: 0,
     });
   };
 
@@ -367,9 +376,11 @@ export const ProductManagementComponent = () => {
                             ) || [],
 
                           image_ids:
-                            product.images?.map((image) => image.id) || [], // Populate image_ids from images
+                            product.images?.map((image) => image.id) || [], // Ensure correct image IDs are extracted
+                          images: product.images || [], // Store full image objects to access URLs later
                           category_id: product.category?.id, // Ensure category_id is set
                         });
+
                         setShowModal(true);
                       }}
                       className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
@@ -442,7 +453,7 @@ export const ProductManagementComponent = () => {
 
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white w-full max-w-4xl rounded-lg shadow-lg p-6">
+          <div className="bg-white w-full max-w-4xl rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl text-gray-900 font-bold mb-4">
               {isEditing ? "Ürün Bilgilerini Düzenle" : "Yeni Ürün Ekle"}
             </h3>
@@ -485,23 +496,23 @@ export const ProductManagementComponent = () => {
                 </button>
                 <div className="mt-2 flex gap-2 overflow-x-auto">
                   {(isEditing && editingProduct
-                    ? editingProduct.image_ids || []
-                    : newProduct.image_ids
-                  ).map((id, index) => {
-                    const imagePath = `http://localhost:8000/uskumenzade/api/static/images/${id}.jpg`; // Replace with the correct image URL format
-                    return (
-                      <div
-                        key={index}
-                        className="w-24 h-24 bg-gray-200 border rounded-lg flex-shrink-0"
-                      >
-                        <img
-                          src={imagePath}
-                          alt={`Selected Image ${index + 1}`}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      </div>
-                    );
-                  })}
+                    ? editingProduct.images || []
+                    : newProduct.image_ids.map((id) => ({
+                        id,
+                        url: `http://localhost:8000/uskumenzade/api/static/images/${id}.jpeg`,
+                      }))
+                  ).map((image, index) => (
+                    <div
+                      key={index}
+                      className="w-24 h-24 bg-gray-200 border rounded-lg flex-shrink-0"
+                    >
+                      <img
+                        src={image.url}
+                        alt={`Selected Image ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -618,21 +629,37 @@ export const ProductManagementComponent = () => {
                   placeholder="İndirimli fiyatı girin"
                   value={
                     isEditing
-                      ? editingProduct?.discounted_price || ""
+                      ? editingProduct?.discounted_price === 0
+                        ? ""
+                        : editingProduct?.discounted_price || ""
+                      : newProduct.discounted_price === 0
+                      ? ""
                       : newProduct.discounted_price || ""
                   }
                   onChange={(e) => {
                     const value = e.target.value
                       ? parseFloat(e.target.value)
                       : 0;
+                    const price = isEditing
+                      ? editingProduct?.price ?? 0 // Ensure price is always a number
+                      : newProduct.price ?? 0;
+
+                    if (value > price) {
+                      showSnackbar(
+                        "İndirimli fiyat, normal fiyattan büyük olamaz!",
+                        "error"
+                      );
+                      return;
+                    }
+
                     if (isEditing) {
                       setEditingProduct((prev) =>
-                        prev ? { ...prev, discounted_price: value } : prev
+                        prev ? { ...prev, discounted_price: value || 0 } : prev
                       );
                     } else {
                       setNewProduct((prev) => ({
                         ...prev,
-                        discounted_price: value,
+                        discounted_price: value || 0,
                       }));
                     }
                   }}
@@ -739,6 +766,101 @@ export const ProductManagementComponent = () => {
                   className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
                 />
               </div>
+            </div>
+            {/* Width */}
+            <div>
+              <label
+                htmlFor="width"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Genişlik (cm) <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="width"
+                name="width"
+                type="number"
+                placeholder="Ürün genişliğini girin"
+                value={
+                  isEditing
+                    ? editingProduct?.width || ""
+                    : newProduct.width || ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value ? parseFloat(e.target.value) : 0;
+                  if (isEditing) {
+                    setEditingProduct((prev) =>
+                      prev ? { ...prev, width: value } : prev
+                    );
+                  } else {
+                    setNewProduct((prev) => ({ ...prev, width: value }));
+                  }
+                }}
+                className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
+              />
+            </div>
+
+            {/* Length */}
+            <div>
+              <label
+                htmlFor="length"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Uzunluk (cm) <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="length"
+                name="length"
+                type="number"
+                placeholder="Ürün uzunluğunu girin"
+                value={
+                  isEditing
+                    ? editingProduct?.length || ""
+                    : newProduct.length || ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value ? parseFloat(e.target.value) : 0;
+                  if (isEditing) {
+                    setEditingProduct((prev) =>
+                      prev ? { ...prev, length: value } : prev
+                    );
+                  } else {
+                    setNewProduct((prev) => ({ ...prev, length: value }));
+                  }
+                }}
+                className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
+              />
+            </div>
+
+            {/* Height */}
+            <div>
+              <label
+                htmlFor="height"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Yükseklik (cm) <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="height"
+                name="height"
+                type="number"
+                placeholder="Ürün yüksekliğini girin"
+                value={
+                  isEditing
+                    ? editingProduct?.height || ""
+                    : newProduct.height || ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value ? parseFloat(e.target.value) : 0;
+                  if (isEditing) {
+                    setEditingProduct((prev) =>
+                      prev ? { ...prev, height: value } : prev
+                    );
+                  } else {
+                    setNewProduct((prev) => ({ ...prev, height: value }));
+                  }
+                }}
+                className="w-full p-2 border border-gray-300 bg-gray-200 text-black rounded-lg"
+              />
             </div>
 
             {/* Actions */}
