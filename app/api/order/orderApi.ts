@@ -65,15 +65,28 @@ interface BasketItem {
   item_id: string;
 }
 
+interface BasketItemPayload {
+  item_id: string;
+  quantity: number;
+}
+
+export interface Discount {
+  id: string;
+  code: string;
+  discount_value: number;
+  is_percentage: boolean;
+  min_order_value: number;
+}
+
 export interface Order {
   id: string;
   status: string;
   created_at: string;
   updated_at: string;
   amount: number;
-  total_amount?: number; // ✅ Ensure this exists
-  shipping_total?: number; // ✅ Add this
-  items_total?: number; // ✅ Add this for clarity
+  total_amount?: number;
+  shipping_total?: number;
+  items_total?: number;
   user: User;
   shipping_address: Address;
   billing_address: Address;
@@ -82,6 +95,7 @@ export interface Order {
   basket: BasketItem[];
   discount_code?: string;
   shipment_code?: string;
+  discount?: Discount; // ✅ Add this
 }
 
 // Fetch orders
@@ -163,9 +177,12 @@ export const fetchOrderById = async (
 
 // Create a new order
 export interface CreateOrderRequest {
-  shipping_address_id: string; // Use address ID for shipping
-  billing_address_id: string; // Use address ID for billing
-  basket: BasketItem[];
+  shipping_address_id: string;
+  billing_address_id: string;
+  basket: {
+    item_id: string;
+    quantity: number;
+  }[];
   discount_code?: string;
 }
 

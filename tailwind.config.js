@@ -28,6 +28,7 @@ module.exports = {
         primary: "#d09c24", // Primary color (Golden Yellow)
         secondary: "#98a45c", // Secondary background (Muted Green)
         tertiary: "#b5cb3d", // Tertiary color (Lighter Golden Yellow)
+        quaternary: "#688c5d", // Quaternary color (Golden Yellow)
         background: "#FFF8D9", // Main background (Soft Yellow)
         button: "#28542c", // Button color (Deep Green)
         accent: "#f0cc6c", // Accent color (Lighter Golden Yellow)

@@ -3,13 +3,15 @@ import API_BASE_URL from "../../../util/config";
 export interface Discount {
   id: string;
   code: string;
-  percentage_discount: number;
+  discount_value: number; // 🔄 Changed from `percentage_discount`
+  is_percentage: boolean; // ✅ New field
   all_items: boolean;
   all_users: boolean;
   max_uses: number;
   max_uses_per_user: number;
   uses: number;
   is_active: boolean;
+  min_order_value: number; // ✅ New field
   created_at: string;
   updated_at: string;
   eligible_items: string[];

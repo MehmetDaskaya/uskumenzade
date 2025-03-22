@@ -1,5 +1,27 @@
 import API_BASE_URL from "../../../util/config";
 
+// types/user.ts or types/index.ts (depending on your project structure)
+
+export interface User {
+  id: string;
+  email: string;
+  fname: string;
+  lname: string;
+  role: string;
+  is_active: boolean;
+  is_superuser: boolean;
+  is_verified: boolean;
+  created_at?: string;
+  updated_at?: string;
+  orders?: {
+    id: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    discount_code: string;
+  }[];
+}
+
 interface ExtendedError extends Error {
   detail?: string;
 }

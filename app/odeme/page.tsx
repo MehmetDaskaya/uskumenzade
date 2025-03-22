@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
+import { fetchDiscounts } from "@/app/api/discount/discountApi";
+import { fetchSettingByKey } from "@/app/api/setting/settingApi";
+
 import Link from "next/link";
 
 import { CreateOrderRequest, createOrder } from "@/app/api/order/orderApi";
@@ -14,7 +17,9 @@ import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner";
 import UserInformationModal from "../components/Modal/UserInformationModal";
 
 export default function PlaceOrder() {
-  const [showModal, setShowModal] = useState(true); // Modal visibility state
+  const [showModal, setShowModal] = useState(false); // ✅ default to hidden
+
+  const [minOrderValue, setMinOrderValue] = useState<number | null>(null);
 
   const handleModalClose = () => {
     setShowModal(false);
@@ -44,19 +49,47 @@ export default function PlaceOrder() {
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const cartItems = useSelector((state: RootState) => state.cart.items);
 
-  const [discountCode, setDiscountCode] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("discountCode") || null;
-    }
-    return null;
-  });
+  useEffect(() => {
+    const loadMinOrderValue = async () => {
+      try {
+        const setting = await fetchSettingByKey("min_order_value");
+        if (setting) {
+          setMinOrderValue(parseFloat(setting.value));
+        }
+      } catch (error) {
+        console.error("Minimum sepet tutarı alınamadı:", error);
+      }
+    };
+
+    loadMinOrderValue();
+  }, []);
 
   useEffect(() => {
-    if (!addresses.length && accessToken) {
-      // If no addresses exist, show the modal
-      setShowModal(true);
-    }
-  }, [addresses, accessToken]);
+    const checkUserInfo = async () => {
+      if (!accessToken) return;
+
+      try {
+        const user = await fetchCurrentUser(accessToken);
+        const hasAllFields = Boolean(
+          user?.fname?.trim() &&
+            user?.lname?.trim() &&
+            user?.email?.trim() &&
+            user?.gsm_number?.trim()
+        );
+
+        const hasAddresses = user?.addresses?.length > 0;
+
+        if (!hasAllFields || !hasAddresses) {
+          setShowModal(true);
+        }
+      } catch (error) {
+        console.error("Kullanıcı bilgileri alınırken hata:", error);
+        setShowModal(true); // Fallback: show modal
+      }
+    };
+
+    checkUserInfo();
+  }, [accessToken]);
 
   useEffect(() => {
     const fetchUserAddresses = async () => {
@@ -100,16 +133,8 @@ export default function PlaceOrder() {
       }
 
       const basket = cartItems.map((item) => ({
-        quantity: item.quantity,
         item_id: item.id,
-        unit_price:
-          item.discounted_price && item.discounted_price > 0
-            ? item.discounted_price
-            : item.price,
-        total_price:
-          (item.discounted_price && item.discounted_price > 0
-            ? item.discounted_price
-            : item.price) * item.quantity,
+        quantity: item.quantity,
       }));
 
       if (basket.length === 0) {
@@ -118,7 +143,63 @@ export default function PlaceOrder() {
         return;
       }
 
-      setDiscountCode(localStorage.getItem("discountCode") || null);
+      const discountCodeFromStorage = localStorage.getItem("discountCode");
+
+      // 👇 Validate discount's min_order_value before creating the order
+      if (discountCodeFromStorage) {
+        const allDiscounts = await fetchDiscounts(accessToken);
+        const applied = allDiscounts.find(
+          (d) => d.code.toLowerCase() === discountCodeFromStorage.toLowerCase()
+        );
+
+        // Calculate total price (before discount)
+        // Step 1: Calculate original total
+        const orderTotal = basket.reduce((sum, item) => {
+          const matched = cartItems.find((c) => c.id === item.item_id);
+          const price = matched?.discounted_price ?? matched?.price ?? 0;
+          return sum + price * item.quantity;
+        }, 0);
+
+        // Step 2: Apply discount (if exists)
+        let finalTotal = orderTotal;
+
+        if (discountCodeFromStorage && applied) {
+          const isPercentage = applied.is_percentage;
+          const discountValue = applied.discount_value;
+
+          const discountAmount = isPercentage
+            ? (orderTotal * discountValue) / 100
+            : discountValue;
+
+          finalTotal = orderTotal - discountAmount;
+        }
+
+        // Step 3: Validate final total against min_order_value
+        if (minOrderValue !== null && finalTotal < minOrderValue) {
+          alert(
+            `Sipariş oluşturmak için minimum sepet tutarı ₺${minOrderValue.toFixed(
+              2
+            )} olmalıdır.`
+          );
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (applied?.min_order_value && orderTotal < applied.min_order_value) {
+          alert(
+            `Bu indirim kodunu kullanmak için minimum sipariş tutarı ₺${applied.min_order_value}`
+          );
+          setIsSubmitting(false);
+          return;
+        }
+        // Assuming you fetched settings and have `min_order`
+
+        if (!applied) {
+          alert("İndirim kodu geçerli değil veya bulunamadı.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
 
       // Create Order Request
       const orderData: CreateOrderRequest = {
@@ -127,7 +208,7 @@ export default function PlaceOrder() {
           ? selectedShippingAddress!
           : selectedBillingAddress!,
         basket,
-        discount_code: discountCode || undefined, // Ensure it's passed only if available
+        discount_code: discountCodeFromStorage || undefined, // ✅ Fix
       };
 
       // ✅ Send request to create order
@@ -142,8 +223,18 @@ export default function PlaceOrder() {
 
       // ✅ Initialize payment
       const paymentResponse = await initializePayment(newOrder.id, accessToken);
-      setCheckoutFormContent(paymentResponse.checkoutFormContent);
-      setShowPaymentModal(true);
+
+      if (paymentResponse?.paymentPageUrl) {
+        window.open(paymentResponse.paymentPageUrl, "_blank");
+        localStorage.removeItem("discountCode");
+
+        // ✅ Maybe show a message like "Ödeme sayfası yeni sekmede açıldı"
+        alert(
+          "Ödeme sayfası yeni bir sekmede açıldı. Ödeme tamamlandıktan sonra siparişlerim sayfasından durumu kontrol edebilirsiniz."
+        );
+      } else {
+        alert("Ödeme başlatılamadı. Lütfen tekrar deneyiniz.");
+      }
     } catch (error) {
       console.error("🚨 Failed to create order or initialize payment:", error);
       alert("Siparişe devam edilemiyor. Lütfen tekrar deneyiniz.");

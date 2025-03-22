@@ -26,7 +26,7 @@ export default function LoadingSpinner({
         </div>
       )}
       {aboveText && (
-        <h2 className="mb-10 text-lg text-gray-700 px-4">{aboveText}</h2>
+        <h2 className="mb-10 text-lg text-white px-4">{aboveText}</h2>
       )}
       <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-tertiary"></div>
     </div>

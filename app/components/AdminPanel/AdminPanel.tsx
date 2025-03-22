@@ -14,7 +14,7 @@ import {
   FaBell,
 } from "react-icons/fa";
 // import { MdOutlineAnalytics } from "react-icons/md";
-import { FiLogOut, FiMenu } from "react-icons/fi";
+import { FiLogOut, FiMenu, FiHome } from "react-icons/fi";
 import {
   DashboardComponent,
   UserManagementComponent,
@@ -207,6 +207,13 @@ export default function AdminPanel() {
             </ul>
           </nav>
           <div className="p-4 border-t border-gray-700">
+            <button
+              className="flex items-center p-3 w-full hover:bg-adminPanelDark"
+              onClick={() => router.push("/")}
+            >
+              <FiHome className="mr-3" />
+              Anasayfaya Dön
+            </button>
             <button
               className="flex items-center p-3 w-full hover:bg-adminPanelDark"
               onClick={() => {

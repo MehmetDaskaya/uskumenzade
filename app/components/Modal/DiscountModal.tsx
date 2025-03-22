@@ -7,13 +7,15 @@ import { FaTimes } from "react-icons/fa";
 interface Discount {
   id: string;
   code: string;
-  percentage_discount: number;
+  discount_value?: number;
+  is_percentage: boolean;
   all_items: boolean;
   all_users: boolean;
-  max_uses: number;
-  max_uses_per_user: number;
+  max_uses?: number;
+  max_uses_per_user?: number;
   uses: number;
   is_active: boolean;
+  min_order_value?: number;
   eligible_items: string[];
   eligible_users: string[];
 }
@@ -35,15 +37,19 @@ export function DiscountModal({
   onDelete,
   discounts,
 }: DiscountModalProps) {
-  const [newDiscount, setNewDiscount] = useState<Partial<Discount>>({
+  type DiscountForm = Omit<Discount, "id" | "created_at" | "updated_at">;
+
+  const [newDiscount, setNewDiscount] = useState<Partial<DiscountForm>>({
     code: "",
-    percentage_discount: 0,
-    all_items: false,
-    all_users: false,
-    max_uses: 1,
-    max_uses_per_user: 1,
+    discount_value: undefined,
+    is_percentage: true,
+    all_items: true,
+    all_users: true,
+    max_uses: undefined,
+    max_uses_per_user: undefined,
     uses: 0,
     is_active: true,
+    min_order_value: undefined,
     eligible_items: [],
     eligible_users: [],
   });
@@ -55,13 +61,15 @@ export function DiscountModal({
     if (!isOpen) {
       setNewDiscount({
         code: "",
-        percentage_discount: 0,
-        all_items: false,
-        all_users: false,
-        max_uses: 1,
-        max_uses_per_user: 1,
+        discount_value: undefined,
+        is_percentage: true,
+        all_items: true,
+        all_users: true,
+        max_uses: undefined,
+        max_uses_per_user: undefined,
         uses: 0,
         is_active: true,
+        min_order_value: undefined,
         eligible_items: [],
         eligible_users: [],
       });
@@ -100,51 +108,107 @@ export function DiscountModal({
         </h3>
 
         {/* Discount Form */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Kod
-            </label>
-            <input
-              type="text"
-              value={editDiscount ? editDiscount.code : newDiscount.code}
-              onChange={(e) =>
-                editDiscount
-                  ? setEditDiscount({ ...editDiscount, code: e.target.value })
-                  : setNewDiscount({ ...newDiscount, code: e.target.value })
-              }
-              className="w-full bg-white text-black p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        <div className="space-y-6">
+          {/* Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                İndirim Kodu
+              </label>
+              <input
+                type="text"
+                value={editDiscount ? editDiscount.code : newDiscount.code}
+                onChange={(e) =>
+                  editDiscount
+                    ? setEditDiscount({ ...editDiscount, code: e.target.value })
+                    : setNewDiscount({ ...newDiscount, code: e.target.value })
+                }
+                className="w-full bg-white text-black p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                İndirim Değeri
+              </label>
+              <input
+                type="number"
+                value={
+                  editDiscount
+                    ? editDiscount.discount_value ?? ""
+                    : newDiscount.discount_value ?? ""
+                }
+                onChange={(e) => {
+                  const value =
+                    e.target.value === "" ? undefined : Number(e.target.value);
+                  editDiscount
+                    ? setEditDiscount({
+                        ...editDiscount,
+                        discount_value: value,
+                      })
+                    : setNewDiscount({ ...newDiscount, discount_value: value });
+                }}
+                className="w-full bg-white text-black p-3 border rounded-lg shadow-sm"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              İndirim Yüzdesi (%)
-            </label>
-            <input
-              type="number"
-              value={
-                editDiscount
-                  ? editDiscount.percentage_discount
-                  : newDiscount.percentage_discount
-              }
-              onChange={(e) =>
-                editDiscount
-                  ? setEditDiscount({
-                      ...editDiscount,
-                      percentage_discount: Number(e.target.value),
-                    })
-                  : setNewDiscount({
-                      ...newDiscount,
-                      percentage_discount: Number(e.target.value),
-                    })
-              }
-              className="w-full bg-white text-black p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          {/* Discount Type & Min Order */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={
+                  editDiscount
+                    ? editDiscount.is_percentage
+                    : newDiscount.is_percentage
+                }
+                onChange={(e) =>
+                  editDiscount
+                    ? setEditDiscount({
+                        ...editDiscount,
+                        is_percentage: e.target.checked,
+                      })
+                    : setNewDiscount({
+                        ...newDiscount,
+                        is_percentage: e.target.checked,
+                      })
+                }
+              />
+              <span className="text-gray-700">İndirim Yüzdelik mi?</span>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Minimum Sipariş Tutarı (₺)
+              </label>
+              <input
+                type="number"
+                value={
+                  editDiscount
+                    ? editDiscount.min_order_value ?? ""
+                    : newDiscount.min_order_value ?? ""
+                }
+                onChange={(e) => {
+                  const value =
+                    e.target.value === "" ? undefined : Number(e.target.value);
+                  editDiscount
+                    ? setEditDiscount({
+                        ...editDiscount,
+                        min_order_value: value,
+                      })
+                    : setNewDiscount({
+                        ...newDiscount,
+                        min_order_value: value,
+                      });
+                }}
+                className="w-full bg-white text-black p-3 border rounded-lg shadow-sm"
+              />
+            </div>
           </div>
 
-          {/* Toggle Buttons */}
-          <div className="flex items-center justify-between">
+          {/* Toggles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -163,7 +227,7 @@ export function DiscountModal({
                       })
                 }
               />
-              <span className="text-gray-700">Tüm Ürünlere Uygula</span>
+              <span className="text-gray-700">Tüm Ürünlerde Geçerli</span>
             </label>
 
             <label className="flex items-center space-x-2">
@@ -184,12 +248,12 @@ export function DiscountModal({
                       })
                 }
               />
-              <span className="text-gray-700">Tüm Kullanıcılara Uygula</span>
+              <span className="text-gray-700">Her Kullanıcıda Geçerli</span>
             </label>
           </div>
 
-          {/* Max Uses */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Usage Limits */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Maksimum Kullanım
@@ -197,19 +261,20 @@ export function DiscountModal({
               <input
                 type="number"
                 value={
-                  editDiscount ? editDiscount.max_uses : newDiscount.max_uses
+                  editDiscount
+                    ? editDiscount.max_uses ?? ""
+                    : newDiscount.max_uses ?? ""
                 }
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value =
+                    e.target.value === "" ? undefined : Number(e.target.value);
                   editDiscount
                     ? setEditDiscount({
                         ...editDiscount,
-                        max_uses: Number(e.target.value),
+                        max_uses: value,
                       })
-                    : setNewDiscount({
-                        ...newDiscount,
-                        max_uses: Number(e.target.value),
-                      })
-                }
+                    : setNewDiscount({ ...newDiscount, max_uses: value });
+                }}
                 className="w-full bg-white text-black p-3 border rounded-lg shadow-sm"
               />
             </div>
@@ -222,25 +287,28 @@ export function DiscountModal({
                 type="number"
                 value={
                   editDiscount
-                    ? editDiscount.max_uses_per_user
-                    : newDiscount.max_uses_per_user
+                    ? editDiscount.max_uses_per_user ?? ""
+                    : newDiscount.max_uses_per_user ?? ""
                 }
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value =
+                    e.target.value === "" ? undefined : Number(e.target.value);
                   editDiscount
                     ? setEditDiscount({
                         ...editDiscount,
-                        max_uses_per_user: Number(e.target.value),
+                        max_uses_per_user: value,
                       })
                     : setNewDiscount({
                         ...newDiscount,
-                        max_uses_per_user: Number(e.target.value),
-                      })
-                }
+                        max_uses_per_user: value,
+                      });
+                }}
                 className="w-full bg-white text-black p-3 border rounded-lg shadow-sm"
               />
             </div>
           </div>
         </div>
+
         {/* Existing Discounts */}
         <div className="mt-6">
           <h3 className="text-xl font-semibold text-black mb-4">
@@ -255,11 +323,15 @@ export function DiscountModal({
                 <div>
                   <p className="text-gray-800 font-semibold">{discount.code}</p>
                   <p className="text-sm text-gray-600">
-                    %{discount.percentage_discount} indirim
+                    {discount.is_percentage
+                      ? `%${discount.discount_value} indirim`
+                      : `${discount.discount_value}₺ indirim`}
                   </p>
+
                   <p className="text-sm text-gray-600">
-                    Kalan Kupon: {discount.max_uses - discount.uses}
+                    Kalan Kupon: {(discount.max_uses ?? 0) - discount.uses}
                   </p>
+
                   <p className="text-sm text-gray-600">
                     {discount.all_users
                       ? "Tüm Kullanıcılara Uygulanır"

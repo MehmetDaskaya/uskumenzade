@@ -66,9 +66,6 @@ export const InfiniteMovingCardsClient = ({
           className
         )}
       >
-        <h2 className="text-3xl text-white font-bold text-center mb-12">
-          Müşteri Yorumları
-        </h2>
         <ul
           ref={scrollerRef}
           className={cn(

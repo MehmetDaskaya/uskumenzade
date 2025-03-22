@@ -148,3 +148,29 @@ export const deleteSetting = async (
     throw new Error("Failed to delete setting");
   }
 };
+
+export const fetchFreeShipmentThreshold = async (): Promise<number> => {
+  const response = await fetch(
+    `${API_BASE_URL}/uskumenzade/api/settings/free_shipment_threshold`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch threshold setting");
+  }
+
+  const setting = await response.json();
+  return parseFloat(setting.value) || 0;
+};
+
+export const fetchMinOrderValue = async (): Promise<number> => {
+  const response = await fetch(
+    `${API_BASE_URL}/uskumenzade/api/settings/min_order`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch minimum order value setting");
+  }
+
+  const setting = await response.json();
+  return parseFloat(setting.value) || 0;
+};

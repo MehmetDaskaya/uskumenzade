@@ -9,7 +9,7 @@ import {
   Order,
   updateOrder,
 } from "@/app/api/order/orderApi";
-import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner"; // Ensure correct import
+import LoadingSpinner from "../../../components/LoadingSpinner/LoadingSpinner";
 
 import { Snackbar } from "../../index";
 import OrderDetailsModal from "../../Modal/OrderDetailsModal";
@@ -161,7 +161,7 @@ export const OrderManagementComponent = () => {
       <h2 className="text-2xl font-bold mb-4">Siparişleri Yönet</h2>
 
       {/* Search Bar */}
-      <div className="mb-4 flex items-center">
+      <div className="mb-4 flex items-center space-x-2">
         <input
           type="text"
           placeholder="Sipariş ara..."
@@ -169,7 +169,21 @@ export const OrderManagementComponent = () => {
           onChange={handleSearch}
           className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <FaSearch className="ml-2 text-gray-500" />
+        <FaSearch className="text-gray-500" />
+
+        {/* Order Status Dropdown Filter */}
+        <select
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="p-2 border border-gray-300 rounded-lg bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={searchQuery}
+        >
+          <option value="">Tüm Siparişler</option>
+          <option value="pending">Beklemede</option>
+          <option value="paid">Ödeme Yapıldı</option>
+          <option value="shipped">Kargolandı</option>
+          <option value="delivered">Teslim Edildi</option>
+          <option value="cancelled">İptal Edildi</option>
+        </select>
       </div>
 
       {/* Order Table */}
@@ -187,75 +201,74 @@ export const OrderManagementComponent = () => {
             <th className="p-4 text-left font-semibold text-gray-600">
               Toplam
             </th>
+            <th className="p-4 text-left font-semibold text-gray-600">
+              Kargo Kodu
+            </th>{" "}
+            {/* ✅ Added */}
             <th className="p-4 text-center font-semibold text-gray-600">
               İşlemler
             </th>
           </tr>
         </thead>
         <tbody>
-          {currentOrders.length > 0 ? (
-            currentOrders.map((order) => (
-              <tr key={order.id} className="border-t">
-                <td className="p-4 text-gray-600">{order.id}</td>
-                <td className="p-4 text-gray-600">
-                  {order.user.fname} {order.user.lname}
-                </td>
-                <td className="p-4 text-gray-600">
-                  {new Date(order.created_at).toLocaleDateString()}
-                </td>
-                <td className="p-4 text-gray-600">
-                  {{
-                    pending: "Beklemede",
-                    processing: "İşleniyor",
-                    shipped: "Kargolandı",
-                    delivered: "Teslim Edildi",
-                    cancelled: "İptal Edildi",
-                    paid: "Ödeme Yapıldı",
-                  }[order.status] || order.status}
-                </td>
-
-                <td className="p-4 text-gray-600">
-                  {order.total_amount
-                    ? order.total_amount.toFixed(2)
-                    : "Hesaplanıyor"}
-                  - ₺
-                </td>
-                <td className="p-4 text-center">
-                  <div className="flex justify-center space-x-2">
-                    <button
-                      onClick={() => handleViewDetails(order)}
-                      className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                    >
-                      <FaEye />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteClick(order.id);
-                      }}
-                      className={`${
-                        deleteConfirmationId === order.id
-                          ? "bg-red-500 text-white mt-1 px-3 py-1 rounded-lg"
-                          : "bg-red-500 text-white p-2 rounded-lg"
-                      } hover:bg-red-600`}
-                    >
-                      {deleteConfirmationId === order.id ? (
-                        "Silme işlemini onaylamak için tıklayın."
-                      ) : (
-                        <FaTrashAlt />
-                      )}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={6} className="p-4 text-center text-gray-500">
-                Sistemde Sipariş Bulunamadı.
+          {currentOrders.map((order) => (
+            <tr key={order.id} className="border-t">
+              <td className="p-4 text-gray-600">{order.id}</td>
+              <td className="p-4 text-gray-600">
+                {order.user.fname} {order.user.lname}
+              </td>
+              <td className="p-4 text-gray-600">
+                {new Date(order.created_at).toLocaleDateString()}
+              </td>
+              <td className="p-4 text-gray-600">
+                {{
+                  pending: "Beklemede",
+                  processing: "İşleniyor",
+                  shipped: "Kargolandı",
+                  delivered: "Teslim Edildi",
+                  cancelled: "İptal Edildi",
+                  paid: "Ödeme Yapıldı",
+                }[order.status] || order.status}
+              </td>
+              <td className="p-4 text-gray-600">
+                {order.total_amount
+                  ? order.total_amount.toFixed(2)
+                  : "Hesaplanıyor"}{" "}
+                ₺
+              </td>
+              <td className="p-4 text-gray-600">
+                {order.shipment_code || "Yok"}
+              </td>{" "}
+              {/* ✅ Added */}
+              <td className="p-4 text-center">
+                <div className="flex justify-center space-x-2">
+                  <button
+                    onClick={() => handleViewDetails(order)}
+                    className="mr-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                  >
+                    <FaEye />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(order.id);
+                    }}
+                    className={`${
+                      deleteConfirmationId === order.id
+                        ? "bg-red-500 text-white mt-1 px-3 py-1 rounded-lg"
+                        : "bg-red-500 text-white p-2 rounded-lg"
+                    } hover:bg-red-600`}
+                  >
+                    {deleteConfirmationId === order.id ? (
+                      "Silme işlemini onaylamak için tıklayın."
+                    ) : (
+                      <FaTrashAlt />
+                    )}
+                  </button>
+                </div>
               </td>
             </tr>
-          )}
+          ))}
         </tbody>
       </table>
 

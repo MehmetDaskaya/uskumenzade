@@ -3,15 +3,17 @@
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 import { clearCartOnSuccess } from "@/redux/slices/cartSlice";
 import { fetchCurrentUser } from "@/app/api/auth/authApi";
+import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 
 const PaymentSuccess = () => {
   const dispatch = useDispatch();
+  const router = useRouter();
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    // Ensure the code runs on the client-side
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
       const statusParam = searchParams.get("status");
@@ -20,7 +22,6 @@ const PaymentSuccess = () => {
 
       if (statusParam === "success") {
         handlePaymentSuccess();
-        console.log(status);
       }
     }
   }, []);
@@ -36,12 +37,25 @@ const PaymentSuccess = () => {
       const userData = await fetchCurrentUser(accessToken);
       const userEmail = userData?.email || null;
 
-      // Dispatch the clearCartOnSuccess action with userEmail
+      // Clear the cart
       dispatch(clearCartOnSuccess(userEmail));
+      localStorage.removeItem("discountCode");
+
+      // Optional: store payment status to sync with other parts of app
+      localStorage.setItem("paymentStatus", "success");
+
+      // Redirect after 3 seconds
+      setTimeout(() => {
+        router.push("/siparislerim");
+      }, 3000);
     } catch (error) {
       console.error("Error handling payment success:", error);
     }
   };
+
+  if (status !== "success") {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full text-center">
@@ -51,7 +65,9 @@ const PaymentSuccess = () => {
         Siparişiniz başarıyla alınmıştır. Bizi tercih ettiğiniz için teşekkür
         ederiz.
       </p>
-      <p className="text-gray-700 mb-6">Bu sayfayı kapatabilirsiniz.</p>
+      <p className="text-gray-500 text-sm">
+        Siparişlerim sayfasına yönlendiriliyorsunuz...
+      </p>
     </div>
   );
 };
