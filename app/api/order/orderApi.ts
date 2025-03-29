@@ -65,11 +65,6 @@ interface BasketItem {
   item_id: string;
 }
 
-interface BasketItemPayload {
-  item_id: string;
-  quantity: number;
-}
-
 export interface Discount {
   id: string;
   code: string;

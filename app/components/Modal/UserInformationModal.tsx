@@ -28,7 +28,9 @@ export default function UserInformationModal({
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<Partial<User>>({});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isEditing, setIsEditing] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressFormData, setAddressFormData] = useState<
@@ -44,6 +46,7 @@ export default function UserInformationModal({
     national_id: "", // Default empty
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAddressEditing, setIsAddressEditing] = useState(false);
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);

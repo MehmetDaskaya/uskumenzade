@@ -3,16 +3,29 @@ import { FaTimes } from "react-icons/fa";
 import { User } from "@/app/api/user/userApi";
 import { Address } from "@/app/api/address/addressApi";
 
+// Fix 1: Better define OrderWithTotal interface
+interface OrderWithTotal {
+  id: string;
+  created_at: string;
+  status: string;
+  total_amount: number | string;
+  // Add other order properties as needed
+}
+
+// Fix 2: Create an extended User type with proper order typing
+interface ExtendedUser extends Omit<User, "orders"> {
+  orders: OrderWithTotal[];
+}
+
 interface UserDetailsModalProps {
   user: User | null;
-  userAddress: Address | null; // Fetch full address instead of just national_id
+  userAddress: Address | null;
   onClose: () => void;
   onUpdateRole: (userId: string, newRole: string, password: string) => void;
 }
 
 const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   user,
-  userAddress,
   onClose,
   onUpdateRole,
 }) => {
@@ -23,7 +36,6 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const handleSubmit = () => {
     if (honeypot) {
       console.warn("Honeypot triggered. Logging out...");
-      // Trigger logout or any other security action
       onClose();
       return;
     }
@@ -39,6 +51,24 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   };
 
   if (!user) return null;
+
+  // Fix 3: Type assertion to use our extended type
+  const typedUser = user as unknown as ExtendedUser;
+
+  // Fix 4: Use the typed user for calculation
+  // Update the totalSpent calculation to ensure it handles all cases:
+  // const totalSpent = typedUser.orders.reduce((sum, order) => {
+
+  //   const amount =
+  //     order.total_amount !== undefined && order.total_amount !== null
+  //       ? typeof order.total_amount === "string"
+  //         ? parseFloat(order.total_amount)
+  //         : order.total_amount
+  //       : 0;
+
+  //   return sum + (isNaN(amount) ? 0 : amount);
+  // }
+  // , 0);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -78,19 +108,15 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 Sipariş Özeti
               </h3>
               <p className="text-gray-600">
-                Toplam Siparişler: {user.orders.length}
+                Toplam Siparişler: {typedUser.orders.length}
               </p>
-              <p className="text-gray-600">
+              {/* Fix 5: Display calculated total amount */}
+              {/* <p className="text-gray-600 font-medium">
                 Harcanan Tutar:{" "}
-                {user.orders
-                  .reduce(
-                    (sum, order) =>
-                      sum + (order.amount ? Number(order.amount) : 0),
-                    0
-                  )
-                  .toFixed(2)}{" "}
-                ₺
-              </p>
+                <span className="text-secondary">
+                  {totalSpent.toFixed(2)} ₺
+                </span>
+              </p> */}
             </div>
           </div>
 
@@ -99,32 +125,38 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Sipariş Geçmişi
             </h3>
-            {user.orders.length > 0 ? (
+            {typedUser.orders.length > 0 ? (
               <table className="w-full border border-gray-300 rounded-lg">
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="p-4 text-left text-gray-600">Sipariş No</th>
                     <th className="p-4 text-left text-gray-600">Tarih</th>
-                    <th className="p-4 text-left text-gray-600">Tutar</th>
+                    {/* <th className="p-4 text-left text-gray-600">Tutar</th> */}
                     <th className="p-4 text-left text-gray-600">Durum</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {user.orders.map((order) => (
+                  {typedUser.orders.map((order) => (
                     <tr key={order.id} className="border-t">
                       <td className="p-4">{order.id}</td>
                       <td className="p-4">
                         {new Date(order.created_at).toLocaleDateString()}
                       </td>
+                      {/* Fix 6: Better handle the display of total_amount */}
+                      {/* 
                       <td className="p-4">
-                        {order.amount
-                          ? order.amount.toFixed(2) + " ₺"
-                          : "Belirtilmemiş"}
-                      </td>
-
+                        {order.total_amount !== undefined &&
+                        order.total_amount !== null
+                          ? `${
+                              typeof order.total_amount === "string"
+                                ? parseFloat(order.total_amount).toFixed(2)
+                                : order.total_amount.toFixed(2)
+                            } ₺`
+                          : "0.00 ₺"}
+                      </td> */}
                       <td className="p-4">
                         {{
-                          pending: "Beklemede",
+                          pending: "Ödeme Yapılmadı",
                           processing: "İşleniyor",
                           shipped: "Kargolandı",
                           delivered: "Teslim Edildi",

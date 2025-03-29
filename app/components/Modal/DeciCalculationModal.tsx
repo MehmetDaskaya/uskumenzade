@@ -106,6 +106,7 @@ export function DeciCalculationModal({
         type: "success",
       });
     } catch (error) {
+      console.error("Ayar güncelleme hatası:", error);
       setSnackbar({
         message: "Ayarlar güncellenirken bir hata oluştu.",
         type: "error",

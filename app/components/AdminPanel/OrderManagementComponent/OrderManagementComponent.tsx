@@ -51,7 +51,15 @@ export const OrderManagementComponent = () => {
           throw new Error("Authentication token is missing.");
         }
         const fetchedOrders = await fetchOrders(accessToken);
-        setOrders(fetchedOrders);
+
+        // Sort by date descending (newest first)
+        const sortedOrders = fetchedOrders.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        setOrders(sortedOrders);
+
         setError(null);
       } catch (err) {
         console.error("Failed to fetch orders:", err);

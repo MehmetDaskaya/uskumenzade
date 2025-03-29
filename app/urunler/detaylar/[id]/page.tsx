@@ -22,5 +22,5 @@ export default async function ProductDetailsPage({
     notFound();
   }
 
-  return <ProductDetailsClient product={product} isLoggedIn={true} />;
+  return <ProductDetailsClient product={product} />;
 }

@@ -4,10 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
+import { signin, fetchCurrentUser } from "@/app/api/auth/authApi";
+import { setAccessToken } from "@/redux/slices/authSlice";
+import { setUser } from "@/redux/slices/userSlice";
+
 import { RootState } from "@/redux/store";
 import { addItemToCart } from "@/redux/slices/cartSlice";
 import { getProducts } from "@/app/api/product/productApi";
-import { fetchCurrentUser } from "@/app/api/auth/authApi";
+
 import { getHealthBenefits } from "@/app/api/benefits/benefitsApi";
 import {
   FaLeaf,
@@ -21,7 +25,6 @@ import {
 import { MdVerified } from "react-icons/md";
 import LoadingSpinner from "../../../../app/components/LoadingSpinner/LoadingSpinner";
 import Link from "next/link";
-import SignInPage from "@/app/giris/page";
 
 interface Product {
   id: string;
@@ -44,7 +47,6 @@ interface Product {
 
 interface ProductDetailsClientProps {
   product: Product;
-  isLoggedIn: boolean;
 }
 
 interface Benefit {
@@ -54,7 +56,6 @@ interface Benefit {
 
 export default function ProductDetailsClient({
   product,
-  isLoggedIn,
 }: ProductDetailsClientProps) {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -65,7 +66,6 @@ export default function ProductDetailsClient({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [healthBenefits, setHealthBenefits] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [activeTab, setActiveTab] = useState("description");
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const [showNotification, setShowNotification] = useState(false);
 
@@ -781,7 +781,89 @@ export default function ProductDetailsClient({
               Sipariş vermek için giriş yapmalısınız
             </h2>
 
-            <SignInPage isEmbedded />
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+
+                // Simple form state
+                const email = (
+                  document.getElementById("modal-email") as HTMLInputElement
+                )?.value;
+                const password = (
+                  document.getElementById("modal-password") as HTMLInputElement
+                )?.value;
+
+                if (!email || !password) {
+                  alert("Lütfen tüm alanları doldurun.");
+                  return;
+                }
+
+                try {
+                  const response = await signin(email, password);
+                  const token = response.access_token;
+
+                  dispatch(setAccessToken({ accessToken: token }));
+                  localStorage.setItem("authToken", token);
+
+                  const userData = await fetchCurrentUser(token);
+
+                  dispatch(
+                    setUser({
+                      id: userData.id,
+                      fname: userData.fname,
+                      lname: userData.lname,
+                      email: userData.email,
+                      role: userData.role,
+                    })
+                  );
+
+                  setIsModalOpen(false);
+                  router.refresh();
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } catch (err: any) {
+                  alert("Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+                  console.error(err);
+                }
+              }}
+              className="space-y-6"
+            >
+              <div>
+                <label
+                  htmlFor="modal-email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  E-Posta
+                </label>
+                <input
+                  id="modal-email"
+                  type="email"
+                  className="mt-1 p-3 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary"
+                  placeholder="E-posta adresinizi girin"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="modal-password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Şifre
+                </label>
+                <input
+                  id="modal-password"
+                  type="password"
+                  className="mt-1 p-3 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-3 bg-secondary text-white rounded-lg hover:bg-tertiary font-semibold transition duration-300"
+              >
+                Giriş Yap
+              </button>
+            </form>
           </div>
         </div>
       )}

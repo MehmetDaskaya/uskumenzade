@@ -18,7 +18,6 @@ interface OrderDetailsModalProps {
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   order,
   onClose,
-  onUpdateStatus,
   //   onInitiateRefund,
 }) => {
   const statuses = [
@@ -67,6 +66,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     message: string;
     type: "success" | "error";
   } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(order);
 
   const showSnackbar = (message: string, type: "success" | "error") => {

@@ -118,11 +118,13 @@ export function DiscountModal({
               <input
                 type="text"
                 value={editDiscount ? editDiscount.code : newDiscount.code}
-                onChange={(e) =>
-                  editDiscount
-                    ? setEditDiscount({ ...editDiscount, code: e.target.value })
-                    : setNewDiscount({ ...newDiscount, code: e.target.value })
-                }
+                onChange={(e) => {
+                  if (editDiscount) {
+                    setEditDiscount({ ...editDiscount, code: e.target.value });
+                  } else {
+                    setNewDiscount({ ...newDiscount, code: e.target.value });
+                  }
+                }}
                 className="w-full bg-white text-black p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -141,12 +143,14 @@ export function DiscountModal({
                 onChange={(e) => {
                   const value =
                     e.target.value === "" ? undefined : Number(e.target.value);
-                  editDiscount
-                    ? setEditDiscount({
-                        ...editDiscount,
-                        discount_value: value,
-                      })
-                    : setNewDiscount({ ...newDiscount, discount_value: value });
+                  if (editDiscount) {
+                    setEditDiscount({
+                      ...editDiscount,
+                      discount_value: value,
+                    });
+                  } else {
+                    setNewDiscount({ ...newDiscount, discount_value: value });
+                  }
                 }}
                 className="w-full bg-white text-black p-3 border rounded-lg shadow-sm"
               />
@@ -163,17 +167,19 @@ export function DiscountModal({
                     ? editDiscount.is_percentage
                     : newDiscount.is_percentage
                 }
-                onChange={(e) =>
-                  editDiscount
-                    ? setEditDiscount({
-                        ...editDiscount,
-                        is_percentage: e.target.checked,
-                      })
-                    : setNewDiscount({
-                        ...newDiscount,
-                        is_percentage: e.target.checked,
-                      })
-                }
+                onChange={(e) => {
+                  if (editDiscount) {
+                    setEditDiscount({
+                      ...editDiscount,
+                      is_percentage: e.target.checked,
+                    });
+                  } else {
+                    setNewDiscount({
+                      ...newDiscount,
+                      is_percentage: e.target.checked,
+                    });
+                  }
+                }}
               />
               <span className="text-gray-700">İndirim Yüzdelik mi?</span>
             </div>
@@ -192,15 +198,17 @@ export function DiscountModal({
                 onChange={(e) => {
                   const value =
                     e.target.value === "" ? undefined : Number(e.target.value);
-                  editDiscount
-                    ? setEditDiscount({
-                        ...editDiscount,
-                        min_order_value: value,
-                      })
-                    : setNewDiscount({
-                        ...newDiscount,
-                        min_order_value: value,
-                      });
+                  if (editDiscount) {
+                    setEditDiscount({
+                      ...editDiscount,
+                      min_order_value: value,
+                    });
+                  } else {
+                    setNewDiscount({
+                      ...newDiscount,
+                      min_order_value: value,
+                    });
+                  }
                 }}
                 className="w-full bg-white text-black p-3 border rounded-lg shadow-sm"
               />
@@ -215,17 +223,19 @@ export function DiscountModal({
                 checked={
                   editDiscount ? editDiscount.all_items : newDiscount.all_items
                 }
-                onChange={(e) =>
-                  editDiscount
-                    ? setEditDiscount({
-                        ...editDiscount,
-                        all_items: e.target.checked,
-                      })
-                    : setNewDiscount({
-                        ...newDiscount,
-                        all_items: e.target.checked,
-                      })
-                }
+                onChange={(e) => {
+                  if (editDiscount) {
+                    setEditDiscount({
+                      ...editDiscount,
+                      all_items: e.target.checked,
+                    });
+                  } else {
+                    setNewDiscount({
+                      ...newDiscount,
+                      all_items: e.target.checked,
+                    });
+                  }
+                }}
               />
               <span className="text-gray-700">Tüm Ürünlerde Geçerli</span>
             </label>
@@ -236,17 +246,19 @@ export function DiscountModal({
                 checked={
                   editDiscount ? editDiscount.all_users : newDiscount.all_users
                 }
-                onChange={(e) =>
-                  editDiscount
-                    ? setEditDiscount({
-                        ...editDiscount,
-                        all_users: e.target.checked,
-                      })
-                    : setNewDiscount({
-                        ...newDiscount,
-                        all_users: e.target.checked,
-                      })
-                }
+                onChange={(e) => {
+                  if (editDiscount) {
+                    setEditDiscount({
+                      ...editDiscount,
+                      all_users: e.target.checked,
+                    });
+                  } else {
+                    setNewDiscount({
+                      ...newDiscount,
+                      all_users: e.target.checked,
+                    });
+                  }
+                }}
               />
               <span className="text-gray-700">Her Kullanıcıda Geçerli</span>
             </label>
@@ -268,12 +280,14 @@ export function DiscountModal({
                 onChange={(e) => {
                   const value =
                     e.target.value === "" ? undefined : Number(e.target.value);
-                  editDiscount
-                    ? setEditDiscount({
-                        ...editDiscount,
-                        max_uses: value,
-                      })
-                    : setNewDiscount({ ...newDiscount, max_uses: value });
+                  if (editDiscount) {
+                    setEditDiscount({
+                      ...editDiscount,
+                      max_uses: value,
+                    });
+                  } else {
+                    setNewDiscount({ ...newDiscount, max_uses: value });
+                  }
                 }}
                 className="w-full bg-white text-black p-3 border rounded-lg shadow-sm"
               />
@@ -293,15 +307,17 @@ export function DiscountModal({
                 onChange={(e) => {
                   const value =
                     e.target.value === "" ? undefined : Number(e.target.value);
-                  editDiscount
-                    ? setEditDiscount({
-                        ...editDiscount,
-                        max_uses_per_user: value,
-                      })
-                    : setNewDiscount({
-                        ...newDiscount,
-                        max_uses_per_user: value,
-                      });
+                  if (editDiscount) {
+                    setEditDiscount({
+                      ...editDiscount,
+                      max_uses_per_user: value,
+                    });
+                  } else {
+                    setNewDiscount({
+                      ...newDiscount,
+                      max_uses_per_user: value,
+                    });
+                  }
                 }}
                 className="w-full bg-white text-black p-3 border rounded-lg shadow-sm"
               />
@@ -362,11 +378,13 @@ export function DiscountModal({
                     <FiEdit2 />
                   </button>
                   <button
-                    onClick={() =>
-                      deleteConfirmId === discount.id
-                        ? handleDelete(discount.id)
-                        : setDeleteConfirmId(discount.id)
-                    }
+                    onClick={() => {
+                      if (deleteConfirmId === discount.id) {
+                        handleDelete(discount.id);
+                      } else {
+                        setDeleteConfirmId(discount.id);
+                      }
+                    }}
                     className={`${
                       deleteConfirmId === discount.id
                         ? "bg-red-500 text-white px-3 py-1 rounded-lg"

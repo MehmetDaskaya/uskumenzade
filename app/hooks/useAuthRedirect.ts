@@ -18,6 +18,7 @@ export const useAuthRedirect = () => {
     try {
       const user = await fetchCurrentUser(token);
       return user;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       console.error("Unauthorized. Redirecting to login...");
       router.push("/giris");

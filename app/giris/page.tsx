@@ -9,12 +9,15 @@ import { setUser } from "../../redux/slices/userSlice";
 import { signin, fetchCurrentUser } from "../api/auth/authApi";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
-export default function SignInPage({ isEmbedded = false }) {
+export default function SignInPage() {
+  const isEmbedded = false;
+
   const router = useRouter();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [honeypot, setHoneypot] = useState(""); // Honeypot state
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [honeypot, setHoneypot] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");

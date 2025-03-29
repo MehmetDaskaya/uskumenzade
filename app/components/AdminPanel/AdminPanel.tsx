@@ -5,6 +5,8 @@ import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { clearAccessToken } from "../../../redux/slices/authSlice";
 import { fetchCurrentUser } from "@/app/api/auth/authApi";
+import { fetchOrders } from "@/app/api/order/orderApi";
+
 import {
   FaUsers,
   FaBox,
@@ -30,8 +32,10 @@ import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 export default function AdminPanel() {
   const dispatch = useDispatch();
   const [activeSection, setActiveSection] = useState("yönetim paneli");
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const [notifications, setNotifications] = useState<
-    Array<{ id: number; message: string }>
+    Array<{ id: string; message: string }>
   >([]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for mobile sidebar
@@ -74,14 +78,63 @@ export default function AdminPanel() {
     setIsSidebarOpen(false); // Close sidebar on mobile after selecting
   };
 
-  // Simulate notifications
   useEffect(() => {
-    setNotifications([
-      { id: 1, message: "New user registered." },
-      { id: 2, message: "Product out of stock: Herbal Tea" },
-      { id: 3, message: "New order placed." },
-    ]);
-  }, []);
+    const loadNotifications = async () => {
+      if (!accessToken) return;
+
+      try {
+        const orders = await fetchOrders(accessToken);
+
+        const recentOrders = orders
+          .filter((order) => {
+            // Customize your "recent" logic if needed
+            const createdDate = new Date(order.created_at);
+            const now = new Date();
+            const diffInMinutes =
+              (now.getTime() - createdDate.getTime()) / 60000;
+            return diffInMinutes < 60; // Orders placed within the last 60 minutes
+          })
+          .map((order) => ({
+            id: order.id,
+            message: `Yeni sipariş: ${order.user.fname} ${order.user.lname} - ${
+              order.total_amount?.toFixed(2) || "?"
+            }₺`,
+          }));
+
+        setNotifications(recentOrders);
+      } catch (err) {
+        console.error("Bildirimler yüklenemedi:", err);
+      }
+    };
+
+    loadNotifications();
+  }, [accessToken]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (accessToken) {
+        fetchOrders(accessToken)
+          .then((orders) => {
+            const recent = orders.filter((order) => {
+              const createdDate = new Date(order.created_at);
+              const now = new Date();
+              return (now.getTime() - createdDate.getTime()) / 60000 < 60;
+            });
+            setNotifications(
+              recent.map((order) => ({
+                id: order.id,
+                message: `Yeni sipariş: ${order.user.fname} ${
+                  order.user.lname
+                } - ${order.total_amount?.toFixed(2) || "?"}₺`,
+              }))
+            );
+          })
+          .catch((err) => console.error("Bildirim güncellenemedi:", err));
+      }
+    }, 300000); // Every 5 minutes
+
+    return () => clearInterval(interval);
+  }, [accessToken]);
 
   if (loading) {
     // Show loading spinner while verifying
@@ -235,11 +288,29 @@ export default function AdminPanel() {
               {activeSection}
             </h1>
             <div className="relative">
-              <FaBell className="text-gray-700 text-2xl cursor-pointer" />
+              <FaBell
+                className="text-gray-700 text-2xl cursor-pointer"
+                onClick={() => setShowNotifications((prev) => !prev)}
+              />
               {notifications.length > 0 && (
                 <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-4 h-4 text-xs text-center">
                   {notifications.length}
                 </span>
+              )}
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white shadow-md rounded-lg z-50 p-4 max-h-96 overflow-y-auto">
+                  <h4 className="font-semibold text-gray-700 mb-2">
+                    Bildirimler
+                  </h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    {notifications.map((n) => (
+                      <li key={n.id} className="border-b pb-1">
+                        {n.message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           </div>

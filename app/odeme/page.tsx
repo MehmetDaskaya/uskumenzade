@@ -42,6 +42,7 @@ export default function PlaceOrder() {
   const [useSameAddress, setUseSameAddress] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [checkoutFormContent, setCheckoutFormContent] = useState<string | null>(
     null
   );

@@ -42,7 +42,6 @@ export default function Cart() {
   const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
   const [isClient, setIsClient] = useState(false);
 
-  const [shipmentCost, setShipmentCost] = useState(0);
   const [transportationFee, setTransportationFee] = useState(0);
   const [minOrderValue, setMinOrderValue] = useState<number | null>(null);
   const [freeShipmentThreshold, setFreeShipmentThreshold] = useState<
@@ -62,6 +61,7 @@ export default function Cart() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         const authenticatedUser = await getAuthenticatedUser();
         if (!authenticatedUser) {
           setUserError(true);
@@ -86,7 +86,7 @@ export default function Cart() {
     if (user?.email) {
       dispatch(loadCartForUser(user.email));
     }
-  }, [user, dispatch]);
+  }, [user?.email, dispatch]);
 
   useEffect(() => {
     // Always clear stored discount code when returning to cart
@@ -234,9 +234,9 @@ export default function Cart() {
 
       // ✅ Check max uses per user
       const userUsageCount = foundDiscount.orders.filter(
-        (order: any) =>
+        (order: { discount_code: string; status: string }) =>
           order.discount_code.toLowerCase() === normalizedInputCode &&
-          order.status !== "cancelled" // optionally exclude cancelled orders
+          order.status !== "cancelled"
       ).length;
 
       if (
@@ -280,12 +280,17 @@ export default function Cart() {
       setSnackbarMessage(`İndirim kodu başarıyla uygulandı: ${displayText}`);
       setSnackbarType("success");
       setSnackbarOpen(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("İndirim kodu uygulanırken hata oluştu:", error);
+      const err = error as {
+        response?: { data?: { detail?: string } };
+      };
+
       const msg =
-        error?.response?.data?.detail === "Discount max uses per user exceeded"
+        err?.response?.data?.detail === "Discount max uses per user exceeded"
           ? "Bu indirim kodunu en fazla bir kez kullanabilirsiniz."
           : "İndirim kodu uygulanamadı.";
+
       setSnackbarMessage(msg);
       setSnackbarType("error");
       setSnackbarOpen(true);
@@ -363,7 +368,6 @@ export default function Cart() {
     const calculateTransportationFee = async () => {
       try {
         const cost = await fetchShipmentCost();
-        setShipmentCost(cost);
 
         const totalShipmentFee = items.reduce((sum, item) => {
           const itemLength = item.length || 1;

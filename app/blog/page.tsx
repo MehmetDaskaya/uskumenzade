@@ -3,7 +3,6 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { fetchBlogsWithSSR } from "../api/blog/blogSSR";
-import { BlogsEffect } from "../components/BlogsEffect/BlogsEffect";
 import { FiSearch, FiClock, FiUser, FiTag, FiArrowRight } from "react-icons/fi";
 
 // Define the Blog type
@@ -299,7 +298,10 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {featuredBlogs.map((blog) => (
-                    <div className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                    <div
+                      key={blog.id}
+                      className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"
+                    >
                       <Link
                         href={`/blog/detaylar/${blog.id}`}
                         className="block"
@@ -632,7 +634,7 @@ const BlogsPage = async ({ searchParams }: BlogsPageProps) => {
                 Doğanın Şifasını Keşfedin
               </h2>
               <p className="text-xl text-white/90 mb-8 leading-relaxed">
-                Üskümenzade'nin şifalı bitki çayları ve doğal ürünleriyle
+                Üskümenzade&apos;nin şifalı bitki çayları ve doğal ürünleriyle
                 sağlıklı yaşamın kapılarını aralayın.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -9,8 +9,6 @@ import {
 
 // Define the shape of a product
 export interface Product {
-  category: any;
-  images: any;
   id: string;
   name: string;
   description: string;
@@ -18,9 +16,26 @@ export interface Product {
   discounted_price: number;
   stock: number;
   how_to_use: string;
+  width: number;
+  length: number;
+  height: number;
+  category: { id: string; name: string };
+  images: { id: string; url: string }[];
+}
+
+export type ProductCreateInput = {
+  name: string;
+  description: string;
+  price: number;
+  discounted_price: number;
+  stock: number;
+  how_to_use: string;
+  width: number;
+  length: number;
+  height: number;
   category_id: string;
   image_ids: string[];
-}
+};
 
 // Define the ProductState type
 interface ProductState {
@@ -68,9 +83,9 @@ export const fetchProductById = createAsyncThunk<
 });
 
 export const addProduct = createAsyncThunk<
-  Product, // Return type (newly added product)
-  Omit<Product, "id">, // Argument type (product data without ID)
-  { rejectValue: string } // Rejected value type
+  Product,
+  ProductCreateInput,
+  { rejectValue: string }
 >("products/addProduct", async (productData, { rejectWithValue }) => {
   try {
     return await createProduct(productData);
@@ -82,9 +97,9 @@ export const addProduct = createAsyncThunk<
 });
 
 export const editProduct = createAsyncThunk<
-  Product, // Return type (updated product)
-  { id: string; productData: Omit<Product, "id"> }, // Argument type (ID and product data)
-  { rejectValue: string } // Rejected value type
+  Product,
+  { id: string; productData: ProductCreateInput },
+  { rejectValue: string }
 >("products/editProduct", async ({ id, productData }, { rejectWithValue }) => {
   try {
     return await updateProduct(id, productData);

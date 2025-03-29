@@ -104,7 +104,7 @@ export default function AboutPage() {
         >
           <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
             <span className="block">Pamukdede Ailesi</span>
-            <span className="text-yellow-400">1953'ten Beri Sizinle</span>
+            <span className="text-yellow-400">1953&#39;ten Beri Sizinle</span>
           </h1>
           <p className="text-xl md:text-2xl text-white drop-shadow-md font-light leading-relaxed max-w-3xl mx-auto">
             Doğanın şifalı bitkilerini modern dünyayla buluşturuyoruz. Sağlıklı
@@ -161,10 +161,11 @@ export default function AboutPage() {
                 Geçmişten Geleceğe
               </h3>
               <p className="text-lg text-gray-700 leading-relaxed">
-                1953'te dedemiz Hüseyin Bey'in kurduğu aktar işletmesinin
-                mirasını 3. nesil olarak yaşatıyoruz. Geleneksel bilgiyle modern
-                dünyayı birleştirerek, doğanın sunduğu şifalı bitkilerden ve
-                doğal ürünlerden yararlanmayı kendimize misyon edindik.
+                1953&#39;te dedemiz Hüseyin Bey&#39;in kurduğu aktar
+                işletmesinin mirasını 3. nesil olarak yaşatıyoruz. Geleneksel
+                bilgiyle modern dünyayı birleştirerek, doğanın sunduğu şifalı
+                bitkilerden ve doğal ürünlerden yararlanmayı kendimize misyon
+                edindik.
               </p>
               <p className="text-lg text-gray-700 leading-relaxed">
                 Bugün,{" "}

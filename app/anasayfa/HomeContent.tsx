@@ -8,7 +8,7 @@ import { useInView } from "react-intersection-observer";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { fetchDiscounts, Discount } from "@/app/api/discount/discountApi";
-import { FlipWords, ProductListings } from "../../app/components";
+import { ProductListings } from "../../app/components";
 import { Snackbar } from "../../app/components/Snackbar/Snackbar";
 import LoadingSpinner from "../../app/components/LoadingSpinner/LoadingSpinner";
 import { InfiniteMovingCards } from "../components/MovingCards/MovingCards";
@@ -19,9 +19,6 @@ import { Card } from "@/app/components/ui/AppleCardsCarousel/AppleCardsCarousel"
 import { IoClose } from "react-icons/io5";
 import { FaLeaf, FaShippingFast, FaRegCheckCircle } from "react-icons/fa";
 import { MdOutlineHealthAndSafety, MdLocalOffer } from "react-icons/md";
-import { RiPlantLine } from "react-icons/ri";
-
-const words = ["Çaylar", "Kremler", "Yağlar"];
 
 // Add this near your other constant declarations at the top of the file
 
@@ -105,30 +102,6 @@ const FadeInWhenVisible = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const categories = [
-  {
-    name: "Bitkisel Çaylar",
-    description: "Doğadan gelen lezzet ve sağlık",
-    image: "/images/category-tea.webp",
-    link: "/urunler/cay",
-    icon: <RiPlantLine className="text-4xl text-primary" />,
-  },
-  {
-    name: "Bitkisel Yağlar",
-    description: "Cildinize doğal dokunuş",
-    image: "/images/category-oil.webp",
-    link: "/urunler/yag",
-    icon: <FaLeaf className="text-4xl text-primary" />,
-  },
-  {
-    name: "Bitkisel Kremler",
-    description: "Doğal içeriklerle cilt bakımı",
-    image: "/images/category-cream.webp",
-    link: "/urunler/krem",
-    icon: <MdOutlineHealthAndSafety className="text-4xl text-primary" />,
-  },
-];
-
 // USP - Unique Selling Propositions
 const benefits = [
   {
@@ -155,7 +128,6 @@ export default function HomeContent() {
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [showPopup, setShowPopup] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
-  const [emailInput, setEmailInput] = useState("");
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const newsletterRef = useRef<HTMLDivElement>(null);
@@ -208,10 +180,10 @@ export default function HomeContent() {
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveHeroSlide((current) => (current + 1) % heroSlides.length);
-    }, 5000); // Change slide every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [heroSlides.length]); // ✅ fixed warning
 
   useEffect(() => {
     const hasSeenPopupThisSession = sessionStorage.getItem("seenDiscountPopup");
@@ -267,24 +239,6 @@ export default function HomeContent() {
     navigator.clipboard.writeText(code);
     setSnackbar({ message: "Kod kopyalandı!", type: "success" });
     setTimeout(() => setSnackbar(null), 3000);
-  };
-
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailInput || !emailInput.includes("@")) {
-      setSnackbar({
-        message: "Lütfen geçerli bir e-posta adresi girin",
-        type: "error",
-      });
-      return;
-    }
-
-    // Here you would normally submit to your API
-    setSnackbar({
-      message: "Bültenimize başarıyla kaydoldunuz!",
-      type: "success",
-    });
-    setEmailInput("");
   };
 
   const scrollToNewsletter = () => {
@@ -594,10 +548,11 @@ export default function HomeContent() {
                 Geçmişten Geleceğe
               </h3>
               <p className="text-lg text-gray-700 leading-relaxed">
-                1953'te dedemiz Hüseyin Bey'in kurduğu aktar işletmesinin
-                mirasını 3. nesil olarak yaşatıyoruz. Geleneksel bilgiyle modern
-                dünyayı birleştirerek, doğanın sunduğu şifalı bitkilerden ve
-                doğal ürünlerden yararlanmayı kendimize misyon edindik.
+                1953&rsquo;te dedemiz Hüseyin Bey&rsquo;in kurduğu aktar
+                işletmesinin mirasını 3. nesil olarak yaşatıyoruz. Geleneksel
+                bilgiyle modern dünyayı birleştirerek, doğanın sunduğu şifalı
+                bitkilerden ve doğal ürünlerden yararlanmayı kendimize misyon
+                edindik.
               </p>
               <p className="text-lg text-gray-700 leading-relaxed">
                 Bugün,{" "}
