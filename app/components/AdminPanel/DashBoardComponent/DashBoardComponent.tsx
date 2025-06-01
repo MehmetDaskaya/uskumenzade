@@ -487,6 +487,22 @@ export const DashboardComponent = () => {
 
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h3 className="text-xl font-semibold text-gray-700 mb-4">
+          En Çok Satılan Ürünler
+        </h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={topProducts}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="sales" fill="#8884d8" name="Satış" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold text-gray-700 mb-4">
           Kategoriye Göre Satış Grafiği
         </h3>
         <ResponsiveContainer width="100%" height={300}>
@@ -548,21 +564,6 @@ export const DashboardComponent = () => {
               </li>
             ))}
         </ul>
-      </div>
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold text-gray-700 mb-4">
-          En Çok Satılan Ürünler
-        </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={topProducts}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="sales" fill="#8884d8" name="Satış" />
-          </BarChart>
-        </ResponsiveContainer>
       </div>
 
       {/* Product Categories and Recent Orders */}

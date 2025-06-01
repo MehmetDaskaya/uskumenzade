@@ -8,7 +8,6 @@ export { ReportsComponent } from "./AdminPanel/ReportsComponent/ReportsComponent
 export { ProductManagementComponent } from "./AdminPanel/ProductManagementComponent/ProductManagementComponent";
 export { BlogsComponent } from "./AdminPanel/BlogsComponent/BlogsComponent";
 export { DefinitionsComponent } from "./AdminPanel/DefinitionsComponent/DefinitionsComponent";
-export { SettingsComponent } from "./AdminPanel/SettingsComponent/SettingsComponent";
 export { FlipWords } from "./ui/FlipWords/FlipWords";
 // export { ProductCard } from "./ProductCard/ProductCard";
 export { Carousel } from "./ui/AppleCardsCarousel/AppleCardsCarousel";

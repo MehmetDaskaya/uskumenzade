@@ -245,7 +245,7 @@ export const UserManagementComponent = () => {
       {selectedUser && (
         <UserDetailsModal
           user={selectedUser}
-          userAddress={selectedUserAddress} // ✅ Now correctly fetched
+          userAddress={selectedUserAddress}
           onClose={() => {
             setSelectedUser(null);
             setSelectedUserAddress(null); // Reset address when closing modal
@@ -258,8 +258,13 @@ export const UserManagementComponent = () => {
 
               // Update user role
               const updatedUser = await updateUser(
-                { role: newRole, password },
-                accessToken
+                {
+                  role: newRole,
+                  is_superuser: newRole === "admin",
+                  password,
+                },
+                accessToken,
+                userId
               );
 
               setUsers((prevUsers) =>

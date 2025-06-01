@@ -17,6 +17,14 @@ import {
   deleteDiscount,
   Discount,
 } from "@/app/api/discount/discountApi";
+import { BannerModal } from "../../Modal/BannerModal";
+import {
+  fetchBanners,
+  createBanner,
+  updateBanner,
+  deleteBanner,
+  Banner,
+} from "@/app/api/banner/bannerApi";
 
 export const DefinitionsComponent = () => {
   const [showImageModal, setShowImageModal] = useState(false);
@@ -27,6 +35,8 @@ export const DefinitionsComponent = () => {
   const [showDeciCalculationModal, setShowDeciCalculationModal] =
     useState(false);
   const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [showBannerModal, setShowBannerModal] = useState(false);
+  const [banners, setBanners] = useState<Banner[]>([]);
 
   const [discounts, setDiscounts] = useState<Discount[]>([]);
 
@@ -53,6 +63,9 @@ export const DefinitionsComponent = () => {
   const openDiscountModal = () => setShowDiscountModal(true);
   const closeDiscountModal = () => setShowDiscountModal(false);
 
+  const openBannerModal = () => setShowBannerModal(true);
+  const closeBannerModal = () => setShowBannerModal(false);
+
   // Load discounts on component mount
 
   const loadDiscounts = useCallback(async () => {
@@ -78,6 +91,54 @@ export const DefinitionsComponent = () => {
   useEffect(() => {
     loadDiscounts();
   }, [loadDiscounts]);
+
+  const loadBanners = useCallback(async () => {
+    if (!accessToken) return;
+
+    try {
+      const fetchedBanners = await fetchBanners(accessToken);
+      setBanners(fetchedBanners);
+    } catch (error) {
+      console.error("Failed to load banners:", error);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    loadBanners();
+  }, [loadBanners]);
+
+  const handleSaveBanner = async (newBanner: Partial<Banner>) => {
+    try {
+      if (!accessToken) return;
+      const created = await createBanner(newBanner, accessToken);
+      setBanners([...banners, created]);
+    } catch (error) {
+      console.error("Failed to create banner:", error);
+    }
+  };
+
+  const handleUpdateBanner = async (
+    bannerId: string,
+    updated: Partial<Banner>
+  ) => {
+    try {
+      if (!accessToken) return;
+      const updatedBanner = await updateBanner(bannerId, updated, accessToken);
+      setBanners(banners.map((b) => (b.id === bannerId ? updatedBanner : b)));
+    } catch (error) {
+      console.error("Failed to update banner:", error);
+    }
+  };
+
+  const handleDeleteBanner = async (bannerId: string) => {
+    try {
+      if (!accessToken) return;
+      await deleteBanner(bannerId, accessToken);
+      setBanners(banners.filter((b) => b.id !== bannerId));
+    } catch (error) {
+      console.error("Failed to delete banner:", error);
+    }
+  };
 
   const handleSaveDiscount = async (newDiscount: Partial<Discount>) => {
     try {
@@ -220,6 +281,20 @@ export const DefinitionsComponent = () => {
             Meta Etiket Ekranını Aç
           </button>
         </div>
+        {/* Manage Banners Section */}
+        <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
+          <h3 className="text-lg font-semibold mb-4">Bannerları Yönet</h3>
+          <p className="text-gray-600 text-center mb-6">
+            Banner ekle, güncelle veya sil
+          </p>
+          <button
+            onClick={openBannerModal}
+            className="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition duration-300"
+          >
+            <FaPlus className="inline mr-2" />
+            Banner Ekranını Aç
+          </button>
+        </div>
       </div>
 
       {/* Modals */}
@@ -300,6 +375,17 @@ export const DefinitionsComponent = () => {
             console.log("Selected Meta Tags:", metaTags);
             closeMetaTagModal();
           }}
+        />
+      )}
+
+      {showBannerModal && (
+        <BannerModal
+          isOpen={showBannerModal}
+          onClose={closeBannerModal}
+          onSave={handleSaveBanner}
+          onUpdate={handleUpdateBanner}
+          onDelete={handleDeleteBanner}
+          banners={banners}
         />
       )}
     </div>

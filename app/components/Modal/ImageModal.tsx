@@ -553,6 +553,27 @@ export function ImageModal({
                 Görseli Düzenle
               </h3>
               <div className="space-y-4">
+                {/* Image ID (read-only, copyable) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Görsel ID
+                  </label>
+                  <input
+                    type="text"
+                    value={editImageId || ""}
+                    readOnly
+                    className="w-full bg-gray-100 text-black p-2 border rounded-lg cursor-text"
+                    onClick={(e) => {
+                      (e.target as HTMLInputElement).select(); // Easy copy on click
+                      navigator.clipboard.writeText(editImageId || "");
+                    }}
+                    title="Kopyalamak için tıklayın"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Tıklayarak kopyalayabilirsiniz.
+                  </p>
+                </div>
+
                 <input
                   type="text"
                   value={editAltText}
@@ -560,6 +581,7 @@ export function ImageModal({
                   placeholder="Alt Text"
                   className="w-full bg-white text-black p-2 border rounded-lg"
                 />
+
                 <select
                   value={editImageType}
                   onChange={(e) => setEditImageType(e.target.value)}
@@ -586,6 +608,7 @@ export function ImageModal({
                   Görseli Güncelle
                 </button>
               </div>
+
               <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="mt-4 w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"

@@ -189,7 +189,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               >
                 <option value="user">Kullanıcı</option>
                 <option value="admin">Yönetici</option>
-                <option value="superadmin">Süper Yönetici</option>
+                <option value="seller">Satıcı</option>
               </select>
             </div>
 

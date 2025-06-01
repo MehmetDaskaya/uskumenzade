@@ -41,9 +41,9 @@ export default function UserInformationModal({
     city: "",
     country: "Türkiye", // ✅ Default country
     address_title: "",
-    contact_name: user?.fname + " " + user?.lname || "", // Auto-fill from user profile
-    contact_number: user?.gsm_number || "", // Auto-fill from user profile
-    national_id: "", // Default empty
+    contact_name: "",
+    contact_number: "",
+    national_id: "",
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -283,8 +283,15 @@ export default function UserInformationModal({
                         name="email"
                         value={formData.email || ""}
                         onChange={handleInputChange}
+                        onInvalid={(e) =>
+                          e.currentTarget.setCustomValidity(
+                            "Lütfen geçerli bir e-posta adresi girin."
+                          )
+                        }
+                        onInput={(e) => e.currentTarget.setCustomValidity("")}
                         placeholder="E-posta"
                         className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
+                        required
                       />
                     </div>
 
@@ -300,12 +307,20 @@ export default function UserInformationModal({
                           id="gsm_number"
                           type="tel"
                           name="gsm_number"
-                          value={formData.gsm_number || ""}
-                          onChange={handleInputChange}
+                          value={formData.gsm_number?.replace("+90", "") || ""}
+                          onChange={(e) => {
+                            const input = e.target.value.replace(/\D/g, "");
+                            if (input.length <= 10) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                gsm_number: input ? `+90${input}` : "",
+                              }));
+                            }
+                          }}
                           required
-                          pattern="^\+[0-9]{12}$"
-                          maxLength={13}
-                          placeholder="Telefon Numarası"
+                          inputMode="numeric"
+                          pattern="[0-9]{10}"
+                          placeholder="542 xxx xxxx"
                           className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                         />
                       </div>
@@ -389,12 +404,29 @@ export default function UserInformationModal({
                     id="contact_number"
                     type="tel"
                     name="contact_number"
-                    value={addressFormData.contact_number || ""}
-                    onChange={handleAddressInputChange}
+                    value={
+                      addressFormData.contact_number?.replace("+90", "") || ""
+                    }
+                    onChange={(e) => {
+                      const input = e.target.value.replace(/\D/g, "");
+                      if (input.length <= 10) {
+                        setAddressFormData((prev) => ({
+                          ...prev,
+                          contact_number: input ? `+90${input}` : "",
+                        }));
+                      }
+                    }}
+                    onInvalid={(e) =>
+                      e.currentTarget.setCustomValidity(
+                        "Lütfen geçerli bir telefon numarası girin."
+                      )
+                    }
+                    onInput={(e) => e.currentTarget.setCustomValidity("")}
                     required
-                    pattern="^\+[0-9]{12}$"
-                    maxLength={13}
-                    placeholder="Telefon Numarası"
+                    inputMode="numeric"
+                    pattern="[0-9]{10}"
+                    maxLength={10}
+                    placeholder="542 xxx xxxx"
                     className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
                   />
                 </div>
@@ -412,6 +444,12 @@ export default function UserInformationModal({
                     name="national_id"
                     value={addressFormData.national_id || ""}
                     onChange={handleAddressInputChange}
+                    onInvalid={(e) =>
+                      e.currentTarget.setCustomValidity(
+                        "Lütfen geçerli bir TC Kimlik Numarası girin."
+                      )
+                    }
+                    onInput={(e) => e.currentTarget.setCustomValidity("")}
                     required
                     pattern="^[0-9]{11}$"
                     maxLength={11}

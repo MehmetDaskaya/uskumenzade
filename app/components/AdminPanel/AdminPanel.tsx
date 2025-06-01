@@ -23,7 +23,6 @@ import {
   OrderManagementComponent,
   ReportsComponent,
   ProductManagementComponent,
-  SettingsComponent,
   BlogsComponent,
   DefinitionsComponent,
 } from "@/app/components";
@@ -246,17 +245,6 @@ export default function AdminPanel() {
                   Tanımlar
                 </button>
               </li>
-              {/* <li>
-                <button
-                  className={`flex items-center p-3 w-full ${
-                    activeSection === "ayarlar" ? "bg-adminPanelDark" : ""
-                  } hover:bg-adminPanelDark`}
-                  onClick={() => handleSectionChange("ayarlar")}
-                >
-                  <FaCog className="mr-3" />
-                  Ayarlar
-                </button>
-              </li> */}
             </ul>
           </nav>
           <div className="p-4 border-t border-gray-700">
@@ -323,7 +311,6 @@ export default function AdminPanel() {
           {activeSection === "bloglar" && <BlogsComponent />}
           {activeSection === "raporlar" && <ReportsComponent />}
           {activeSection === "tanımlar" && <DefinitionsComponent />}
-          {activeSection === "ayarlar" && <SettingsComponent />}
         </main>
       </div>
     </>

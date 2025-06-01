@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, ReactNode } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -130,7 +130,6 @@ export default function HomeContent() {
   const [isGuest, setIsGuest] = useState(false);
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
-  const newsletterRef = useRef<HTMLDivElement>(null);
 
   const [snackbar, setSnackbar] = useState<{
     message: string;
@@ -241,10 +240,6 @@ export default function HomeContent() {
     setTimeout(() => setSnackbar(null), 3000);
   };
 
-  const scrollToNewsletter = () => {
-    newsletterRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <div className="bg-background text-gray-900 font-sans relative">
       {/* Discount Popup - Enhanced Version */}
@@ -293,12 +288,6 @@ export default function HomeContent() {
                         </button>
                       </Link>
                     </div>
-                    <button
-                      onClick={scrollToNewsletter}
-                      className="text-sm text-gray-500 hover:text-gray-700 underline mt-4 block mx-auto"
-                    >
-                      Veya bültenimize kaydolun
-                    </button>
                   </motion.div>
                 </>
               ) : discounts && discounts.length > 0 ? (
@@ -473,41 +462,19 @@ export default function HomeContent() {
         </div>
       </section>
 
-      {/* Enhanced Benefits Section */}
-      <section
-        ref={benefitsRef}
-        className="py-16 bg-gradient-to-b from-white to-gray-50"
-      >
+      {/* Featured Products Section */}
+      <section className="bg-secondary/5 py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-              Neden Üskümenzade?
+              Öne Çıkan Ürünlerimiz
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Yüzyıllardır süregelen geleneksel bilgiyi, modern bilimle
-              birleştiriyoruz.
+              En çok tercih edilen doğal ürünlerimiz
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {benefits.map((benefit, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                animate={benefitsInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-                className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 group"
-              >
-                <div className="w-16 h-16 rounded-full bg-tertiary/10 flex items-center justify-center mb-6 text-tertiary group-hover:bg-tertiary group-hover:text-white transition-all duration-300">
-                  {benefit.icon}
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">
-                  {benefit.title}
-                </h3>
-                <p className="text-gray-600">{benefit.description}</p>
-              </motion.div>
-            ))}
-          </div>
+          <ProductListings />
         </div>
       </section>
 
@@ -623,7 +590,7 @@ export default function HomeContent() {
         </div>
       </div>
 
-      {/* Blog Section - Enhanced */}
+      {/* Blog Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -636,8 +603,7 @@ export default function HomeContent() {
           </div>
 
           <div className="max-w-6xl mx-auto">
-            {/* Keep the original data and card mapping */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center md:justify-items-stretch">
               {data.map((card, index) => (
                 <motion.div
                   key={index}
@@ -681,22 +647,6 @@ export default function HomeContent() {
               </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Featured Products Section */}
-      <section className="bg-secondary/5 py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-              Öne Çıkan Ürünlerimiz
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              En çok tercih edilen doğal ürünlerimiz
-            </p>
-          </div>
-
-          <ProductListings />
         </div>
       </section>
 
@@ -817,6 +767,44 @@ export default function HomeContent() {
           >
             <InfiniteMovingCards />
           </motion.div>
+        </div>
+      </section>
+
+      {/*Benefits Section */}
+      <section
+        ref={benefitsRef}
+        className="py-16 bg-gradient-to-b from-white to-gray-50"
+      >
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+              Neden Üskümenzade?
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Yüzyıllardır süregelen geleneksel bilgiyi, modern bilimle
+              birleştiriyoruz.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {benefits.map((benefit, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                animate={benefitsInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 group"
+              >
+                <div className="w-16 h-16 rounded-full bg-tertiary/10 flex items-center justify-center mb-6 text-tertiary group-hover:bg-tertiary group-hover:text-white transition-all duration-300">
+                  {benefit.icon}
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">
+                  {benefit.title}
+                </h3>
+                <p className="text-gray-600">{benefit.description}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

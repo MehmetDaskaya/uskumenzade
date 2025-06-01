@@ -1,7 +1,5 @@
 import API_BASE_URL from "../../../util/config";
 
-// types/user.ts or types/index.ts (depending on your project structure)
-
 export interface User {
   id: string;
   email: string;
@@ -47,10 +45,10 @@ export const signup = async (
   password: string,
   fname: string,
   lname: string,
-  role: string = "admin", // Ensure admin role
+  role: string = "user",
   is_active: boolean = true,
-  is_superuser: boolean = true, // Ensure superuser permissions
-  is_verified: boolean = true // Ensure verification
+  is_superuser: boolean = false,
+  is_verified: boolean = false
 ) => {
   const response = await fetchFromAPI("/uskumenzade/api/auth/register", {
     method: "POST",
@@ -67,7 +65,7 @@ export const signup = async (
     }),
   });
 
-  console.log("Signup response:", response); // Log response to debug
+  console.log("Signup response:", response);
   return response;
 };
 
@@ -75,7 +73,7 @@ export const signup = async (
 export const signin = async (email: string, password: string) => {
   const body = new URLSearchParams();
   body.append("grant_type", "password");
-  body.append("username", email); // email is used as the username
+  body.append("username", email);
   body.append("password", password);
 
   const response = await fetch(

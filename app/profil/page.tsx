@@ -186,7 +186,7 @@ export default function Profile() {
         {/* User Profile Section */}
         <div>
           <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">
-            Profilim
+            Hesap Bilgilerim
           </h1>
           {user ? (
             // Replace the input fields with label + input structures, for example:
@@ -267,21 +267,21 @@ export default function Profile() {
                       id="gsm_number"
                       type="tel"
                       name="gsm_number"
-                      value={formData.gsm_number || ""}
+                      value={formData.gsm_number?.replace("+90", "") || ""}
                       onChange={(e) => {
-                        e.currentTarget.setCustomValidity("");
-                        handleInputChange(e);
-                      }}
-                      onInvalid={(e) => {
-                        e.currentTarget.setCustomValidity(
-                          "Telefon numarası +905557778899 formatında olmalı (13 karakter ve yalnızca rakam)."
-                        );
+                        const input = e.target.value.replace(/\D/g, ""); // remove non-digits
+                        if (input.length <= 10) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            gsm_number: input ? `+90${input}` : "",
+                          }));
+                        }
                       }}
                       disabled={!isEditing}
                       required
-                      pattern="^\+[0-9]{12}$"
-                      maxLength={13}
-                      placeholder="Telefon Numarası"
+                      inputMode="numeric"
+                      pattern="[0-9]{10}"
+                      placeholder="542 xxx xxxx"
                       className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
                     />
                   </div>

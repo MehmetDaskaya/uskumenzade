@@ -503,6 +503,15 @@ export const ProductListings = ({
           )}
         </div>
       </div>
+      {!isProductsPage && (
+        <div className="flex justify-center mt-8">
+          <Link href="/urunler">
+            <button className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+              Tüm ürünleri görüntüle
+            </button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

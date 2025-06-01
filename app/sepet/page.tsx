@@ -611,7 +611,7 @@ export default function Cart() {
                         {(freeShipmentThreshold - calculatedTotalPrice).toFixed(
                           2
                         )}
-                        ₺ daha ekleyin
+                        ₺ daha ekleyin ve kargonuz ücretsiz olsun!
                       </p>
                       <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                         <div
@@ -678,23 +678,43 @@ export default function Cart() {
                 </div>
 
                 {/* Checkout Button */}
-                <Link href="odeme" className="block">
-                  <button
-                    className={`w-full py-4 rounded-lg font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 mt-4 ${
-                      minOrderValue !== null &&
-                      calculatedTotalPrice < minOrderValue
-                        ? "bg-gray-400 cursor-not-allowed opacity-70"
-                        : "bg-green-600 hover:bg-green-700 transform hover:scale-105 shadow-lg"
-                    }`}
-                    disabled={
-                      minOrderValue !== null &&
-                      calculatedTotalPrice < minOrderValue
+                <button
+                  onClick={() => {
+                    const hasStockError = items.some(
+                      (item) => item.quantity > item.stock
+                    );
+                    if (hasStockError) {
+                      setSnackbarMessage(
+                        "Sepetinizdeki bazı ürünlerin adedi stoktan fazla."
+                      );
+                      setSnackbarType("error");
+                      setSnackbarOpen(true);
+                      return;
                     }
-                  >
-                    <span>Ödeme Adımına Geç</span>
-                    <AiOutlineArrowRight />
-                  </button>
-                </Link>
+
+                    if (
+                      minOrderValue !== null &&
+                      calculatedTotalPrice < minOrderValue
+                    ) {
+                      return;
+                    }
+
+                    router.push("/odeme");
+                  }}
+                  className={`w-full py-4 rounded-lg font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 mt-4 ${
+                    minOrderValue !== null &&
+                    calculatedTotalPrice < minOrderValue
+                      ? "bg-gray-400 cursor-not-allowed opacity-70"
+                      : "bg-green-600 hover:bg-green-700 transform hover:scale-105 shadow-lg"
+                  }`}
+                  disabled={
+                    minOrderValue !== null &&
+                    calculatedTotalPrice < minOrderValue
+                  }
+                >
+                  <span>Ödeme Adımına Geç</span>
+                  <AiOutlineArrowRight />
+                </button>
 
                 {/* Link to Products Page */}
                 <div className="text-center pt-4">

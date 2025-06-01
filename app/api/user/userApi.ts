@@ -98,9 +98,14 @@ export const fetchUserById = async (
 // Update the current user
 export const updateUser = async (
   payload: UpdateUserPayload,
-  token: string
+  token: string,
+  userId?: string
 ): Promise<User> => {
-  const response = await fetch(`${API_BASE_URL}/uskumenzade/api/users/me`, {
+  const url = userId
+    ? `${API_BASE_URL}/uskumenzade/api/users/${userId}`
+    : `${API_BASE_URL}/uskumenzade/api/users/me`;
+
+  const response = await fetch(url, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

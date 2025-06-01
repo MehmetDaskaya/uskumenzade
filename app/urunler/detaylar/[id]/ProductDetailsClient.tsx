@@ -124,7 +124,12 @@ export default function ProductDetailsClient({
     }
   };
 
-  const handleAddToCart = async () => {
+  const handleCartButtonClick = async () => {
+    if (isAddedToCart) {
+      router.push("/sepet");
+      return;
+    }
+
     if (!accessToken) {
       setIsModalOpen(true);
       return;
@@ -134,32 +139,34 @@ export default function ProductDetailsClient({
       const userData = await fetchCurrentUser(accessToken);
       const userEmail = userData?.email;
 
-      if (!isAddedToCart) {
-        dispatch(
-          addItemToCart({
-            userId: userEmail,
-            item: {
-              id: product.id,
-              name: product.name,
-              price: product.price,
-              discounted_price: product.discounted_price,
-              imageUrl: product.images?.[0]?.url || "/placeholder.png",
-              stock: product.stock,
-              quantity,
-              length: product.length,
-              width: product.width,
-              height: product.height,
-            },
-          })
-        );
-        setIsAddedToCart(true);
-        setShowNotification(true);
-        setTimeout(() => setShowNotification(false), 3000);
-      } else {
-        router.push("/sepet");
+      if (!userEmail) {
+        console.error("User email not available");
+        return;
       }
+
+      dispatch(
+        addItemToCart({
+          userId: userEmail,
+          item: {
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            discounted_price: product.discounted_price,
+            imageUrl: product.images?.[0]?.url || "/placeholder.png",
+            stock: product.stock,
+            quantity,
+            length: product.length,
+            width: product.width,
+            height: product.height,
+          },
+        })
+      );
+
+      setIsAddedToCart(true);
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
     } catch (error) {
-      console.error("Error fetching user data or adding to cart:", error);
+      console.error("Error adding to cart or fetching user data:", error);
     }
   };
 
@@ -363,7 +370,7 @@ export default function ProductDetailsClient({
                 </button>
               </div>
               <button
-                onClick={handleAddToCart}
+                onClick={handleCartButtonClick}
                 disabled={product.stock <= 0}
                 className={`flex-1 flex items-center justify-center bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300 disabled:bg-gray-400 ${
                   isAddedToCart ? "bg-green-700" : ""
@@ -600,19 +607,13 @@ export default function ProductDetailsClient({
                       <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-2 text-xs font-bold">
                         1
                       </div>
-                      <p className="text-sm text-gray-700">Düzenli kullanın</p>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-2 text-xs font-bold">
-                        2
-                      </div>
                       <p className="text-sm text-gray-700">
                         Kuru yerde saklayın
                       </p>
                     </div>
                     <div className="flex items-center">
                       <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-2 text-xs font-bold">
-                        3
+                        2
                       </div>
                       <p className="text-sm text-gray-700">Talimatlara uyun</p>
                     </div>
@@ -778,7 +779,7 @@ export default function ProductDetailsClient({
             </button>
 
             <h2 className="text-xl font-bold text-center text-gray-900 mb-6">
-              Sipariş vermek için giriş yapmalısınız
+              Sipariş vermek için giriş yapmalısınız.
             </h2>
 
             <form
@@ -837,7 +838,7 @@ export default function ProductDetailsClient({
                 <input
                   id="modal-email"
                   type="email"
-                  className="mt-1 p-3 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary"
+                  className="mt-1 p-3 bg-white w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary"
                   placeholder="E-posta adresinizi girin"
                   required
                 />
@@ -852,7 +853,7 @@ export default function ProductDetailsClient({
                 <input
                   id="modal-password"
                   type="password"
-                  className="mt-1 p-3 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary"
+                  className="mt-1 bg-white p-3 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-tertiary"
                   placeholder="••••••••"
                   required
                 />
