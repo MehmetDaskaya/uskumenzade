@@ -91,6 +91,7 @@ export interface Order {
   discount_code?: string;
   shipment_code?: string;
   discount?: Discount; // ✅ Add this
+  payment_on_delivery?: boolean;
 }
 
 // Fetch orders
@@ -179,6 +180,7 @@ export interface CreateOrderRequest {
     quantity: number;
   }[];
   discount_code?: string;
+  payment_on_delivery?: boolean;
 }
 
 // Update the createOrder function to use CreateOrderRequest

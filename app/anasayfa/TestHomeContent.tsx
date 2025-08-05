@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { ProductListings } from "../../app/components";
 import { Snackbar } from "../../app/components/Snackbar/Snackbar";
-import { InfiniteMovingCards } from "../components/MovingCards/MovingCards";
 import herbalTea from "@/public/images/herbal-tea.webp";
 import herbalOil from "@/public/images/herbal-oil.webp";
 import herbalCream from "@/public/images/herbal-cream.webp";
@@ -150,7 +149,7 @@ export default function TestHomeContent() {
     },
     {
       image: "/images/hero2.webp",
-      title: "Sağlığınıza İyi Gelennnn",
+      title: "Sağlığınıza İyi Gelen",
       subtitle: "Doğal bitkisel ürünler",
       cta: "Çaylarımız Hakkında Bilgi Alın",
       link: "/blog",
@@ -165,11 +164,6 @@ export default function TestHomeContent() {
   ]);
 
   const [benefitsRef, benefitsInView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
-
-  const [testimonialsRef, testimonialsInView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
@@ -590,28 +584,6 @@ export default function TestHomeContent() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Enhanced Testimonials Section */}
-      <section ref={testimonialsRef} className="py-16 bg-gray-50">
-        <div className="mx-auto ">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-              Müşterilerimiz Ne Diyor?
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Ürünlerimizden memnun kalan müşterilerimizin yorumları
-            </p>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={testimonialsInView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.8 }}
-          >
-            <InfiniteMovingCards />
-          </motion.div>
         </div>
       </section>
 

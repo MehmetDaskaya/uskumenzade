@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../../redux/store"; // Adjust the import based on your project structure
+import { RootState } from "../../../redux/store";
 import { fetchDocuments } from "@/app/api/document/documentApi";
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
@@ -19,7 +19,7 @@ interface Document {
   name: string;
   type: string;
   created_at: string;
-  url: string; // Add this line
+  url: string;
 }
 
 export const Footer = ({ viewable = false }: FooterProps) => {
@@ -58,7 +58,7 @@ export const Footer = ({ viewable = false }: FooterProps) => {
         viewable ? "" : "hidden"
       }`}
     >
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-6">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 px-6">
         {/* Logo and Description */}
         <div>
           <h2 className="text-2xl font-bold mb-4">Üskümenzade</h2>
@@ -124,6 +124,41 @@ export const Footer = ({ viewable = false }: FooterProps) => {
           </ul>
         </div>
 
+        {/* Diğer Pazaryerleri (Other Marketplaces) */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Diğer Pazaryerleri</h3>
+          <ul className="space-y-2">
+            <li>
+              <Link
+                href="https://www.trendyol.com/magaza/profil/uskumenzade-m-1048848"
+                target="_blank"
+                className="hover:text-tertiary flex flex-row items-center space-x-2"
+              >
+                <img
+                  src="/images/trendyol.png"
+                  alt="Trendyol"
+                  className="h-6"
+                />
+                <div>Trendyol</div>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="https://www.hepsiburada.com"
+                target="_blank"
+                className="hover:text-tertiary flex flex-row items-center space-x-2"
+              >
+                <img
+                  src="/images/hepsiburada.png"
+                  alt="Hepsiburada"
+                  className="h-6"
+                />
+                <div>Hepsiburada</div>
+              </Link>
+            </li>
+          </ul>
+        </div>
+
         {/* Map Section */}
         <div>
           <h3 className="text-xl font-semibold mb-4">Adres</h3>
@@ -141,6 +176,7 @@ export const Footer = ({ viewable = false }: FooterProps) => {
         </div>
       </div>
 
+      {/* Footer Bottom Section */}
       <div className="flex flex-row justify-between items-end">
         {/* Social Media Links */}
         <div className="mt-8 mx-4">
@@ -184,8 +220,8 @@ export const Footer = ({ viewable = false }: FooterProps) => {
         </div>
       </div>
 
+      {/* Footer Legal Section */}
       <div className="border-t border-gray-700 mt-8 pt-6 text-center">
-        {/* Legal Documents */}
         <div className="flex flex-col md:flex-row justify-center items-center space-y-3 md:space-y-0 md:space-x-6 mb-4">
           {kvkkDocument && (
             <a
@@ -208,8 +244,6 @@ export const Footer = ({ viewable = false }: FooterProps) => {
             </a>
           )}
         </div>
-
-        {/* All Rights Reserved */}
         <p className="text-center text-sm text-gray-500">
           &copy; 2025 Üskümenzade. Tüm Hakları Saklıdır.
         </p>

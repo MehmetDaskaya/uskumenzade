@@ -15,4 +15,8 @@ export { ProductListings } from "./ProductListings/ProductListings";
 export { Footer } from "./Footer/Footer";
 export { Navbar } from "./Navbar/Navbar";
 export { GoToTopButton } from "./GoToTopButton/GoToTopButton";
+export { WhatsAppButton } from "./WhatsappContactButton/WhatsappContactButton";
 export { Snackbar } from "./Snackbar/Snackbar";
+export { ShipmentPricingModal } from "./Modal/ShipmentPricingModal";
+export { PayOnDeliveryPricingModal } from "./Modal/PayOnDeliveryPricingModal";
+export { PricingSettingsModal } from "./Modal/PricingSettingsModal";

@@ -26,6 +26,7 @@ export default function OrderHistory() {
     active: true,
     completed: true,
     failed: false,
+    payOnDelivery: true,
   });
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>(
     {}
@@ -80,6 +81,7 @@ export default function OrderHistory() {
             "paid",
             "processing",
             "shipped",
+            "pending",
           ].includes(order.status);
         });
         setExpandedOrders(initialExpandedState);
@@ -103,7 +105,9 @@ export default function OrderHistory() {
     }));
   };
 
-  const toggleSection = (section: "active" | "completed" | "failed") => {
+  const toggleSection = (
+    section: "active" | "completed" | "failed" | "payOnDelivery"
+  ) => {
     setExpandedSections((prev) => ({
       ...prev,
       [section]: !prev[section],
@@ -131,8 +135,8 @@ export default function OrderHistory() {
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
       paid: "Ödeme Yapıldı",
-      pending: "Ödeme Yapılmadı",
-      processing: "İşleniyor",
+      pending: "Ödeme Bekliyor", // For credit card orders waiting for payment
+      processing: "İşleniyor", // For pay-on-delivery orders that are confirmed
       shipped: "Kargolandı",
       delivered: "Teslim Edildi",
       cancelled: "İptal Edildi",
@@ -150,8 +154,9 @@ export default function OrderHistory() {
         return "bg-blue-100 border-blue-500 text-blue-700";
       case "paid":
         return "bg-yellow-100 border-yellow-500 text-yellow-700";
-      case "cancelled":
       case "pending":
+        return "bg-red-100 border-red-500 text-red-700"; // Red for failed section
+      case "cancelled":
         return "bg-red-100 border-red-500 text-red-700";
       default:
         return "bg-gray-100 border-gray-500 text-gray-700";
@@ -193,7 +198,7 @@ export default function OrderHistory() {
               </h3>
               <span
                 className={`text-sm px-2 py-1 rounded-full ${
-                  ["cancelled", "pending"].includes(order.status)
+                  order.status === "cancelled" || order.status === "pending"
                     ? "bg-red-100 text-red-800"
                     : order.status === "delivered"
                     ? "bg-green-100 text-green-800"
@@ -202,6 +207,11 @@ export default function OrderHistory() {
               >
                 {getStatusText(order.status)}
               </span>
+              {order.payment_on_delivery && (
+                <span className="text-sm px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                  Kapıda Ödeme
+                </span>
+              )}
             </div>
             <p className="text-sm text-gray-600">
               {formatDate(order.created_at)}
@@ -390,13 +400,22 @@ export default function OrderHistory() {
     </motion.div>
   );
 
-  const activeOrders = orders.filter((o) =>
-    ["paid", "processing", "shipped"].includes(o.status)
+  const activeOrders = orders.filter(
+    (o) =>
+      ["paid", "processing", "shipped"].includes(o.status) &&
+      !o.payment_on_delivery
   );
-  const completedOrders = orders.filter((o) => o.status === "delivered");
-  const failedOrders = orders.filter((o) =>
-    ["pending", "cancelled"].includes(o.status)
+  const completedOrders = orders.filter(
+    (o) => o.status === "delivered" && !o.payment_on_delivery
   );
+  const failedOrders = orders.filter(
+    (o) =>
+      (o.status === "cancelled" || o.status === "pending") &&
+      !o.payment_on_delivery
+  );
+
+  // Pay on delivery orders
+  const payOnDeliveryOrders = orders.filter((o) => o.payment_on_delivery);
 
   const SectionHeader = ({
     title,
@@ -503,6 +522,32 @@ export default function OrderHistory() {
                 )}
               </AnimatePresence>
             </section>
+
+            {/* Pay on Delivery Orders Section */}
+            {payOnDeliveryOrders.length > 0 && (
+              <section>
+                <SectionHeader
+                  title="Kapıda Ödeme Siparişleri"
+                  count={payOnDeliveryOrders.length}
+                  isExpanded={expandedSections.payOnDelivery}
+                  toggleFn={() => toggleSection("payOnDelivery")}
+                />
+
+                <AnimatePresence>
+                  {expandedSections.payOnDelivery && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      {payOnDeliveryOrders.map(orderCard)}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </section>
+            )}
 
             {/* Failed Orders Section */}
             {failedOrders.length > 0 && (

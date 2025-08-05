@@ -48,7 +48,7 @@ export default function ContactPage() {
               Telefon
             </h3>
             <p className="text-gray-600">
-              +90 212 123 45 67
+              +90 551 988 8205
               <br />
               Pazartesi - Cuma, 09:00 - 18:00
             </p>
@@ -68,9 +68,11 @@ export default function ContactPage() {
             <p className="text-gray-600">
               <a
                 href="https://wa.me/905551234567"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-tertiary hover:underline"
               >
-                +90 555 123 45 67
+                +90 551 988 8205
               </a>
             </p>
           </div>
@@ -142,7 +144,7 @@ export default function ContactPage() {
         {/* Map Section */}
         <div className="rounded-lg overflow-hidden shadow-lg">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d791.7808113669026!2d30.574253269631527!3d37.45781189825417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14c44120ba663679%3A0xf5096f80aae765f5!2sPamuk%20Dede!5e0!3m2!1sen!2str!4v1739155081024!5m2!1sen!2str"
+            src={`https://maps.google.com/maps?q=37.45316819368852,30.58805108070374&z=16&output=embed`}
             title="Uskumenzade Lokasyon"
             allowFullScreen
             loading="lazy"

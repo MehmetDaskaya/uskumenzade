@@ -13,6 +13,7 @@ import { addItemToCart } from "@/redux/slices/cartSlice";
 import { getProducts } from "@/app/api/product/productApi";
 
 import { getHealthBenefits } from "@/app/api/benefits/benefitsApi";
+import { fetchSettingByKey } from "@/app/api/setting/settingApi";
 import {
   FaLeaf,
   FaShoppingCart,
@@ -66,6 +67,9 @@ export default function ProductDetailsClient({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [healthBenefits, setHealthBenefits] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [freeShipmentThreshold, setFreeShipmentThreshold] = useState<
+    number | null
+  >(null);
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const [showNotification, setShowNotification] = useState(false);
 
@@ -84,7 +88,20 @@ export default function ProductDetailsClient({
       }
     };
 
+    const fetchFreeShipmentThreshold = async () => {
+      try {
+        const setting = await fetchSettingByKey("free_shipment_threshold");
+        if (setting) {
+          const threshold = parseFloat(setting.value);
+          setFreeShipmentThreshold(threshold > 0 ? threshold : null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch free shipment threshold:", error);
+      }
+    };
+
     fetchHealthBenefits();
+    fetchFreeShipmentThreshold();
 
     return () => clearTimeout(timer);
   }, [product.id]);
@@ -386,27 +403,29 @@ export default function ProductDetailsClient({
             </div>
 
             {/* Shipping Info */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <div className="flex items-center space-x-3 mb-2">
-                <FaTruck className="text-green-600 text-xl" />
-                <div>
-                  <p className="font-medium text-gray-900">Ücretsiz Kargo</p>
-                  <p className="text-sm text-gray-600">
-                    100₺ ve üzeri alışverişlerde geçerlidir
-                  </p>
+            {freeShipmentThreshold && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="flex items-center space-x-3 mb-2">
+                  <FaTruck className="text-green-600 text-xl" />
+                  <div>
+                    <p className="font-medium text-gray-900">Ücretsiz Kargo</p>
+                    <p className="text-sm text-gray-600">
+                      {freeShipmentThreshold.toFixed(0)}₺ ve üzeri
+                      alışverişlerde geçerlidir
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-between text-sm text-gray-600 mt-2">
+                  <span>Tahmini Teslimat:</span>
+                  <span className="font-medium text-gray-900">3-5 iş günü</span>
                 </div>
               </div>
-              <div className="flex justify-between text-sm text-gray-600 mt-2">
-                <span>Tahmini Teslimat:</span>
-                <span className="font-medium text-gray-900">3-5 iş günü</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Product Description and Benefits - Custom Tabs Implementation */}
-      {/* Product Information Cards - New Approach without Tabs */}
       <div className="max-w-7xl mx-auto mt-8 px-4 sm:px-8">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
           <span>Ürün Bilgileri</span>
@@ -615,7 +634,9 @@ export default function ProductDetailsClient({
                       <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-2 text-xs font-bold">
                         2
                       </div>
-                      <p className="text-sm text-gray-700">Talimatlara uyun</p>
+                      <p className="text-sm text-gray-700">
+                        Paket üzerindeki talimatları uygulayın
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { fetchCurrentUser, updateUser, User } from "@/app/api/user/userApi";
-import {
-  createAddress,
-  updateAddress,
-  Address,
-} from "@/app/api/address/addressApi";
+import { createAddress, Address } from "@/app/api/address/addressApi";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
 
@@ -28,9 +24,6 @@ export default function UserInformationModal({
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<Partial<User>>({});
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isEditing, setIsEditing] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressFormData, setAddressFormData] = useState<
@@ -39,31 +32,32 @@ export default function UserInformationModal({
     address: "",
     zip_code: "",
     city: "",
-    country: "Türkiye", // ✅ Default country
+    country: "Türkiye",
     address_title: "",
     contact_name: "",
     contact_number: "",
     national_id: "",
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isAddressEditing, setIsAddressEditing] = useState(false);
-
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
 
   // Fetch user and address data
-
   useEffect(() => {
     const fetchData = async () => {
       if (!accessToken) return;
 
       try {
-        // Fetch the user data, including addresses
         const userData = await fetchCurrentUser(accessToken);
         setUser(userData);
-        setFormData(userData);
+        setFormData({
+          ...userData,
+          fname: userData.fname === "string" ? "" : userData.fname,
+          lname: userData.lname === "string" ? "" : userData.lname,
+          email: userData.email === "string" ? "" : userData.email,
+          gsm_number:
+            userData.gsm_number === "string" ? "" : userData.gsm_number,
+        });
 
-        // Use the addresses from the user data
         setAddresses(userData.addresses || []);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -93,114 +87,58 @@ export default function UserInformationModal({
   const handleUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+
     try {
       if (!accessToken) return;
-      const updatedUser = await updateUser(formData, accessToken);
-      setUser(updatedUser);
 
-      setIsEditing(false);
+      await updateUser(formData, accessToken);
       setSuccessMessage("Profil bilgileri başarıyla güncellendi!");
 
-      // Check if the user has addresses
+      // Move to address step if user has no addresses
       if (addresses.length === 0) {
-        setCurrentStep("address"); // Show the address step if no addresses exist
+        setCurrentStep("address");
       } else {
-        onClose(); // Close the modal if addresses exist
+        onUpdateAddresses(addresses);
       }
     } catch (error) {
-      console.error("Failed to update profile:", error);
-      alert("Profil bilgileri güncellenemedi. Tekrar deneyiniz.");
+      console.error("Failed to update user:", error);
+      alert("Profil güncellenirken hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Address Handlers
   const handleAddressInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setAddressFormData((prev) => ({
-      ...prev,
-      [name]: value,
-      country: "Türkiye",
-    }));
+    setAddressFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddressSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const {
-      address,
-      zip_code,
-      city,
-      address_title,
-      contact_name,
-      contact_number,
-      national_id,
-    } = addressFormData;
-
-    if (
-      !address ||
-      !zip_code ||
-      !city ||
-      !address_title ||
-      !contact_name ||
-      !contact_number ||
-      !national_id
-    ) {
-      alert("Lütfen tüm adres bilgilerini doldurun.");
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
-      if (isAddressEditing && addressFormData.id) {
-        const updatedAddress = await updateAddress(
-          addressFormData.id,
-          {
-            address,
-            zip_code,
-            city,
-            country: "Türkiye",
-            state: addressFormData.state || "",
-            address_title,
-            contact_name,
-            contact_number,
-            national_id,
-          },
-          accessToken || ""
-        );
+      if (!accessToken) return;
 
-        setAddresses((prev) =>
-          prev.map((addr) =>
-            addr.id === updatedAddress.id ? updatedAddress : addr
-          )
-        );
-        onUpdateAddresses(addresses);
-      } else {
-        const newAddress = await createAddress(
-          {
-            address,
-            zip_code,
-            city,
-            country: "Türkiye",
-            state: addressFormData.state || "",
-            address_title,
-            contact_name,
-            contact_number,
-            national_id,
-          },
-          accessToken || ""
-        );
-        const updatedAddresses = [...addresses, newAddress];
-        setAddresses(updatedAddresses);
-        onUpdateAddresses(updatedAddresses);
-      }
+      const newAddress = await createAddress(
+        addressFormData as Omit<
+          Address,
+          "id" | "created_at" | "updated_at" | "user_id"
+        >,
+        accessToken || ""
+      );
+      const updatedAddresses = [...addresses, newAddress];
+      setAddresses(updatedAddresses);
+      onUpdateAddresses(updatedAddresses);
 
       onClose();
     } catch (error) {
       console.error("Failed to save address:", error);
       alert("Adres kaydedilemedi. Lütfen tekrar deneyin.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -208,157 +146,162 @@ export default function UserInformationModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 overflow-y-auto">
-      <div className="max-w-3xl w-full bg-white p-6 rounded-lg shadow-lg space-y-6 relative mx-4 mt-10 mb-10">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
-        >
-          ×
-        </button>
-        <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">
-          Profil ve Adres Bilgileri
-        </h2>
-        {/* User Profile Section */}
-
-        <div>
-          {currentStep === "profile" && (
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">
-                Profilim
-              </h1>
-              {user ? (
-                <form onSubmit={handleUserSubmit} className="space-y-8">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">
-                      Kişisel Bilgiler
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div>
-                        <label
-                          htmlFor="fname"
-                          className="block text-gray-700 font-semibold mb-2"
-                        >
-                          Ad
-                        </label>
-                        <input
-                          id="fname"
-                          type="text"
-                          name="fname"
-                          value={formData.fname || ""}
-                          onChange={handleInputChange}
-                          placeholder="Ad"
-                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="lname"
-                          className="block text-gray-700 font-semibold mb-2"
-                        >
-                          Soyad
-                        </label>
-                        <input
-                          id="lname"
-                          type="text"
-                          name="lname"
-                          value={formData.lname || ""}
-                          onChange={handleInputChange}
-                          placeholder="Soyad"
-                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <label
-                        htmlFor="email"
-                        className="block text-gray-700 font-semibold mb-2"
-                      >
-                        E-posta
-                      </label>
-                      <input
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={formData.email || ""}
-                        onChange={handleInputChange}
-                        onInvalid={(e) =>
-                          e.currentTarget.setCustomValidity(
-                            "Lütfen geçerli bir e-posta adresi girin."
-                          )
-                        }
-                        onInput={(e) => e.currentTarget.setCustomValidity("")}
-                        placeholder="E-posta"
-                        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 gap-6">
-                      <div>
-                        <label
-                          htmlFor="gsm_number"
-                          className="block text-gray-700 font-semibold mb-2"
-                        >
-                          Telefon Numarası
-                        </label>
-                        <input
-                          id="gsm_number"
-                          type="tel"
-                          name="gsm_number"
-                          value={formData.gsm_number?.replace("+90", "") || ""}
-                          onChange={(e) => {
-                            const input = e.target.value.replace(/\D/g, "");
-                            if (input.length <= 10) {
-                              setFormData((prev) => ({
-                                ...prev,
-                                gsm_number: input ? `+90${input}` : "",
-                              }));
-                            }
-                          }}
-                          required
-                          inputMode="numeric"
-                          pattern="[0-9]{10}"
-                          placeholder="542 xxx xxxx"
-                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary text-black bg-gray-200"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-4">
-                    <button
-                      type="submit"
-                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                    >
-                      Profil bilgilerini kaydet ve devam et
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <p className="text-center text-gray-600">
-                  Kullanıcı bilgileri yükleniyor...
-                </p>
-              )}
+      <div className="max-w-2xl w-full bg-white p-8 rounded-xl shadow-2xl space-y-6 relative mx-4 mt-10 mb-10">
+        {/* Header with warning message */}
+        <div className="text-center mb-6">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <svg
+                className="w-5 h-5 text-amber-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="text-amber-800 font-semibold">Önemli</span>
             </div>
-          )}
+            <p className="text-amber-700 text-sm">
+              Sipariş vermek için önce profil ve adres bilgilerinizi
+              doldurmalısınız.
+            </p>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Profil ve Adres Bilgileri
+          </h2>
         </div>
 
-        {/* Address Section */}
+        {/* Profile Step */}
+        {currentStep === "profile" && (
+          <div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">
+              Kişisel Bilgiler
+            </h3>
+            {user ? (
+              <form onSubmit={handleUserSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="fname"
+                      className="block text-gray-700 font-medium mb-2 text-sm"
+                    >
+                      Ad
+                    </label>
+                    <input
+                      id="fname"
+                      type="text"
+                      name="fname"
+                      value={formData.fname || ""}
+                      onChange={handleInputChange}
+                      placeholder="Adınız"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                      required
+                    />
+                  </div>
 
+                  <div>
+                    <label
+                      htmlFor="lname"
+                      className="block text-gray-700 font-medium mb-2 text-sm"
+                    >
+                      Soyad
+                    </label>
+                    <input
+                      id="lname"
+                      type="text"
+                      name="lname"
+                      value={formData.lname || ""}
+                      onChange={handleInputChange}
+                      placeholder="Soyadınız"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-gray-700 font-medium mb-2 text-sm"
+                  >
+                    E-posta
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email || ""}
+                    onChange={handleInputChange}
+                    placeholder="E-posta adresiniz"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="gsm_number"
+                    className="block text-gray-700 font-medium mb-2 text-sm"
+                  >
+                    Telefon Numarası
+                  </label>
+                  <input
+                    id="gsm_number"
+                    type="tel"
+                    name="gsm_number"
+                    value={formData.gsm_number?.replace("+90", "") || ""}
+                    onChange={(e) => {
+                      const input = e.target.value.replace(/\D/g, "");
+                      if (input.length <= 10) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          gsm_number: input ? `+90${input}` : "",
+                        }));
+                      }
+                    }}
+                    required
+                    inputMode="numeric"
+                    pattern="[0-9]{10}"
+                    placeholder="542 xxx xxxx"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-4 pt-4">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  >
+                    {isSubmitting
+                      ? "Kaydediliyor..."
+                      : "Profil bilgilerini kaydet"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <p className="text-center text-gray-600">
+                Kullanıcı bilgileri yükleniyor...
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Address Step */}
         {currentStep === "address" && (
-          <div className="w-full bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">
               Adres Bilgileri
-            </h2>
-
+            </h3>
             <form onSubmit={handleAddressSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label
                     htmlFor="address_title"
-                    className="block text-gray-700 font-semibold mb-2"
+                    className="block text-gray-700 font-medium mb-2 text-sm"
                   >
                     Adres Başlığı
                   </label>
@@ -368,8 +311,8 @@ export default function UserInformationModal({
                     name="address_title"
                     value={addressFormData.address_title || ""}
                     onChange={handleAddressInputChange}
-                    placeholder="Adres Başlığı"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
+                    placeholder="Ev, İş, vb."
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
@@ -377,7 +320,7 @@ export default function UserInformationModal({
                 <div>
                   <label
                     htmlFor="contact_name"
-                    className="block text-gray-700 font-semibold mb-2"
+                    className="block text-gray-700 font-medium mb-2 text-sm"
                   >
                     İletişim İsmi
                   </label>
@@ -387,18 +330,79 @@ export default function UserInformationModal({
                     name="contact_name"
                     value={addressFormData.contact_name || ""}
                     onChange={handleAddressInputChange}
-                    placeholder="İletişim İsmi"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
+                    placeholder="Ad Soyad"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="address"
+                  className="block text-gray-700 font-medium mb-2 text-sm"
+                >
+                  Adres
+                </label>
+                <textarea
+                  id="address"
+                  name="address"
+                  value={addressFormData.address || ""}
+                  onChange={handleAddressInputChange}
+                  placeholder="Tam adres bilgisi"
+                  rows={3}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="city"
+                    className="block text-gray-700 font-medium mb-2 text-sm"
+                  >
+                    Şehir
+                  </label>
+                  <input
+                    id="city"
+                    type="text"
+                    name="city"
+                    value={addressFormData.city || ""}
+                    onChange={handleAddressInputChange}
+                    placeholder="İstanbul"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
 
                 <div>
                   <label
-                    htmlFor="contact_number"
-                    className="block text-gray-700 font-semibold mb-2"
+                    htmlFor="zip_code"
+                    className="block text-gray-700 font-medium mb-2 text-sm"
                   >
-                    Telefon Numarası
+                    Posta Kodu
+                  </label>
+                  <input
+                    id="zip_code"
+                    type="text"
+                    name="zip_code"
+                    value={addressFormData.zip_code || ""}
+                    onChange={handleAddressInputChange}
+                    placeholder="34000"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="contact_number"
+                    className="block text-gray-700 font-medium mb-2 text-sm"
+                  >
+                    Telefon
                   </label>
                   <input
                     id="contact_number"
@@ -416,123 +420,68 @@ export default function UserInformationModal({
                         }));
                       }
                     }}
-                    onInvalid={(e) =>
-                      e.currentTarget.setCustomValidity(
-                        "Lütfen geçerli bir telefon numarası girin."
-                      )
-                    }
-                    onInput={(e) => e.currentTarget.setCustomValidity("")}
-                    required
-                    inputMode="numeric"
-                    pattern="[0-9]{10}"
-                    maxLength={10}
                     placeholder="542 xxx xxxx"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    required
                   />
                 </div>
 
                 <div>
                   <label
                     htmlFor="national_id"
-                    className="block text-gray-700 font-semibold mb-2"
+                    className="block text-gray-700 font-medium mb-2 text-sm"
                   >
-                    TC Kimlik Numarası
+                    TC Kimlik/Vergi No
                   </label>
                   <input
                     id="national_id"
                     type="text"
                     name="national_id"
                     value={addressFormData.national_id || ""}
-                    onChange={handleAddressInputChange}
-                    onInvalid={(e) =>
-                      e.currentTarget.setCustomValidity(
-                        "Lütfen geçerli bir TC Kimlik Numarası girin."
-                      )
-                    }
-                    onInput={(e) => e.currentTarget.setCustomValidity("")}
-                    required
-                    pattern="^[0-9]{11}$"
+                    onChange={(e) => {
+                      const input = e.target.value.replace(/\D/g, "");
+                      if (input.length <= 11) {
+                        setAddressFormData((prev) => ({
+                          ...prev,
+                          national_id: input,
+                        }));
+                      }
+                    }}
+                    placeholder="12345678901"
                     maxLength={11}
-                    placeholder="TC Kimlik Numarası"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="address"
-                    className="block text-gray-700 font-semibold mb-2"
-                  >
-                    Adres
-                  </label>
-                  <input
-                    id="address"
-                    type="text"
-                    name="address"
-                    value={addressFormData.address || ""}
-                    onChange={handleAddressInputChange}
-                    placeholder="Adres"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="city"
-                    className="block text-gray-700 font-semibold mb-2"
-                  >
-                    Şehir
-                  </label>
-                  <input
-                    id="city"
-                    type="text"
-                    name="city"
-                    value={addressFormData.city || ""}
-                    onChange={handleAddressInputChange}
-                    placeholder="Şehir"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="zip_code"
-                    className="block text-gray-700 font-semibold mb-2"
-                  >
-                    Posta Kodu
-                  </label>
-                  <input
-                    id="zip_code"
-                    type="text"
-                    name="zip_code"
-                    value={addressFormData.zip_code || ""}
-                    onChange={handleAddressInputChange}
-                    placeholder="Posta Kodu"
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
+                    pattern="[0-9]{11}"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     required
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-4">
+              <div className="flex justify-end space-x-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep("profile")}
+                  className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200"
+                >
+                  Geri
+                </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  disabled={isSubmitting}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 >
-                  Adres bilgilerini kaydet
+                  {isSubmitting ? "Kaydediliyor..." : "Adresi kaydet"}
                 </button>
               </div>
             </form>
           </div>
         )}
+
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-green-700 text-center">{successMessage}</p>
+          </div>
+        )}
       </div>
-      {successMessage && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded shadow-md z-50 transition-opacity">
-          {successMessage}
-        </div>
-      )}
     </div>
   );
 }

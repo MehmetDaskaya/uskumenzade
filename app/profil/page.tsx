@@ -512,9 +512,6 @@ export default function Profile() {
             </form>
           </div>
 
-          {/* Vertical Divider */}
-          <div className="w-0.5 bg-gray-300"></div>
-
           {/* Saved Addresses Section */}
           <div className="w-full lg:w-1/2 bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
@@ -559,6 +556,10 @@ export default function Profile() {
                       <p className="text-gray-700">
                         <span className="font-medium">İletişim Numarası:</span>{" "}
                         {addr.contact_number || "Belirtilmedi"}
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">TC Kimlik/Vergi No:</span>{" "}
+                        {addr.national_id || "Belirtilmedi"}
                       </p>
                     </div>
                     <div className="space-x-4 flex-shrink-0">

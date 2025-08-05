@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { FaPlus } from "react-icons/fa";
-import { ImageModal, CategoryModal } from "../../../components/";
+import {
+  ImageModal,
+  CategoryModal,
+  ShipmentPricingModal,
+  PayOnDeliveryPricingModal,
+  PricingSettingsModal,
+} from "../../../components/";
 import { TagModal } from "../../Modal/TagIdModal";
 import { MetaTagModal } from "../../Modal/MetaTagModal";
 import { DocumentModal } from "../../Modal/DocumentModal";
@@ -25,6 +31,20 @@ import {
   deleteBanner,
   Banner,
 } from "@/app/api/banner/bannerApi";
+import {
+  fetchShipmentPricings,
+  createShipmentPricing,
+  updateShipmentPricing,
+  deleteShipmentPricing,
+  ShipmentPricing,
+} from "@/app/api/shipment-pricing/shipmentPricingApi";
+import {
+  fetchPayOnDeliveryPricings,
+  createPayOnDeliveryPricing,
+  updatePayOnDeliveryPricing,
+  deletePayOnDeliveryPricing,
+  PayOnDeliveryPricing,
+} from "@/app/api/pay-on-delivery-pricing/payOnDeliveryPricingApi";
 
 export const DefinitionsComponent = () => {
   const [showImageModal, setShowImageModal] = useState(false);
@@ -36,9 +56,20 @@ export const DefinitionsComponent = () => {
     useState(false);
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [showBannerModal, setShowBannerModal] = useState(false);
+  const [showShipmentPricingModal, setShowShipmentPricingModal] =
+    useState(false);
+  const [showPayOnDeliveryPricingModal, setShowPayOnDeliveryPricingModal] =
+    useState(false);
+  const [showPricingSettingsModal, setShowPricingSettingsModal] =
+    useState(false);
   const [banners, setBanners] = useState<Banner[]>([]);
-
   const [discounts, setDiscounts] = useState<Discount[]>([]);
+  const [shipmentPricings, setShipmentPricings] = useState<ShipmentPricing[]>(
+    []
+  );
+  const [payOnDeliveryPricings, setPayOnDeliveryPricings] = useState<
+    PayOnDeliveryPricing[]
+  >([]);
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken); // Get token from Redux
 
@@ -65,6 +96,17 @@ export const DefinitionsComponent = () => {
 
   const openBannerModal = () => setShowBannerModal(true);
   const closeBannerModal = () => setShowBannerModal(false);
+
+  const openShipmentPricingModal = () => setShowShipmentPricingModal(true);
+  const closeShipmentPricingModal = () => setShowShipmentPricingModal(false);
+
+  const openPayOnDeliveryPricingModal = () =>
+    setShowPayOnDeliveryPricingModal(true);
+  const closePayOnDeliveryPricingModal = () =>
+    setShowPayOnDeliveryPricingModal(false);
+
+  const openPricingSettingsModal = () => setShowPricingSettingsModal(true);
+  const closePricingSettingsModal = () => setShowPricingSettingsModal(false);
 
   // Load discounts on component mount
 
@@ -106,6 +148,36 @@ export const DefinitionsComponent = () => {
   useEffect(() => {
     loadBanners();
   }, [loadBanners]);
+
+  const loadShipmentPricings = useCallback(async () => {
+    if (!accessToken) return;
+
+    try {
+      const fetchedPricings = await fetchShipmentPricings(accessToken);
+      setShipmentPricings(fetchedPricings);
+    } catch (error) {
+      console.error("Failed to load shipment pricings:", error);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    loadShipmentPricings();
+  }, [loadShipmentPricings]);
+
+  const loadPayOnDeliveryPricings = useCallback(async () => {
+    if (!accessToken) return;
+
+    try {
+      const fetchedPricings = await fetchPayOnDeliveryPricings(accessToken);
+      setPayOnDeliveryPricings(fetchedPricings);
+    } catch (error) {
+      console.error("Failed to load pay-on-delivery pricings:", error);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    loadPayOnDeliveryPricings();
+  }, [loadPayOnDeliveryPricings]);
 
   const handleSaveBanner = async (newBanner: Partial<Banner>) => {
     try {
@@ -173,6 +245,92 @@ export const DefinitionsComponent = () => {
       setDiscounts(discounts.filter((d) => d.id !== discountId));
     } catch (error) {
       console.error("Failed to delete discount:", error);
+    }
+  };
+
+  const handleSaveShipmentPricing = async (
+    newPricing: Partial<ShipmentPricing>
+  ) => {
+    try {
+      if (!accessToken) return;
+      const created = await createShipmentPricing(newPricing, accessToken);
+      setShipmentPricings([...shipmentPricings, created]);
+    } catch (error) {
+      console.error("Failed to create shipment pricing:", error);
+    }
+  };
+
+  const handleUpdateShipmentPricing = async (
+    pricingId: string,
+    updated: Partial<ShipmentPricing>
+  ) => {
+    try {
+      if (!accessToken) return;
+      const updatedPricing = await updateShipmentPricing(
+        pricingId,
+        updated,
+        accessToken
+      );
+      setShipmentPricings(
+        shipmentPricings.map((p) => (p.id === pricingId ? updatedPricing : p))
+      );
+    } catch (error) {
+      console.error("Failed to update shipment pricing:", error);
+    }
+  };
+
+  const handleDeleteShipmentPricing = async (pricingId: string) => {
+    try {
+      if (!accessToken) return;
+      await deleteShipmentPricing(pricingId, accessToken);
+      setShipmentPricings(shipmentPricings.filter((p) => p.id !== pricingId));
+    } catch (error) {
+      console.error("Failed to delete shipment pricing:", error);
+    }
+  };
+
+  const handleSavePayOnDeliveryPricing = async (
+    newPricing: Partial<PayOnDeliveryPricing>
+  ) => {
+    try {
+      if (!accessToken) return;
+      const created = await createPayOnDeliveryPricing(newPricing, accessToken);
+      setPayOnDeliveryPricings([...payOnDeliveryPricings, created]);
+    } catch (error) {
+      console.error("Failed to create pay-on-delivery pricing:", error);
+    }
+  };
+
+  const handleUpdatePayOnDeliveryPricing = async (
+    pricingId: string,
+    updated: Partial<PayOnDeliveryPricing>
+  ) => {
+    try {
+      if (!accessToken) return;
+      const updatedPricing = await updatePayOnDeliveryPricing(
+        pricingId,
+        updated,
+        accessToken
+      );
+      setPayOnDeliveryPricings(
+        payOnDeliveryPricings.map((p) =>
+          p.id === pricingId ? updatedPricing : p
+        )
+      );
+    } catch (error) {
+      console.error("Failed to update pay-on-delivery pricing:", error);
+    }
+  };
+
+  const handleDeletePayOnDeliveryPricing = async (pricingId: string) => {
+    try {
+      if (!accessToken) return;
+      await deletePayOnDeliveryPricing(pricingId, accessToken);
+      setPayOnDeliveryPricings(
+        payOnDeliveryPricings.filter((p) => p.id !== pricingId)
+      );
+    } catch (error) {
+      console.error("Failed to delete pay-on-delivery pricing:", error);
     }
   };
 
@@ -295,6 +453,54 @@ export const DefinitionsComponent = () => {
             Banner Ekranını Aç
           </button>
         </div>
+
+        {/* Manage Shipment Pricing Section */}
+        <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
+          <h3 className="text-lg font-semibold mb-4">Kargo Fiyatlandırması</h3>
+          <p className="text-gray-600 text-center mb-6">
+            Hacim bazlı kargo fiyatlandırması ekle, güncelle veya sil
+          </p>
+          <button
+            onClick={openShipmentPricingModal}
+            className="bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600 transition duration-300"
+          >
+            <FaPlus className="inline mr-2" />
+            Kargo Fiyatlandırması Ekranını Aç
+          </button>
+        </div>
+
+        {/* Manage Pay on Delivery Pricing Section */}
+        <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
+          <h3 className="text-lg font-semibold mb-4">
+            Kapıda Ödeme Fiyatlandırması
+          </h3>
+          <p className="text-gray-600 text-center mb-6">
+            Sipariş tutarı bazlı kapıda ödeme fiyatlandırması ekle, güncelle
+            veya sil
+          </p>
+          <button
+            onClick={openPayOnDeliveryPricingModal}
+            className="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition duration-300"
+          >
+            <FaPlus className="inline mr-2" />
+            Kapıda Ödeme Fiyatlandırması Ekranını Aç
+          </button>
+        </div>
+
+        {/* Manage Pricing Settings Section */}
+        <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
+          <h3 className="text-lg font-semibold mb-4">Fiyatlandırma Ayarları</h3>
+          <p className="text-gray-600 text-center mb-6">
+            Ek hacim ücreti ve kapıda ödeme yüzde ayarlarını yapılandır
+          </p>
+          <button
+            onClick={openPricingSettingsModal}
+            className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition duration-300"
+          >
+            <FaPlus className="inline mr-2" />
+            Fiyatlandırma Ayarları Ekranını Aç
+          </button>
+        </div>
       </div>
 
       {/* Modals */}
@@ -386,6 +592,36 @@ export const DefinitionsComponent = () => {
           onUpdate={handleUpdateBanner}
           onDelete={handleDeleteBanner}
           banners={banners}
+        />
+      )}
+
+      {showShipmentPricingModal && (
+        <ShipmentPricingModal
+          isOpen={showShipmentPricingModal}
+          onClose={closeShipmentPricingModal}
+          onSave={handleSaveShipmentPricing}
+          onUpdate={handleUpdateShipmentPricing}
+          onDelete={handleDeleteShipmentPricing}
+          pricings={shipmentPricings}
+        />
+      )}
+
+      {showPayOnDeliveryPricingModal && (
+        <PayOnDeliveryPricingModal
+          isOpen={showPayOnDeliveryPricingModal}
+          onClose={closePayOnDeliveryPricingModal}
+          onSave={handleSavePayOnDeliveryPricing}
+          onUpdate={handleUpdatePayOnDeliveryPricing}
+          onDelete={handleDeletePayOnDeliveryPricing}
+          pricings={payOnDeliveryPricings}
+        />
+      )}
+
+      {showPricingSettingsModal && (
+        <PricingSettingsModal
+          isOpen={showPricingSettingsModal}
+          onClose={closePricingSettingsModal}
+          token={accessToken || ""}
         />
       )}
     </div>

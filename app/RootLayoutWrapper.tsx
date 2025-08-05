@@ -4,7 +4,12 @@
 import { ReactNode, useMemo } from "react";
 import { usePathname } from "next/navigation"; // Use `usePathname` instead of `headers` for client-side check
 import ReduxProvider from "@/redux/provider";
-import { Navbar, Footer, GoToTopButton } from "./components/index";
+import {
+  Navbar,
+  Footer,
+  GoToTopButton,
+  WhatsAppButton,
+} from "./components/index";
 
 export default function RootLayoutWrapper({
   children,
@@ -21,6 +26,7 @@ export default function RootLayoutWrapper({
           {!isAdmin && <Navbar viewable={true} />}
           {children}
           {!isAdmin && <Footer viewable={true} />}
+          <WhatsAppButton />
           <GoToTopButton />
         </ReduxProvider>
       </body>

@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import { InfiniteMovingCards } from "../components/MovingCards/MovingCards";
 import { useState, ReactNode } from "react";
 
 const fadeInUp = {
@@ -654,19 +653,6 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Testimonials Section */}
-      <div className="py-16">
-        <FadeInWhenVisible>
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-900 relative">
-            <span className="relative inline-block">
-              Müşterilerimiz Ne Diyor?
-              <span className="absolute -bottom-4 left-0 right-0 h-1 bg-secondary rounded"></span>
-            </span>
-          </h2>
-        </FadeInWhenVisible>
-        <InfiniteMovingCards />
       </div>
 
       {/* Call-to-Action Section */}

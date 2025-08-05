@@ -15,17 +15,24 @@ import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { User } from "../api/auth/authApi";
 
 import { fetchDiscounts } from "../api/discount/discountApi";
-import {
-  fetchShipmentCost,
-  fetchSettingByKey,
-} from "../api/setting/settingApi";
+import { fetchSettingByKey } from "../api/setting/settingApi";
+import { createOrder, CreateOrderRequest } from "../api/order/orderApi";
+import { fetchCurrentUser } from "../api/user/userApi";
+import { Address } from "../api/address/addressApi";
 
 import { Snackbar } from "../components/index";
+import UserInformationModal from "../components/Modal/UserInformationModal";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { FaTrashAlt, FaTag, FaTruckMoving } from "react-icons/fa";
+import {
+  FaTrashAlt,
+  FaTag,
+  FaTruckMoving,
+  FaCreditCard,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
 import { AiOutlineShoppingCart, AiOutlineArrowRight } from "react-icons/ai";
 import { BiMinus, BiPlus } from "react-icons/bi";
 
@@ -53,6 +60,21 @@ export default function Cart() {
     "success"
   );
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  // Payment method and address state
+  const [paymentMethod, setPaymentMethod] = useState<
+    "credit_card" | "pay_on_delivery"
+  >("credit_card");
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedShippingAddress, setSelectedShippingAddress] = useState<
+    string | null
+  >(null);
+  const [selectedBillingAddress, setSelectedBillingAddress] = useState<
+    string | null
+  >(null);
+  const [useSameAddress, setUseSameAddress] = useState(false);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [showUserInfoModal, setShowUserInfoModal] = useState(false);
 
   const { getAuthenticatedUser } = useAuthRedirect();
   const [user, setUser] = useState<User | null>(null);
@@ -147,12 +169,14 @@ export default function Cart() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const minOrder = await fetchSettingByKey("min_order_value");
+        const minOrder = await fetchSettingByKey("min_order");
         const freeShipping = await fetchSettingByKey("free_shipment_threshold");
 
         if (minOrder) setMinOrderValue(parseFloat(minOrder.value));
-        if (freeShipping)
-          setFreeShipmentThreshold(parseFloat(freeShipping.value));
+        if (freeShipping) {
+          const threshold = parseFloat(freeShipping.value);
+          setFreeShipmentThreshold(threshold > 0 ? threshold : null);
+        }
       } catch (error) {
         console.error("Ayarlar alınırken hata oluştu:", error);
         setSnackbarMessage("Ayarlar yüklenemedi.");
@@ -163,6 +187,53 @@ export default function Cart() {
 
     fetchSettings();
   }, []);
+
+  // Load user addresses and check for missing information
+  useEffect(() => {
+    const loadUserAddresses = async () => {
+      if (!user?.email) return;
+
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) return;
+
+        const userData = await fetchCurrentUser(token);
+        setAddresses(userData.addresses || []);
+
+        // Check if user has all required information
+        const hasAllFields = Boolean(
+          userData?.fname?.trim() &&
+            userData?.lname?.trim() &&
+            userData?.email?.trim() &&
+            userData?.gsm_number?.trim()
+        );
+
+        const hasAddresses = userData?.addresses?.length > 0;
+
+        // Show modal if missing information
+        if (!hasAllFields || !hasAddresses) {
+          setShowUserInfoModal(true);
+        } else {
+          // Auto-select first address if available
+          if (userData.addresses && userData.addresses.length > 0) {
+            const firstAddress = userData.addresses[0];
+            if (firstAddress.id) {
+              setSelectedShippingAddress(firstAddress.id as string);
+              setSelectedBillingAddress(firstAddress.id as string);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Adresler yüklenirken hata oluştu:", error);
+        setSnackbarMessage("Adresler yüklenemedi.");
+        setSnackbarType("error");
+        setSnackbarOpen(true);
+        setShowUserInfoModal(true);
+      }
+    };
+
+    loadUserAddresses();
+  }, [user?.email]);
 
   type DiscountWithOrders = {
     code: string;
@@ -364,30 +435,121 @@ export default function Cart() {
     }
   }, [calculatedTotalPrice, appliedDiscount]);
 
+  // Simplified shipment fee - will be calculated by backend
   useEffect(() => {
-    const calculateTransportationFee = async () => {
-      try {
-        const cost = await fetchShipmentCost();
+    setTransportationFee(0); // Backend will calculate this
+  }, []);
 
-        const totalShipmentFee = items.reduce((sum, item) => {
-          const itemLength = item.length || 1;
-          const itemWidth = item.width || 1;
-          const itemHeight = item.height || 1;
+  const handleConfirmCart = async () => {
+    if (!user?.email) {
+      setSnackbarMessage("Lütfen giriş yapın.");
+      setSnackbarType("error");
+      setSnackbarOpen(true);
+      return;
+    }
 
-          const itemShipmentFee =
-            (itemLength * itemWidth * itemHeight * item.quantity * cost) / 3000;
+    // Check if user has all required information
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setSnackbarMessage("Kimlik doğrulama hatası.");
+      setSnackbarType("error");
+      setSnackbarOpen(true);
+      return;
+    }
 
-          return sum + itemShipmentFee;
-        }, 0);
+    try {
+      const userData = await fetchCurrentUser(token);
+      const hasAllFields = Boolean(
+        userData?.fname?.trim() &&
+          userData?.lname?.trim() &&
+          userData?.email?.trim() &&
+          userData?.gsm_number?.trim()
+      );
 
-        setTransportationFee(totalShipmentFee);
-      } catch (error) {
-        console.error("Failed to fetch shipment cost:", error);
+      const hasAddresses = userData?.addresses?.length > 0;
+
+      if (!hasAllFields || !hasAddresses) {
+        setShowUserInfoModal(true);
+        return;
       }
-    };
+    } catch (error) {
+      console.error("Kullanıcı bilgileri kontrol edilirken hata:", error);
+      setShowUserInfoModal(true);
+      return;
+    }
 
-    calculateTransportationFee();
-  }, [items]);
+    if (
+      !selectedShippingAddress ||
+      (!useSameAddress && !selectedBillingAddress)
+    ) {
+      setSnackbarMessage("Lütfen adres bilgilerini seçin.");
+      setSnackbarType("error");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    if (items.length === 0) {
+      setSnackbarMessage("Sepetiniz boş.");
+      setSnackbarType("error");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    setIsCreatingOrder(true);
+
+    try {
+      const basket = items.map((item) => ({
+        item_id: item.id,
+        quantity: item.quantity,
+      }));
+
+      const discountCodeFromStorage = localStorage.getItem("discountCode");
+
+      // Create order with payment method
+      const orderData: CreateOrderRequest = {
+        shipping_address_id: selectedShippingAddress,
+        billing_address_id: useSameAddress
+          ? selectedShippingAddress
+          : selectedBillingAddress!,
+        basket,
+        discount_code: discountCodeFromStorage || undefined,
+        payment_on_delivery: paymentMethod === "pay_on_delivery",
+      };
+
+      const newOrder = await createOrder(orderData, token);
+
+      // Store order ID for the confirmation page
+      localStorage.setItem("pendingOrderId", newOrder.id);
+      localStorage.setItem("paymentMethod", paymentMethod);
+
+      // Navigate to confirmation page
+      router.push("/sepet/confirm");
+    } catch (error) {
+      console.error("Sipariş oluşturulurken hata:", error);
+      setSnackbarMessage("Sipariş oluşturulamadı. Lütfen tekrar deneyin.");
+      setSnackbarType("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowUserInfoModal(false);
+  };
+
+  const handleAddressUpdate = (updatedAddresses: Address[]) => {
+    setAddresses(updatedAddresses);
+    // Auto-select first address if available
+    if (updatedAddresses && updatedAddresses.length > 0) {
+      const firstAddress = updatedAddresses[0];
+      if (firstAddress.id) {
+        setSelectedShippingAddress(firstAddress.id as string);
+        setSelectedBillingAddress(firstAddress.id as string);
+      }
+    }
+    setShowUserInfoModal(false);
+  };
 
   if (!isClient) return null;
 
@@ -562,6 +724,117 @@ export default function Cart() {
                   Sipariş Özeti
                 </h2>
 
+                {/* Payment Method Selection */}
+                <div className="space-y-3">
+                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <FaCreditCard className="text-secondary" />
+                    Ödeme Yöntemi
+                  </h3>
+
+                  <div className="space-y-2">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="credit_card"
+                        checked={paymentMethod === "credit_card"}
+                        onChange={(e) =>
+                          setPaymentMethod(
+                            e.target.value as "credit_card" | "pay_on_delivery"
+                          )
+                        }
+                        className="text-secondary focus:ring-secondary"
+                      />
+                      <span className="text-gray-700">Kredi Kartı ile Öde</span>
+                    </label>
+
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="pay_on_delivery"
+                        checked={paymentMethod === "pay_on_delivery"}
+                        onChange={(e) =>
+                          setPaymentMethod(
+                            e.target.value as "credit_card" | "pay_on_delivery"
+                          )
+                        }
+                        className="text-secondary focus:ring-secondary "
+                      />
+                      <span className="text-gray-700">Kapıda Ödeme</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Address Selection */}
+                {addresses.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <FaMapMarkerAlt className="text-secondary" />
+                      Adres Bilgileri
+                    </h3>
+
+                    <div className="space-y-3">
+                      {/* Shipping Address */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Teslimat Adresi
+                        </label>
+                        <select
+                          value={selectedShippingAddress || ""}
+                          onChange={(e) =>
+                            setSelectedShippingAddress(e.target.value)
+                          }
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm bg-white"
+                        >
+                          <option value="">Teslimat adresi seçin</option>
+                          {addresses.map((address) => (
+                            <option key={address.id} value={address.id}>
+                              {address.address_title} - {address.address},{" "}
+                              {address.city}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Billing Address */}
+                      <div>
+                        <label className="flex items-center space-x-2 mb-1">
+                          <input
+                            type="checkbox"
+                            checked={useSameAddress}
+                            onChange={(e) =>
+                              setUseSameAddress(e.target.checked)
+                            }
+                            className="text-secondary focus:ring-secondary "
+                          />
+                          <span className="text-sm text-gray-700">
+                            Fatura adresi teslimat adresi ile aynı
+                          </span>
+                        </label>
+
+                        {!useSameAddress && (
+                          <select
+                            value={selectedBillingAddress || ""}
+                            onChange={(e) =>
+                              setSelectedBillingAddress(e.target.value)
+                            }
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm bg-white"
+                          >
+                            <option value="">Fatura adresi seçin</option>
+                            {addresses.map((address) => (
+                              <option key={address.id} value={address.id}>
+                                {address.address_title} - {address.address},{" "}
+                                {address.city}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <div className="flex justify-between text-gray-600 py-2">
                     <span>Ürünler ({totalQuantity} adet)</span>
@@ -570,25 +843,17 @@ export default function Cart() {
                     </span>
                   </div>
 
-                  <div className="flex justify-between text-gray-600 py-2 items-center">
-                    <span className="flex items-center gap-2">
-                      <FaTruckMoving className="text-secondary" />
-                      Kargo Ücreti
-                    </span>
-                    <span
-                      className={`font-medium ${
-                        freeShipmentThreshold !== null &&
-                        calculatedTotalPrice >= freeShipmentThreshold
-                          ? "text-green-600"
-                          : ""
-                      }`}
-                    >
-                      {freeShipmentThreshold !== null &&
-                      calculatedTotalPrice >= freeShipmentThreshold
-                        ? "Ücretsiz"
-                        : `${transportationFee.toFixed(2)} ₺`}
-                    </span>
-                  </div>
+                  {freeShipmentThreshold && (
+                    <div className="flex justify-between text-gray-600 py-2 items-center">
+                      <span className="flex items-center gap-2">
+                        <FaTruckMoving className="text-secondary" />
+                        Kargo Ücreti
+                      </span>
+                      <span className="font-medium text-gray-400">
+                        Hesaplanacak
+                      </span>
+                    </div>
+                  )}
 
                   {discountAmount > 0 && (
                     <div className="flex justify-between text-gray-600 py-2 items-center">
@@ -603,7 +868,7 @@ export default function Cart() {
                   )}
                 </div>
 
-                {freeShipmentThreshold !== null &&
+                {freeShipmentThreshold &&
                   finalTotal < freeShipmentThreshold && (
                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                       <p className="text-sm text-blue-700 font-medium flex items-center gap-2">
@@ -629,16 +894,9 @@ export default function Cart() {
                   )}
 
                 <div className="flex justify-between text-xl font-bold text-gray-800 pt-4 border-t border-gray-200">
-                  <span>Genel Toplam</span>
+                  <span>Ürünler Toplamı</span>
                   <span className="text-secondary">
-                    {(
-                      finalTotal +
-                      (freeShipmentThreshold !== null &&
-                      calculatedTotalPrice >= freeShipmentThreshold
-                        ? 0
-                        : transportationFee)
-                    ).toFixed(2)}{" "}
-                    ₺
+                    {finalTotal.toFixed(2)} ₺
                   </span>
                 </div>
 
@@ -677,43 +935,34 @@ export default function Cart() {
                   </div>
                 </div>
 
-                {/* Checkout Button */}
+                {/* Confirm Cart Button */}
                 <button
-                  onClick={() => {
-                    const hasStockError = items.some(
-                      (item) => item.quantity > item.stock
-                    );
-                    if (hasStockError) {
-                      setSnackbarMessage(
-                        "Sepetinizdeki bazı ürünlerin adedi stoktan fazla."
-                      );
-                      setSnackbarType("error");
-                      setSnackbarOpen(true);
-                      return;
-                    }
-
-                    if (
-                      minOrderValue !== null &&
-                      calculatedTotalPrice < minOrderValue
-                    ) {
-                      return;
-                    }
-
-                    router.push("/odeme");
-                  }}
+                  onClick={handleConfirmCart}
+                  disabled={
+                    isCreatingOrder ||
+                    (minOrderValue !== null &&
+                      calculatedTotalPrice < minOrderValue) ||
+                    !selectedShippingAddress ||
+                    (!useSameAddress && !selectedBillingAddress)
+                  }
                   className={`w-full py-4 rounded-lg font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 mt-4 ${
-                    minOrderValue !== null &&
-                    calculatedTotalPrice < minOrderValue
+                    isCreatingOrder ||
+                    (minOrderValue !== null &&
+                      calculatedTotalPrice < minOrderValue) ||
+                    !selectedShippingAddress ||
+                    (!useSameAddress && !selectedBillingAddress)
                       ? "bg-gray-400 cursor-not-allowed opacity-70"
                       : "bg-green-600 hover:bg-green-700 transform hover:scale-105 shadow-lg"
                   }`}
-                  disabled={
-                    minOrderValue !== null &&
-                    calculatedTotalPrice < minOrderValue
-                  }
                 >
-                  <span>Ödeme Adımına Geç</span>
-                  <AiOutlineArrowRight />
+                  {isCreatingOrder ? (
+                    <span>İşlem Devam Ediyor...</span>
+                  ) : (
+                    <>
+                      <span>Sepeti Onayla</span>
+                      <AiOutlineArrowRight />
+                    </>
+                  )}
                 </button>
 
                 {/* Link to Products Page */}
@@ -737,6 +986,15 @@ export default function Cart() {
           />
         )}
       </div>
+
+      {/* User Information Modal */}
+      {showUserInfoModal && (
+        <UserInformationModal
+          isVisible={showUserInfoModal}
+          onClose={handleModalClose}
+          onUpdateAddresses={handleAddressUpdate}
+        />
+      )}
     </div>
   );
 }

@@ -4,12 +4,9 @@ import { useState, useEffect } from "react";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { fetchDiscounts } from "@/app/api/discount/discountApi";
-import { fetchSettingByKey } from "@/app/api/setting/settingApi";
 
 import Link from "next/link";
 
-import { CreateOrderRequest, createOrder } from "@/app/api/order/orderApi";
 import { initializePayment } from "@/app/api/payment/paymentApi";
 import { Address } from "@/app/api/address/addressApi";
 import { fetchCurrentUser } from "@/app/api/user/userApi";
@@ -19,27 +16,18 @@ import UserInformationModal from "../components/Modal/UserInformationModal";
 export default function PlaceOrder() {
   const [showModal, setShowModal] = useState(false); // ✅ default to hidden
 
-  const [minOrderValue, setMinOrderValue] = useState<number | null>(null);
-
   const handleModalClose = () => {
     setShowModal(false);
   };
 
-  const handleAddressUpdate = (updatedAddresses: Address[]) => {
-    setAddresses(updatedAddresses); // Update addresses when the modal updates
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleAddressUpdate = (_updatedAddresses: Address[]) => {
+    // Addresses are now handled in cart page, so this is just a placeholder
   };
 
   const router = useRouter();
   const [paymentData, setPaymentData] = useState(null);
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedShippingAddress, setSelectedShippingAddress] = useState<
-    string | null
-  >(null);
-  const [selectedBillingAddress, setSelectedBillingAddress] = useState<
-    string | null
-  >(null);
-  const [useSameAddress, setUseSameAddress] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -48,22 +36,6 @@ export default function PlaceOrder() {
   );
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
-  const cartItems = useSelector((state: RootState) => state.cart.items);
-
-  useEffect(() => {
-    const loadMinOrderValue = async () => {
-      try {
-        const setting = await fetchSettingByKey("min_order_value");
-        if (setting) {
-          setMinOrderValue(parseFloat(setting.value));
-        }
-      } catch (error) {
-        console.error("Minimum sepet tutarı alınamadı:", error);
-      }
-    };
-
-    loadMinOrderValue();
-  }, []);
 
   useEffect(() => {
     const checkUserInfo = async () => {
@@ -78,9 +50,8 @@ export default function PlaceOrder() {
             user?.gsm_number?.trim()
         );
 
-        const hasAddresses = user?.addresses?.length > 0;
-
-        if (!hasAllFields || !hasAddresses) {
+        // Since address selection is now done in cart, we only check for basic user info
+        if (!hasAllFields) {
           setShowModal(true);
         }
       } catch (error) {
@@ -90,27 +61,6 @@ export default function PlaceOrder() {
     };
 
     checkUserInfo();
-  }, [accessToken]);
-
-  useEffect(() => {
-    const fetchUserAddresses = async () => {
-      if (!accessToken) return;
-
-      try {
-        const userData = await fetchCurrentUser(accessToken);
-        const userAddresses = userData.addresses || [];
-        setAddresses(userAddresses);
-
-        if (userAddresses.length > 0) {
-          setSelectedShippingAddress(userAddresses[0]?.id || null);
-          setSelectedBillingAddress(userAddresses[0]?.id || null);
-        }
-      } catch (error) {
-        console.error("Failed to fetch user addresses:", error);
-      }
-    };
-
-    fetchUserAddresses();
   }, [accessToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,121 +74,37 @@ export default function PlaceOrder() {
         return;
       }
 
-      if (
-        !selectedShippingAddress ||
-        (!useSameAddress && !selectedBillingAddress)
-      ) {
-        alert("Lütfen tüm adres bilgilerini seçin.");
-        setIsSubmitting(false);
-        return;
-      }
+      // Check if we have an existing order from cart confirmation
+      const existingOrderId = localStorage.getItem("pendingOrderId");
 
-      const basket = cartItems.map((item) => ({
-        item_id: item.id,
-        quantity: item.quantity,
-      }));
-
-      if (basket.length === 0) {
-        alert("Sepetiniz boş. Lütfen ürün ekleyin.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      const discountCodeFromStorage = localStorage.getItem("discountCode");
-
-      // 👇 Validate discount's min_order_value before creating the order
-      if (discountCodeFromStorage) {
-        const allDiscounts = await fetchDiscounts(accessToken);
-        const applied = allDiscounts.find(
-          (d) => d.code.toLowerCase() === discountCodeFromStorage.toLowerCase()
+      if (existingOrderId) {
+        // Use existing order for payment
+        const paymentResponse = await initializePayment(
+          existingOrderId,
+          accessToken
         );
 
-        // Calculate total price (before discount)
-        // Step 1: Calculate original total
-        const orderTotal = basket.reduce((sum, item) => {
-          const matched = cartItems.find((c) => c.id === item.item_id);
-          const price = matched?.discounted_price ?? matched?.price ?? 0;
-          return sum + price * item.quantity;
-        }, 0);
+        if (paymentResponse?.paymentPageUrl) {
+          window.open(paymentResponse.paymentPageUrl, "_blank");
+          localStorage.removeItem("discountCode");
+          localStorage.removeItem("pendingOrderId");
 
-        // Step 2: Apply discount (if exists)
-        let finalTotal = orderTotal;
-
-        if (discountCodeFromStorage && applied) {
-          const isPercentage = applied.is_percentage;
-          const discountValue = applied.discount_value;
-
-          const discountAmount = isPercentage
-            ? (orderTotal * discountValue) / 100
-            : discountValue;
-
-          finalTotal = orderTotal - discountAmount;
-        }
-
-        // Step 3: Validate final total against min_order_value
-        if (minOrderValue !== null && finalTotal < minOrderValue) {
           alert(
-            `Sipariş oluşturmak için minimum sepet tutarı ₺${minOrderValue.toFixed(
-              2
-            )} olmalıdır.`
+            "Ödeme sayfası yeni bir sekmede açıldı. Ödeme tamamlandıktan sonra siparişlerim sayfasından durumu kontrol edebilirsiniz."
           );
-          setIsSubmitting(false);
-          return;
+        } else {
+          alert("Ödeme başlatılamadı. Lütfen tekrar deneyiniz.");
         }
-
-        if (applied?.min_order_value && orderTotal < applied.min_order_value) {
-          alert(
-            `Bu indirim kodunu kullanmak için minimum sipariş tutarı ₺${applied.min_order_value}`
-          );
-          setIsSubmitting(false);
-          return;
-        }
-        // Assuming you fetched settings and have `min_order`
-
-        if (!applied) {
-          alert("İndirim kodu geçerli değil veya bulunamadı.");
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      // Create Order Request
-      const orderData: CreateOrderRequest = {
-        shipping_address_id: selectedShippingAddress!,
-        billing_address_id: useSameAddress
-          ? selectedShippingAddress!
-          : selectedBillingAddress!,
-        basket,
-        discount_code: discountCodeFromStorage || undefined, // ✅ Fix
-      };
-
-      // ✅ Send request to create order
-      const newOrder = await createOrder(orderData, accessToken);
-      console.log("✅ Order created successfully:", newOrder);
-
-      if (!newOrder.total_amount || newOrder.total_amount <= 0) {
-        alert("Hatalı toplam tutar! Lütfen tekrar deneyiniz.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // ✅ Initialize payment
-      const paymentResponse = await initializePayment(newOrder.id, accessToken);
-
-      if (paymentResponse?.paymentPageUrl) {
-        window.open(paymentResponse.paymentPageUrl, "_blank");
-        localStorage.removeItem("discountCode");
-
-        // ✅ Maybe show a message like "Ödeme sayfası yeni sekmede açıldı"
-        alert(
-          "Ödeme sayfası yeni bir sekmede açıldı. Ödeme tamamlandıktan sonra siparişlerim sayfasından durumu kontrol edebilirsiniz."
-        );
       } else {
-        alert("Ödeme başlatılamadı. Lütfen tekrar deneyiniz.");
+        // Fallback to old flow if no existing order
+        alert(
+          "Sipariş bilgisi bulunamadı. Lütfen sepet sayfasından tekrar deneyin."
+        );
+        router.push("/sepet");
       }
     } catch (error) {
-      console.error("🚨 Failed to create order or initialize payment:", error);
-      alert("Siparişe devam edilemiyor. Lütfen tekrar deneyiniz.");
+      console.error("🚨 Failed to initialize payment:", error);
+      alert("Ödeme başlatılamadı. Lütfen tekrar deneyiniz.");
     } finally {
       setIsSubmitting(false);
     }
@@ -318,78 +184,29 @@ export default function PlaceOrder() {
   return (
     <div className="mx-auto px-6 py-12 bg-secondary">
       <h1 className="text-4xl font-bold text-white mb-8 text-center">
-        Sipariş Bilgileri
+        Ödeme Sayfası
       </h1>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow-lg space-y-10"
-      >
-        {/* Shipping Address Section */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-semibold text-gray-700">
-            Teslimat Adresi
+      <div className="bg-white p-8 rounded-lg shadow-lg space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+            Ödeme İşlemi
           </h2>
-          <select
-            value={selectedShippingAddress || ""}
-            onChange={(e) => setSelectedShippingAddress(e.target.value)}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
-            required
-          >
-            <option value="" disabled>
-              Teslimat adresi seçin
-            </option>
-            {addresses.map((address) => (
-              <option key={address.id} value={address.id}>
-                {address.address_title} - {address.address}, {address.city}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Billing Address Section */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-semibold text-gray-700">
-            Fatura Adresi
-          </h2>
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              checked={useSameAddress}
-              onChange={() => setUseSameAddress(!useSameAddress)}
-              className="w-5 h-5 text-tertiary focus:ring-2 focus:ring-tertiary border-gray-300 rounded"
-            />
-            <label className="text-gray-600">Teslimat adresi ile aynı</label>
-          </div>
-          {!useSameAddress && (
-            <select
-              value={selectedBillingAddress || ""}
-              onChange={(e) => setSelectedBillingAddress(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary bg-gray-200 text-black"
-              required
-            >
-              <option value="" disabled>
-                Fatura adresi seçin
-              </option>
-              {addresses.map((address) => (
-                <option key={address.id} value={address.id}>
-                  {address.address_title} - {address.address}, {address.city} (
-                  {address.contact_number})
-                </option>
-              ))}
-            </select>
-          )}
+          <p className="text-gray-600 mb-6">
+            Adres bilgileriniz sepet sayfasında seçilmiştir. Ödeme işlemini
+            başlatmak için aşağıdaki butona tıklayın.
+          </p>
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-center space-x-4">
           <Link href="/sepet">
             <button className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300">
-              Geri
+              Sepete Dön
             </button>
           </Link>
           <button
-            type="submit"
+            onClick={handleSubmit}
             disabled={isSubmitting}
             className={`px-6 py-3 rounded-lg text-white transition duration-300 ${
               isSubmitting
@@ -397,10 +214,10 @@ export default function PlaceOrder() {
                 : "bg-green-600 hover:bg-green-700"
             }`}
           >
-            {isSubmitting ? "İşlem Devam Ediyor..." : "Ödeme Adımına Geç"}
+            {isSubmitting ? "İşlem Devam Ediyor..." : "Ödemeye Geç"}
           </button>
         </div>
-      </form>
+      </div>
 
       <div className="container mx-auto px-6 py-12 ">
         {/* Display payment message */}
