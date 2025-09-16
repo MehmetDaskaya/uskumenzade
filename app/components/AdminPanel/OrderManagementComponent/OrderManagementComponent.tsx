@@ -232,6 +232,7 @@ export const OrderManagementComponent = () => {
                 {{
                   pending: "Beklemede",
                   processing: "İşleniyor",
+                  confirmed: "Onaylandı",
                   shipped: "Kargolandı",
                   delivered: "Teslim Edildi",
                   cancelled: "İptal Edildi",

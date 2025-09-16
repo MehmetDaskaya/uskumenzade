@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { useAuthRedirect } from "../../hooks/useAuthRedirect";
 import { User } from "../../api/auth/authApi";
 import { Snackbar } from "../../components/index";
+import { updateOrder } from "../../api/order/orderApi";
+import { fetchPayOnDeliveryPricings } from "../../api/pay-on-delivery-pricing/payOnDeliveryPricingApi";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -105,6 +107,76 @@ export default function CartConfirm() {
 
         const orderData = await response.json();
 
+        // Calculate pay on delivery cost and separate shipping cost
+        let payOnDeliveryCost = 0;
+        let actualShippingCost = orderData.shipping_total || 0;
+
+        if (orderData.payment_on_delivery) {
+          try {
+            // Try to get POD pricing from backend
+            const podPricings = await fetchPayOnDeliveryPricings(token);
+            const orderTotal = orderData.items_total || 0;
+
+            // Find appropriate pricing tier based on items total only
+            const applicablePricing = podPricings.find(
+              (pricing) =>
+                orderTotal >= pricing.min_cost && orderTotal <= pricing.max_cost
+            );
+
+            if (applicablePricing) {
+              payOnDeliveryCost = Number(applicablePricing.price) || 0;
+              // Subtract POD cost from shipping_total to get actual shipping cost
+              actualShippingCost = Math.max(
+                0,
+                (orderData.shipping_total || 0) - payOnDeliveryCost
+              );
+            } else {
+              // Fallback: estimate POD cost as percentage of items total
+              payOnDeliveryCost = Math.round(
+                (orderData.items_total || 0) * 0.05
+              ); // 5% of items
+              actualShippingCost = Math.max(
+                0,
+                (orderData.shipping_total || 0) - payOnDeliveryCost
+              );
+            }
+          } catch (error) {
+            console.warn(
+              "Failed to fetch POD pricing, using fallback calculation:",
+              error
+            );
+            // Fallback: estimate POD cost as percentage of items total
+            payOnDeliveryCost = Math.round((orderData.items_total || 0) * 0.05); // 5% of items
+            actualShippingCost = Math.max(
+              0,
+              (orderData.shipping_total || 0) - payOnDeliveryCost
+            );
+          }
+        }
+
+        // Ensure values are valid numbers
+        payOnDeliveryCost = Number(payOnDeliveryCost) || 0;
+        actualShippingCost = Number(actualShippingCost) || 0;
+
+        // Debug: Log order data to see what backend returns
+        console.log("🔍 Order Data from Backend:", {
+          total_amount: orderData.total_amount,
+          items_total: orderData.items_total,
+          shipping_total: orderData.shipping_total,
+          payment_on_delivery: orderData.payment_on_delivery,
+          calculated_pod_cost: payOnDeliveryCost,
+          actual_shipping_cost: actualShippingCost,
+          breakdown: {
+            items: orderData.items_total,
+            shipping: actualShippingCost,
+            pod: payOnDeliveryCost,
+            total:
+              (orderData.items_total || 0) +
+              actualShippingCost +
+              payOnDeliveryCost,
+          },
+        });
+
         // Transform order data to match confirmation format
         const confirmationData: CartConfirmationData = {
           items: orderData.basket.map(
@@ -132,10 +204,8 @@ export default function CartConfirm() {
           ),
           pricing: {
             item_total: orderData.items_total || 0,
-            shipment_cost: orderData.shipping_total || 0,
-            pay_on_delivery_cost: orderData.payment_on_delivery
-              ? orderData.total_amount * 0.05
-              : 0, // 5% for pay on delivery
+            shipment_cost: actualShippingCost,
+            pay_on_delivery_cost: payOnDeliveryCost,
 
             final_total: orderData.total_amount || 0,
             total_volume: orderData.total_volume || 0,
@@ -167,7 +237,26 @@ export default function CartConfirm() {
     const paymentMethod = localStorage.getItem("paymentMethod");
 
     if (paymentMethod === "pay_on_delivery") {
-      // For pay on delivery, redirect to orders page
+      // For pay on delivery, update order status to confirmed and redirect to orders page
+      try {
+        const token = localStorage.getItem("authToken");
+        const orderId = localStorage.getItem("pendingOrderId");
+
+        if (token && orderId) {
+          // Update order status to confirmed for pay on delivery orders
+          await updateOrder(orderId, { status: "confirmed" }, token);
+          console.log("✅ Pay on delivery order confirmed:", orderId);
+        }
+      } catch (error) {
+        console.error("❌ Failed to confirm pay on delivery order:", error);
+        // Continue with redirect even if update fails
+      }
+
+      // Clear pending order data
+      localStorage.removeItem("pendingOrderId");
+      localStorage.removeItem("paymentMethod");
+
+      // Redirect to orders page
       router.push("/siparislerim");
     } else {
       // For credit card, initiate payment directly
@@ -356,7 +445,9 @@ export default function CartConfirm() {
                       Kapıda Ödeme Ücreti
                     </span>
                     <span className="font-medium text-orange-600">
-                      {confirmationData.pricing.pay_on_delivery_cost.toFixed(2)}{" "}
+                      {(
+                        confirmationData.pricing.pay_on_delivery_cost || 0
+                      ).toFixed(2)}{" "}
                       ₺
                     </span>
                   </div>

@@ -340,7 +340,7 @@ export const DefinitionsComponent = () => {
         {/* Manage Images Section */}
         <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
           <h3 className="text-lg font-semibold mb-4">Görselleri Yönet</h3>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-6 text-sm">
             Görsel yükle, güncelle veya sil
           </p>
           <button
@@ -354,7 +354,7 @@ export const DefinitionsComponent = () => {
 
         <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
           <h3 className="text-lg font-semibold mb-4">Dokümanları Yönet</h3>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-6 text-sm">
             Doküman yükle, güncelle veya sil
           </p>
           <button
@@ -369,7 +369,7 @@ export const DefinitionsComponent = () => {
         {/* Manage Categories Section */}
         <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
           <h3 className="text-lg font-semibold mb-4">Kategorileri Yönet</h3>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-6 text-sm">
             Kategori ekle, güncelle veya sil
           </p>
           <button
@@ -380,25 +380,11 @@ export const DefinitionsComponent = () => {
             Kategori Ekranını Aç
           </button>
         </div>
-        {/* Manage Deci Section */}
-        <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
-          <h3 className="text-lg font-semibold mb-4">Desi Hesaplama</h3>
-          <p className="text-gray-600 text-center mb-6">
-            Desi bilgilerini ekle, güncelle veya sil
-          </p>
-          <button
-            onClick={openDeciCalculationModal}
-            className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition duration-300"
-          >
-            <FaPlus className="inline mr-2" />
-            Desi Hesaplama Ekranını Aç
-          </button>
-        </div>
 
         {/* Manage Discounts Section */}
         <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
           <h3 className="text-lg font-semibold mb-4">İndirimleri Yönet</h3>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-6 text-sm">
             İndirim ekle, güncelle veya sil
           </p>
           <button
@@ -413,7 +399,7 @@ export const DefinitionsComponent = () => {
         {/* Manage Tags Section */}
         <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
           <h3 className="text-lg font-semibold mb-4">Etiketleri Yönet</h3>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-6 text-sm">
             Etiket ekle, güncelle veya sil
           </p>
           <button
@@ -428,7 +414,7 @@ export const DefinitionsComponent = () => {
         {/* Manage Meta Tags Section */}
         <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
           <h3 className="text-lg font-semibold mb-4">Meta Etiketleri Yönet</h3>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-6 text-sm">
             Meta etiket ekle, güncelle veya sil
           </p>
           <button
@@ -442,7 +428,7 @@ export const DefinitionsComponent = () => {
         {/* Manage Banners Section */}
         <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
           <h3 className="text-lg font-semibold mb-4">Bannerları Yönet</h3>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-6 text-sm">
             Banner ekle, güncelle veya sil
           </p>
           <button
@@ -454,18 +440,33 @@ export const DefinitionsComponent = () => {
           </button>
         </div>
 
+        {/* Manage Deci Section */}
+        <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
+          <h3 className="text-lg font-semibold mb-4">Desi Hesaplama</h3>
+          <p className="text-gray-600 text-center mb-6 text-sm">
+            Desi bilgilerini ekle, güncelle veya sil
+          </p>
+          <button
+            onClick={openDeciCalculationModal}
+            className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition duration-300"
+          >
+            <FaPlus className="inline mr-2" />
+            Desi Hesaplama Ekranını Aç
+          </button>
+        </div>
+
         {/* Manage Shipment Pricing Section */}
         <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
           <h3 className="text-lg font-semibold mb-4">Kargo Fiyatlandırması</h3>
-          <p className="text-gray-600 text-center mb-6">
-            Hacim bazlı kargo fiyatlandırması ekle, güncelle veya sil
+          <p className="text-gray-600 text-center mb-6 text-sm">
+            Kargo fiyatlandırma ekle, güncelle veya sil
           </p>
           <button
             onClick={openShipmentPricingModal}
             className="bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600 transition duration-300"
           >
             <FaPlus className="inline mr-2" />
-            Kargo Fiyatlandırması Ekranını Aç
+            Kargo Fiyatlandırma Ekranını Aç
           </button>
         </div>
 
@@ -474,7 +475,7 @@ export const DefinitionsComponent = () => {
           <h3 className="text-lg font-semibold mb-4">
             Kapıda Ödeme Fiyatlandırması
           </h3>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-6 text-sm">
             Sipariş tutarı bazlı kapıda ödeme fiyatlandırması ekle, güncelle
             veya sil
           </p>
@@ -483,14 +484,14 @@ export const DefinitionsComponent = () => {
             className="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition duration-300"
           >
             <FaPlus className="inline mr-2" />
-            Kapıda Ödeme Fiyatlandırması Ekranını Aç
+            Kapıda Ödeme Ekranını Aç
           </button>
         </div>
 
         {/* Manage Pricing Settings Section */}
         <div className="bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex flex-col items-center">
           <h3 className="text-lg font-semibold mb-4">Fiyatlandırma Ayarları</h3>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-6 text-sm">
             Ek hacim ücreti ve kapıda ödeme yüzde ayarlarını yapılandır
           </p>
           <button
@@ -498,7 +499,7 @@ export const DefinitionsComponent = () => {
             className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition duration-300"
           >
             <FaPlus className="inline mr-2" />
-            Fiyatlandırma Ayarları Ekranını Aç
+            Fiyatlandırma Ekranını Aç
           </button>
         </div>
       </div>

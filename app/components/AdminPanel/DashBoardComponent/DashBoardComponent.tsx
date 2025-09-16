@@ -98,6 +98,14 @@ export const DashboardComponent = () => {
     productGrowth: 0,
     orderGrowth: 0,
     revenueGrowth: 0,
+    pendingOrders: 0,
+    confirmedOrders: 0,
+    paidOrders: 0,
+    shippedOrders: 0,
+    deliveredOrders: 0,
+    cancelledOrders: 0,
+    payOnDeliveryOrders: 0,
+    creditCardOrders: 0,
   });
 
   const [salesData, setSalesData] = useState<
@@ -109,6 +117,12 @@ export const DashboardComponent = () => {
   >([]);
   const [orderCountData, setOrderCountData] = useState<
     { name: string; orderCount: number }[]
+  >([]);
+  const [orderStatusData, setOrderStatusData] = useState<
+    { name: string; value: number }[]
+  >([]);
+  const [paymentMethodData, setPaymentMethodData] = useState<
+    { name: string; value: number }[]
   >([]);
 
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
@@ -153,8 +167,9 @@ export const DashboardComponent = () => {
           previousCutoffDate.setFullYear(now.getFullYear() - 2);
         }
 
+        // Include both paid and confirmed orders for revenue calculation
         const paidOrders = validOrders.filter(
-          (order) => order.status === "paid"
+          (order) => order.status === "paid" || order.status === "confirmed"
         );
 
         const currentOrders = paidOrders.filter((order) => {
@@ -208,7 +223,8 @@ export const DashboardComponent = () => {
 
         const filteredOrders = validOrders.filter(
           (order) =>
-            order.status === "paid" && new Date(order.created_at) >= cutoffDate
+            (order.status === "paid" || order.status === "confirmed") &&
+            new Date(order.created_at) >= cutoffDate
         );
 
         // --- Daily grouping + cumulative ---
@@ -323,6 +339,18 @@ export const DashboardComponent = () => {
           {} as Record<string, number>
         );
 
+        // Calculate order status breakdown
+        const orderStatusBreakdown = validOrders.reduce((acc, order) => {
+          acc[order.status] = (acc[order.status] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        // Calculate payment method breakdown
+        const payOnDeliveryCount = validOrders.filter(
+          (order) => order.payment_on_delivery
+        ).length;
+        const creditCardCount = validOrders.length - payOnDeliveryCount;
+
         setTopProducts(topProducts);
         setSalesData(finalSalesData);
         setProductCategoryData(
@@ -331,6 +359,23 @@ export const DashboardComponent = () => {
             value: value as number,
           }))
         );
+
+        // Set order status data for charts
+        setOrderStatusData([
+          { name: "Beklemede", value: orderStatusBreakdown.pending || 0 },
+          { name: "Onaylandı", value: orderStatusBreakdown.confirmed || 0 },
+          { name: "Ödeme Yapıldı", value: orderStatusBreakdown.paid || 0 },
+          { name: "Kargolandı", value: orderStatusBreakdown.shipped || 0 },
+          { name: "Teslim Edildi", value: orderStatusBreakdown.delivered || 0 },
+          { name: "İptal Edildi", value: orderStatusBreakdown.cancelled || 0 },
+        ]);
+
+        // Set payment method data for charts
+        setPaymentMethodData([
+          { name: "Kapıda Ödeme", value: payOnDeliveryCount },
+          { name: "Kredi Kartı", value: creditCardCount },
+        ]);
+
         setStats({
           users: users.length,
           products: fetchedProducts.length,
@@ -340,6 +385,14 @@ export const DashboardComponent = () => {
           productGrowth: 0,
           orderGrowth,
           revenueGrowth,
+          pendingOrders: orderStatusBreakdown.pending || 0,
+          confirmedOrders: orderStatusBreakdown.confirmed || 0,
+          paidOrders: orderStatusBreakdown.paid || 0,
+          shippedOrders: orderStatusBreakdown.shipped || 0,
+          deliveredOrders: orderStatusBreakdown.delivered || 0,
+          cancelledOrders: orderStatusBreakdown.cancelled || 0,
+          payOnDeliveryOrders: payOnDeliveryCount,
+          creditCardOrders: creditCardCount,
         });
 
         setRecentOrders(validOrders.slice(0, 5));
@@ -382,6 +435,84 @@ export const DashboardComponent = () => {
           icon={<FaDollarSign />}
           growth={stats.revenueGrowth}
         />
+      </div>
+
+      {/* Order Status Summary */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold text-gray-700 mb-4">
+          Sipariş Durumu Özeti
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="text-center p-4 bg-yellow-50 rounded-lg">
+            <div className="text-2xl font-bold text-yellow-600">
+              {stats.pendingOrders}
+            </div>
+            <div className="text-sm text-yellow-700">Beklemede</div>
+          </div>
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">
+              {stats.confirmedOrders}
+            </div>
+            <div className="text-sm text-green-700">Onaylandı</div>
+          </div>
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.paidOrders}
+            </div>
+            <div className="text-sm text-blue-700">Ödeme Yapıldı</div>
+          </div>
+          <div className="text-center p-4 bg-indigo-50 rounded-lg">
+            <div className="text-2xl font-bold text-indigo-600">
+              {stats.shippedOrders}
+            </div>
+            <div className="text-sm text-indigo-700">Kargolandı</div>
+          </div>
+          <div className="text-center p-4 bg-emerald-50 rounded-lg">
+            <div className="text-2xl font-bold text-emerald-600">
+              {stats.deliveredOrders}
+            </div>
+            <div className="text-sm text-emerald-700">Teslim Edildi</div>
+          </div>
+          <div className="text-center p-4 bg-red-50 rounded-lg">
+            <div className="text-2xl font-bold text-red-600">
+              {stats.cancelledOrders}
+            </div>
+            <div className="text-sm text-red-700">İptal Edildi</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Method Summary */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold text-gray-700 mb-4">
+          Ödeme Yöntemi Özeti
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="text-center p-6 bg-blue-50 rounded-lg">
+            <div className="text-3xl font-bold text-blue-600">
+              {stats.payOnDeliveryOrders}
+            </div>
+            <div className="text-lg text-blue-700">Kapıda Ödeme</div>
+            <div className="text-sm text-blue-600 mt-1">
+              %
+              {stats.orders > 0
+                ? Math.round((stats.payOnDeliveryOrders / stats.orders) * 100)
+                : 0}
+            </div>
+          </div>
+          <div className="text-center p-6 bg-green-50 rounded-lg">
+            <div className="text-3xl font-bold text-green-600">
+              {stats.creditCardOrders}
+            </div>
+            <div className="text-lg text-green-700">Kredi Kartı</div>
+            <div className="text-sm text-green-600 mt-1">
+              %
+              {stats.orders > 0
+                ? Math.round((stats.creditCardOrders / stats.orders) * 100)
+                : 0}
+            </div>
+          </div>
+        </div>
       </div>
       {/* Sales and Revenue Chart */}
       <div className="bg-white p-6 rounded-lg shadow-md space-y-6">
@@ -528,6 +659,64 @@ export const DashboardComponent = () => {
           </PieChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Order Status Breakdown */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold text-gray-700 mb-4">
+          Sipariş Durumu Dağılımı
+        </h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={orderStatusData}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+              nameKey="name"
+            >
+              {orderStatusData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Payment Method Breakdown */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold text-gray-700 mb-4">
+          Ödeme Yöntemi Dağılımı
+        </h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={paymentMethodData}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              fill="#00C49F"
+              dataKey="value"
+              nameKey="name"
+            >
+              {paymentMethodData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h3 className="text-xl font-semibold text-gray-700 mb-4">
           Düşük Stoklu Ürünler (10 ve altı)
@@ -549,18 +738,50 @@ export const DashboardComponent = () => {
 
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h3 className="text-xl font-semibold text-gray-700 mb-4">
-          Ödemesi Yapılmamış Siparişler
+          Bekleyen Siparişler (Ödeme Bekleyen + Onaylanan)
         </h3>
         <ul>
           {orders
-            .filter((order) => order.status === "pending")
+            .filter(
+              (order) =>
+                order.status === "pending" || order.status === "confirmed"
+            )
             .map((order) => (
-              <li key={order.id} className="py-2 border-b border-gray-200">
-                {order.user.fname} {order.user.lname} - ₺
-                {order.total_amount
-                  ? `${order.total_amount.toFixed(2)} ₺ (Kargo Dahil)`
-                  : "Hesaplanıyor"}{" "}
-                {new Date(order.created_at).toLocaleDateString()}
+              <li
+                key={order.id}
+                className="py-2 border-b border-gray-200 flex justify-between items-center"
+              >
+                <div>
+                  <span className="font-medium">
+                    {order.user.fname} {order.user.lname}
+                  </span>
+                  <span
+                    className={`ml-2 px-2 py-1 rounded text-xs ${
+                      order.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {order.status === "pending"
+                      ? "Ödeme Bekliyor"
+                      : "Onaylandı"}
+                  </span>
+                  {order.payment_on_delivery && (
+                    <span className="ml-2 px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+                      Kapıda Ödeme
+                    </span>
+                  )}
+                </div>
+                <div className="text-right">
+                  <div className="font-medium">
+                    {order.total_amount
+                      ? `${order.total_amount.toFixed(2)} ₺`
+                      : "Hesaplanıyor"}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {new Date(order.created_at).toLocaleDateString()}
+                  </div>
+                </div>
               </li>
             ))}
         </ul>

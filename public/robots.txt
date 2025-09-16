@@ -1,0 +1,34 @@
+# Üskümenzade Website Robots.txt
+# https://uskumenzade.com
+
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+
+# Disallow temporary and development files
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /sitemap.xml
+
+# Allow important directories
+Allow: /urunler/
+Allow: /blog/
+Allow: /hakkimizda/
+Allow: /iletisim/
+Allow: /images/
+
+# Crawl delay (optional - be respectful to servers)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://uskumenzade.com/sitemap.xml
+
+# Host directive
+Host: https://uskumenzade.com
+

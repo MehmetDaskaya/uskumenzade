@@ -13,6 +13,7 @@ import {
   FaBox,
   FaShippingFast,
   FaCheck,
+  FaCheckCircle,
   FaTimes,
   FaRegClock,
 } from "react-icons/fa";
@@ -120,6 +121,8 @@ export default function OrderHistory() {
         return <FaRegClock className="text-yellow-500" />;
       case "processing":
         return <FaBox className="text-blue-500" />;
+      case "confirmed":
+        return <FaCheckCircle className="text-green-500" />;
       case "shipped":
         return <FaShippingFast className="text-indigo-500" />;
       case "delivered":
@@ -137,6 +140,7 @@ export default function OrderHistory() {
       paid: "Ödeme Yapıldı",
       pending: "Ödeme Bekliyor", // For credit card orders waiting for payment
       processing: "İşleniyor", // For pay-on-delivery orders that are confirmed
+      confirmed: "Onaylandı", // For pay-on-delivery orders that are confirmed
       shipped: "Kargolandı",
       delivered: "Teslim Edildi",
       cancelled: "İptal Edildi",
@@ -150,6 +154,8 @@ export default function OrderHistory() {
         return "bg-green-100 border-green-500 text-green-700";
       case "shipped":
         return "bg-indigo-100 border-indigo-500 text-indigo-700";
+      case "confirmed":
+        return "bg-green-100 border-green-500 text-green-700";
       case "processing":
         return "bg-blue-100 border-blue-500 text-blue-700";
       case "paid":

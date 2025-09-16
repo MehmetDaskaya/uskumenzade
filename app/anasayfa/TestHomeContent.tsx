@@ -333,7 +333,7 @@ export default function TestHomeContent() {
             <div className="relative">
               <div className="absolute -top-4 -left-4 w-72 h-72 md:w-80 md:h-80 bg-secondary rounded-lg -z-10"></div>
               <Image
-                src="/images/family.webp" // Replace with your actual image
+                src="/images/family.png" // Replace with your actual image
                 alt="Pamukdede Ailesi"
                 width={600}
                 height={400}

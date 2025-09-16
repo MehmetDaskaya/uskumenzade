@@ -23,6 +23,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   const statuses = [
     { key: "pending", label: "Beklemede" },
     { key: "paid", label: "Ödeme Yapıldı" },
+    { key: "confirmed", label: "Onaylandı" },
     { key: "shipped", label: "Kargolandı" },
     { key: "delivered", label: "Teslim Edildi" },
     { key: "cancelled", label: "İptal Edildi" },
